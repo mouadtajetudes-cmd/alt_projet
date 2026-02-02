@@ -1,0 +1,47 @@
+{
+  "name": "alt/microservices",
+  "description": "ALT Project - Microservices Platform",
+  "type": "project",
+  "require": {
+    "php": ">=8.4",
+    "slim/slim": "^4.14",
+    "slim/psr7": "^1.7",
+    "ramsey/uuid": "^4.7",
+    "firebase/php-jwt": "^6.11",
+    "monolog/monolog": "^3.7",
+    "fakerphp/faker": "^1.23",
+    "php-di/php-di": "^7.0",
+    "php-di/slim-bridge": "^3.4",
+    "respect/validation": "^2.3",
+    "vlucas/phpdotenv": "^5.6",
+    "ext-pdo": "*",
+    "ext-pdo_pgsql": "*",
+    "ext-json": "*",
+    "mongodb/mongodb": "^1.19"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.0",
+    "phpstan/phpstan": "^1.12"
+  },
+  "autoload": {
+    "psr-4": {
+      "Alt\\Gateway\\": "./gateway/src",
+      "Alt\\Auth\\": "./services/auth/src",
+      "Alt\\Social\\": "./services/social/src",
+      "Alt\\Marketplace\\": "./services/marketplace/src",
+      "Alt\\Avatar\\": "./services/avatar/src",
+      "Alt\\Chat\\": "./services/chat/src"
+    }
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true,
+    "allow-plugins": {
+      "php-http/discovery": true
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "analyse": "phpstan analyse src --level=5"
+  }
+}

@@ -1,0 +1,287 @@
+networks:
+  alt_network:
+    driver: bridge
+
+volumes:
+  alt_postgres_data:
+  alt_mongo_data:
+
+services:
+  # ===========================================
+  # 1. GATEWAY - Point d'entrée unique
+  # Routage, agrégation, CORS, JWT, rate limiting
+  # ===========================================
+  gateway:
+    build:
+      context: ./build
+      dockerfile: 8.4-cli.Dockerfile
+    container_name: alt_gateway
+    ports:
+      - "8000:80"
+    volumes:
+      - ./gateway:/var/php
+    working_dir: /var/php
+    networks:
+      - alt_network
+    depends_on:
+      - auth
+      - social
+      - marketplace
+      - avatar
+      - chat
+    environment:
+      - SERVICE_AUTH=http://auth
+      - SERVICE_SOCIAL=http://social
+      - SERVICE_MARKETPLACE=http://marketplace
+      - SERVICE_AVATAR=http://avatar
+      - SERVICE_CHAT=http://chat
+      - JWT_SECRET=d@#hH3r!g5yL6^nZxPqS7vW9uJ0kLmN
+    restart: unless-stopped
+    command: sh -c "composer install --no-dev --optimize-autoloader 2>/dev/null || true; php -S 0.0.0.0:80 -t public"
+
+  # ===========================================
+  # 2. AUTH - Authentification & Comptes
+  # Inscription, connexion, JWT, reset password, providers
+  # ===========================================
+  auth:
+    build:
+      context: ./build
+      dockerfile: 8.4-cli.Dockerfile
+    container_name: alt_auth
+    ports:
+      - "8001:80"
+    volumes:
+      - ./services/auth:/var/php
+    working_dir: /var/php
+    networks:
+      - alt_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=alt
+      - DB_USER=alt
+      - DB_PASS=altpass
+      - JWT_SECRET=d@#hH3r!g5yL6^nZxPqS7vW9uJ0kLmN
+      - JWT_EXPIRES_IN=86400
+    restart: unless-stopped
+    command: sh -c "composer install --no-dev --optimize-autoloader 2>/dev/null || true; php -S 0.0.0.0:80 -t public"
+
+  # ===========================================
+  # 3. SOCIAL - Réseau Social
+  # Posts, commentaires, réactions, follows, feed, blocage
+  # ===========================================
+  social:
+    build:
+      context: ./build
+      dockerfile: 8.4-cli.Dockerfile
+    container_name: alt_social
+    ports:
+      - "8002:80"
+    volumes:
+      - ./services/social:/var/php
+    working_dir: /var/php
+    networks:
+      - alt_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=alt
+      - DB_USER=alt
+      - DB_PASS=altpass
+      - JWT_SECRET=d@#hH3r!g5yL6^nZxPqS7vW9uJ0kLmN
+    restart: unless-stopped
+    command: sh -c "composer install --no-dev --optimize-autoloader 2>/dev/null || true; php -S 0.0.0.0:80 -t public"
+
+  # ===========================================
+  # 4. MARKETPLACE - Marketplace utilisateurs
+  # Annonces, catégories, recherche, filtres, contact vendeur
+  # ===========================================
+  marketplace:
+    build:
+      context: ./build
+      dockerfile: 8.4-cli.Dockerfile
+    container_name: alt_marketplace
+    ports:
+      - "8003:80"
+    volumes:
+      - ./services/marketplace:/var/php
+    working_dir: /var/php
+    networks:
+      - alt_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=alt
+      - DB_USER=alt
+      - DB_PASS=altpass
+    restart: unless-stopped
+    command: sh -c "composer install --no-dev --optimize-autoloader 2>/dev/null || true; php -S 0.0.0.0:80 -t public"
+
+  # ===========================================
+  # 5. AVATAR - Compagnons ludiques
+  # Création, progression, skins, accessoires, récompenses
+  # ===========================================
+  avatar:
+    build:
+      context: ./build
+      dockerfile: 8.4-cli.Dockerfile
+    container_name: alt_avatar
+    ports:
+      - "8004:80"
+    volumes:
+      - ./services/avatar:/var/php
+    working_dir: /var/php
+    networks:
+      - alt_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=alt
+      - DB_USER=alt
+      - DB_PASS=altpass
+    restart: unless-stopped
+    command: sh -c "composer install --no-dev --optimize-autoloader 2>/dev/null || true; php -S 0.0.0.0:80 -t public"
+
+  # ===========================================
+  # 6. CHAT REST - Structure du chat
+  # Conversations, groupes, rooms, membres, rôles, permissions
+  # ===========================================
+  chat:
+    build:
+      context: ./build
+      dockerfile: 8.4-cli.Dockerfile
+    container_name: alt_chat
+    ports:
+      - "8005:80"
+    volumes:
+      - ./services/chat:/var/php
+    working_dir: /var/php
+    networks:
+      - alt_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=alt
+      - DB_USER=alt
+      - DB_PASS=altpass
+      - MONGO_URI=mongodb://altmongo:altmongopass@mongodb:27017/alt_messages?authSource=admin
+      - JWT_SECRET=d@#hH3r!g5yL6^nZxPqS7vW9uJ0kLmN
+    restart: unless-stopped
+    command: sh -c "composer install --no-dev --optimize-autoloader 2>/dev/null || true; php -S 0.0.0.0:80 -t public"
+
+  # ===========================================
+  # 7. WEBSOCKET - Messages en temps réel
+  # Messages instantanés, broadcast, présence, typing, ack
+  # ===========================================
+  websocket:
+    image: node:20-alpine
+    container_name: alt_websocket
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./ws:/app
+    working_dir: /app
+    networks:
+      - alt_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - WS_PORT=3001
+      - JWT_SECRET=d@#hH3r!g5yL6^nZxPqS7vW9uJ0kLmN
+      - MONGO_URI=mongodb://altmongo:altmongopass@mongodb:27017/alt_messages?authSource=admin
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=alt
+      - DB_USER=alt
+      - DB_PASS=altpass
+    restart: unless-stopped
+    command: sh -c "if [ -f package.json ]; then npm install 2>/dev/null || true; fi; if [ -f server.js ]; then node server.js; elif [ -f index.js ]; then node index.js; else echo 'WebSocket service waiting for code...'; tail -f /dev/null; fi"
+
+  # ===========================================
+  # 8. POSTGRESQL - Base de données relationnelle
+  # Users, posts, shop, avatars, groups, rooms, membership
+  # ===========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: alt_postgres
+    ports:
+      - "5433:5432"
+    networks:
+      - alt_network
+    environment:
+      POSTGRES_DB: alt
+      POSTGRES_USER: alt
+      POSTGRES_PASSWORD: altpass
+    volumes:
+      - alt_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alt -d alt"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  # ===========================================
+  # 9. MONGODB - Base de données NoSQL
+  # Messages du chat, events, pièces jointes
+  # ===========================================
+  mongodb:
+    image: mongo:7
+    container_name: alt_mongodb
+    ports:
+      - "27018:27017"
+    networks:
+      - alt_network
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: altmongo
+      MONGO_INITDB_ROOT_PASSWORD: altmongopass
+      MONGO_INITDB_DATABASE: alt_messages
+    volumes:
+      - alt_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  # ===========================================
+  # 10. ADMINER - Interface web PostgreSQL
+  # Inspection et gestion de la base de données
+  # ===========================================
+  adminer:
+    image: adminer:latest
+    container_name: alt_adminer
+    ports:
+      - "8080:8080"
+    networks:
+      - alt_network
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: nette
+    restart: unless-stopped
+    depends_on:
+      - postgres
