@@ -44,4 +44,30 @@ class PdoAdRepository implements AdRepositoryInterface
         $stmt->setFetchMode(PDO::FETCH_CLASS, Ad::class);
         return $stmt->fetch();
     }
+
+    public function update(int $id, array $data): Ad
+    {
+        $fields = [];
+        $values = [];
+        
+        foreach ($data as $key => $value) {
+            $fields[] = "$key = ?";
+            $values[] = $value;
+        }
+        
+        $values[] = $id;
+        
+        $sql = 'UPDATE publicites SET ' . implode(', ', $fields) . ' WHERE id_publicite = ? RETURNING *';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($values);
+        
+        $stmt->setFetchMode(PDO::FETCH_CLASS, Ad::class);
+        return $stmt->fetch();
+    }
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM publicites WHERE id_publicite = ?');
+        return $stmt->execute([$id]);
+    }
 }
