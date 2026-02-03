@@ -125,6 +125,8 @@ services:
       - alt_postgres_data:/var/lib/postgresql/data
       - ./sql/auth_schema.sql:/docker-entrypoint-initdb.d/1-auth_schema.sql
       - ./sql/auth_data.sql:/docker-entrypoint-initdb.d/2-auth_data.sql
+      - ./sql/marketplace_schema.sql:/docker-entrypoint-initdb.d/3-marketplace_schema.sql
+      - ./sql/marketplace_data.sql:/docker-entrypoint-initdb.d/4-marketplace_data.sql
 
   # service alt.mongo : base de données MongoDB pour le chat
   #
