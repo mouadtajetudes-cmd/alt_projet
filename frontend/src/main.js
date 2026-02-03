@@ -21,13 +21,23 @@ window.testService = async (service) => {
             url = `${GATEWAY_URL}/${service}/`;
         }
         
+        console.log(`Testing ${service}: ${url}`);
         const response = await axios.get(url, { timeout: 5000 });
         
         const status = response.data.status || response.data.service || 'OK';
         resultDiv.innerHTML = `✅ ${status}`;
         resultDiv.className = 'result success';
+        console.log(`✅ ${service} OK:`, response.data);
     } catch (error) {
-        const message = error.response?.data?.message || error.message;
+        console.error(`❌ ${service} error:`, error);
+        let message;
+        if (error.code === 'ERR_NETWORK') {
+            message = 'Network Error - Check if gateway is running';
+        } else if (error.response) {
+            message = error.response.data?.message || `HTTP ${error.response.status}`;
+        } else {
+            message = error.message;
+        }
         resultDiv.innerHTML = `❌ ${message}`;
         resultDiv.className = 'result error';
     }
