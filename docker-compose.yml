@@ -123,8 +123,8 @@ services:
       - alt.net
     volumes:
       - alt_postgres_data:/var/lib/postgresql/data
-      - ./sql/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
-      - ./sql/data.sql:/docker-entrypoint-initdb.d/2-data.sql
+      - ./sql/auth_schema.sql:/docker-entrypoint-initdb.d/1-auth_schema.sql
+      - ./sql/auth_data.sql:/docker-entrypoint-initdb.d/2-auth_data.sql
 
   # service alt.mongo : base de données MongoDB pour le chat
   #
