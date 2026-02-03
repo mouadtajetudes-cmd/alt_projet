@@ -28,20 +28,23 @@ class PdoUserRepository implements UserRepositoryInterface
     public function create(User $user): User
     {
         $stmt = $this->pdo->prepare('
-            INSERT INTO utilisateurs (nom, prenom, email, telephone, password, administrateur, premium, points)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO utilisateurs (nom, prenom, email, telephone, password, administrateur, premium, auth_provider, points, id_avatar)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING *
         ');
         
+        //conversion des bool en true/false pour PostgreSQL
         $stmt->execute([
             $user->nom,
             $user->prenom,
             $user->email,
             $user->telephone,
             $user->password,
-            $user->administrateur,
-            $user->premium,
-            $user->points
+            $user->administrateur ? 'true' : 'false',
+            $user->premium ? 'true' : 'false',
+            $user->auth_provider,
+            $user->points,
+            $user->id_avatar
         ]);
         
         $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
