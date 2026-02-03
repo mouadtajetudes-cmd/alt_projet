@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALT Platform</title>
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>🚀 ALT Platform</h1>
+            <div id="status" class="status">Disconnected</div>
+        </header>
+
+        <main>
+            <section class="services">
+                <h2>Microservices</h2>
+                <div class="service-grid">
+                    <div class="service-card" data-service="auth">
+                        <h3>🔐 Auth</h3>
+                        <p>Authentication Service</p>
+                        <button onclick="testService('auth')">Test</button>
+                        <div class="result"></div>
+                    </div>
+                    
+                    <div class="service-card" data-service="avatar">
+                        <h3>👤 Avatar</h3>
+                        <p>Avatar Service</p>
+                        <button onclick="testService('avatar')">Test</button>
+                        <div class="result"></div>
+                    </div>
+                    
+                    <div class="service-card" data-service="chat">
+                        <h3>💬 Chat</h3>
+                        <p>Chat Service (MongoDB)</p>
+                        <button onclick="testService('chat')">Test</button>
+                        <div class="result"></div>
+                    </div>
+                    
+                    <div class="service-card" data-service="marketplace">
+                        <h3>🛒 Marketplace</h3>
+                        <p>Marketplace Service</p>
+                        <button onclick="testService('marketplace')">Test</button>
+                        <div class="result"></div>
+                    </div>
+                    
+                    <div class="service-card" data-service="social">
+                        <h3>📱 Social</h3>
+                        <p>Social Network Service</p>
+                        <button onclick="testService('social')">Test</button>
+                        <div class="result"></div>
+                    </div>
+
+                    <div class="service-card" data-service="gateway">
+                        <h3>🌐 Gateway</h3>
+                        <p>API Gateway</p>
+                        <button onclick="testService('gateway')">Test</button>
+                        <div class="result"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="websocket">
+                <h2>WebSocket</h2>
+                <div class="ws-controls">
+                    <button id="ws-connect" onclick="connectWS()">Connect</button>
+                    <button id="ws-disconnect" onclick="disconnectWS()" disabled>Disconnect</button>
+                </div>
+                <div id="ws-messages" class="ws-messages"></div>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
