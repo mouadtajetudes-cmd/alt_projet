@@ -1,9 +1,18 @@
 <?php
+declare(strict_types=1);
 
-use alt\core\repositories\UserRepositoryInterface;
-use alt\core\services\UserService;
-use alt\core\services\UserServiceInterface;
+use alt\core\application\ports\spi\repositoryInterfaces\UserRepositoryInterface;
+use alt\core\application\ports\spi\repositoryInterfaces\GroupRepositoryInterface;
+use alt\core\application\ports\spi\repositoryInterfaces\AdRepositoryInterface;
+use alt\core\application\ports\api\UserServiceInterface;
+use alt\core\application\ports\api\GroupServiceInterface;
+use alt\core\application\ports\api\AdServiceInterface;
+use alt\core\application\usecases\UserService;
+use alt\core\application\usecases\GroupService;
+use alt\core\application\usecases\AdService;
 use alt\infra\repositories\PdoUserRepository;
+use alt\infra\repositories\PdoGroupRepository;
+use alt\infra\repositories\PdoAdRepository;
 use PDO;
 
 return [
@@ -11,7 +20,7 @@ return [
         $dbConfig = $c->get('settings')['database'];
         $driver  = $dbConfig['driver'] ?? 'pgsql';
         $host    = $dbConfig['host'] ?? 'alt.db';
-        $dbname  = $dbConfig['database'] ?? 'alt_auth';
+        $dbname  = $dbConfig['database'] ?? 'alt';
         $user    = $dbConfig['username'] ?? 'alt';
         $pass    = $dbConfig['password'] ?? 'alt';
 
@@ -29,9 +38,29 @@ return [
         return new PdoUserRepository($c->get('pdo'));
     },
     
+    GroupRepositoryInterface::class => function ($c) {
+        return new PdoGroupRepository($c->get('pdo'));
+    },
+    
+    AdRepositoryInterface::class => function ($c) {
+        return new PdoAdRepository($c->get('pdo'));
+    },
+    
     UserServiceInterface::class => function ($c) {
         return new UserService(
             $c->get(UserRepositoryInterface::class)
+        );
+    },
+    
+    GroupServiceInterface::class => function ($c) {
+        return new GroupService(
+            $c->get(GroupRepositoryInterface::class)
+        );
+    },
+    
+    AdServiceInterface::class => function ($c) {
+        return new AdService(
+            $c->get(AdRepositoryInterface::class)
         );
     },
 ];
