@@ -12,9 +12,15 @@ use alt\api\actions\GetAllAdsAction;
 use alt\api\actions\CreateAdAction;
 use alt\api\actions\UpdateAdAction;
 use alt\api\actions\DeleteAdAction;
+use alt\api\actions\LoginAction;
+use alt\api\actions\RegisterAction;
+use alt\api\actions\GetUserGroupsAction;
+use alt\api\actions\GetGroupMembersAction;
+use alt\api\actions\RemoveMemberAction;
 use alt\core\application\ports\api\UserServiceInterface;
 use alt\core\application\ports\api\GroupServiceInterface;
 use alt\core\application\ports\api\AdServiceInterface;
+use alt\core\application\ports\api\AuthServiceInterface;
 
 return [
 
@@ -81,6 +87,36 @@ return [
     DeleteAdAction::class => function ($c) {
         return new DeleteAdAction(
             $c->get(AdServiceInterface::class)
+        );
+    },
+
+    LoginAction::class => function ($c) {
+        return new LoginAction(
+            $c->get(AuthServiceInterface::class)
+        );
+    },
+
+    RegisterAction::class => function ($c) {
+        return new RegisterAction(
+            $c->get(AuthServiceInterface::class)
+        );
+    },
+
+    GetUserGroupsAction::class => function ($c) {
+        return new GetUserGroupsAction(
+            $c->get(GroupServiceInterface::class)
+        );
+    },
+
+    GetGroupMembersAction::class => function ($c) {
+        return new GetGroupMembersAction(
+            $c->get(GroupServiceInterface::class)
+        );
+    },
+
+    RemoveMemberAction::class => function ($c) {
+        return new RemoveMemberAction(
+            $c->get(GroupServiceInterface::class)
         );
     },
 ];

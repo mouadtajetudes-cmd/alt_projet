@@ -9,7 +9,12 @@ use PDO;
 
 class PdoUserRepository implements UserRepositoryInterface
 {
-    public function __construct(private PDO $pdo) {}
+    private PDO $pdo;
+
+    public function __construct(PDO $pdo)
+    {
+        $this->pdo = $pdo;
+    }
 
     public function findAll(): array
     {
@@ -23,6 +28,15 @@ class PdoUserRepository implements UserRepositoryInterface
         $stmt->execute([$id]);
         $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
         return $stmt->fetch();
+    }
+
+    public function findByEmail(string $email): ?User
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM utilisateurs WHERE email = ?');
+        $stmt->execute([$email]);
+        $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+        $result = $stmt->fetch();
+        return $result ?: null;
     }
 
     public function create(User $user): User

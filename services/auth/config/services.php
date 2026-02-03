@@ -7,12 +7,18 @@ use alt\core\application\ports\spi\repositoryInterfaces\AdRepositoryInterface;
 use alt\core\application\ports\api\UserServiceInterface;
 use alt\core\application\ports\api\GroupServiceInterface;
 use alt\core\application\ports\api\AdServiceInterface;
+use alt\core\application\ports\api\AuthServiceInterface;
+use alt\core\application\ports\api\provider\AuthProviderInterface;
+use alt\core\application\ports\api\provider\jwt\JwtManagerInterface;
 use alt\core\application\usecases\UserService;
 use alt\core\application\usecases\GroupService;
 use alt\core\application\usecases\AdService;
+use alt\core\application\usecases\AuthService;
 use alt\infra\repositories\PdoUserRepository;
 use alt\infra\repositories\PdoGroupRepository;
 use alt\infra\repositories\PdoAdRepository;
+use alt\infra\auth\jwt\JWTManager;
+use alt\infra\auth\jwt\JWTAuthProvider;
 use PDO;
 
 return [
@@ -61,6 +67,25 @@ return [
     AdServiceInterface::class => function ($c) {
         return new AdService(
             $c->get(AdRepositoryInterface::class)
+        );
+    },
+    
+    JwtManagerInterface::class => function ($c) {
+        $secret = $_ENV['JWT_SECRET'] ?? 'your-secret-key-change-this';
+        return new JWTManager($secret);
+    },
+    
+    AuthProviderInterface::class => function ($c) {
+        return new JWTAuthProvider(
+            $c->get(UserRepositoryInterface::class),
+            $c->get(JwtManagerInterface::class)
+        );
+    },
+    
+    AuthServiceInterface::class => function ($c) {
+        return new AuthService(
+            $c->get(UserRepositoryInterface::class),
+            $c->get(AuthProviderInterface::class)
         );
     },
 ];

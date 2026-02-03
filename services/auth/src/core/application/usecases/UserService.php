@@ -11,9 +11,13 @@ use alt\core\domain\entities\User;
 
 class UserService implements UserServiceInterface
 {
+    private UserRepositoryInterface $userRepository;
+
     public function __construct(
-        private UserRepositoryInterface $userRepository
-    ) {}
+        UserRepositoryInterface $userRepository
+    ) {
+        $this->userRepository = $userRepository;
+    }
 
     public function getAllUsers(): array
     {

@@ -10,9 +10,13 @@ use alt\core\domain\entities\Group;
 
 class GroupService implements GroupServiceInterface
 {
+    private GroupRepositoryInterface $groupRepository;
+
     public function __construct(
-        private GroupRepositoryInterface $groupRepository
-    ) {}
+        GroupRepositoryInterface $groupRepository
+    ) {
+        $this->groupRepository = $groupRepository;
+    }
 
     public function getAllGroups(): array
     {
@@ -42,5 +46,20 @@ class GroupService implements GroupServiceInterface
     public function getMembers(int $groupId): array
     {
         return $this->groupRepository->getMembers($groupId);
+    }
+
+    public function getUserGroups(int $userId): array
+    {
+        return $this->groupRepository->getUserGroups($userId);
+    }
+
+    public function getGroupMembers(int $groupId): array
+    {
+        return $this->groupRepository->getGroupMembers($groupId);
+    }
+
+    public function removeMember(int $groupId, int $userId): bool
+    {
+        return $this->groupRepository->removeMember($groupId, $userId);
     }
 }

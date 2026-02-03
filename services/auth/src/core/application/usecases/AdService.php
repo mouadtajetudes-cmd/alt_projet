@@ -11,9 +11,13 @@ use alt\core\domain\entities\Ad;
 
 class AdService implements AdServiceInterface
 {
+    private AdRepositoryInterface $adRepository;
+
     public function __construct(
-        private AdRepositoryInterface $adRepository
-    ) {}
+        AdRepositoryInterface $adRepository
+    ) {
+        $this->adRepository = $adRepository;
+    }
 
     public function getAllAds(): array
     {
