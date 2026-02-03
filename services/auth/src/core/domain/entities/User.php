@@ -15,7 +15,6 @@ class User
     public bool $premium;
     public string $auth_provider;
     public int $points;
-    public ?int $id_niveau;
     public ?int $id_avatar;
     public string $created_at;
     public string $updated_at;
