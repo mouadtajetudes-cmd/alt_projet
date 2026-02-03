@@ -40,14 +40,15 @@ Le projet est composé de plusieurs micro-services :
 
 ## 🔗 Services
 
-- **Gateway** : http://localhost:8080
-- **Frontend** : http://localhost:5173
-- **Auth Service** : http://localhost:8081
-- **Social Service** : http://localhost:8082
-- **Marketplace** : http://localhost:8083
-- **Avatar Service** : http://localhost:8084
-- **WebSocket** : ws://localhost:8085
-- **Mongo Express** : http://localhost:8086
+- **Gateway** : http://localhost:6080
+- **Frontend** : http://localhost:3000
+- **Auth Service** : http://localhost:6081
+- **Social Service** : http://localhost:6085
+- **Marketplace** : http://localhost:6082
+- **Chat** : http://localhost:6084   (Pas encore)
+- **Avatar Service** : http://localhost:6083
+- **WebSocket** : ws://localhost:3001
+- **Mongo DB** : http://localhost:27017
 
 ## 📝 Fonctionnalités
 
