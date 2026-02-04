@@ -1,8 +1,8 @@
 <?php
 
-namespace alt\core\application\ports\usecases;
+namespace alt\core\application\usecases;
 
-use alt\core\repositories\LevelRepositoryInterface;
+use alt\core\application\ports\spi\repositoryInterfaces\LevelRepositoryInterface;
 use alt\core\application\ports\api\LevelServiceInterface;
 
 class LevelService implements LevelServiceInterface

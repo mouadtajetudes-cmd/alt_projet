@@ -1,8 +1,8 @@
 <?php
 
-namespace alt\core\application\ports\usecases;
+namespace alt\core\application\usecases;
 
-use alt\core\repositories\AvatarVersionRepositoryInterface;
+use alt\core\application\ports\spi\repositoryInterfaces\AvatarVersionRepositoryInterface;
 use alt\core\application\ports\api\AvatarVersionServiceInterface;
 use alt\core\application\ports\api\LevelUpDTO;
 
