@@ -1,8 +1,7 @@
 <?php
 
-namespace alt\core\services;
+namespace alt\core\application\ports\api;
 
-use alt\core\domain\dto\CreateCategoryDTO;
 use alt\core\domain\entities\Category;
 
 interface CategoryServiceInterface

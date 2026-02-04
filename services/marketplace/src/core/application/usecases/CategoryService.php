@@ -1,10 +1,13 @@
 <?php
 
-namespace alt\core\services;
+namespace alt\core\application\usecases;
 
-use alt\core\repositories\CategoryRepositoryInterface;
-use alt\core\domain\dto\CreateCategoryDTO;
+use alt\core\application\ports\spi\repositoryInterfaces\CategoryRepositoryInterface;
+use alt\core\application\ports\api\CreateCategoryDTO;
+use alt\core\application\ports\api\CategoryServiceInterface;
 use alt\core\domain\entities\Category;
+use Exception;
+use DateTimeImmutable;
 
 class CategoryService implements CategoryServiceInterface
 {
@@ -25,7 +28,7 @@ class CategoryService implements CategoryServiceInterface
         $category = $this->categoryRepository->findById($id);
         
         if (!$category) {
-            throw new \Exception("Category not found", 404);
+            throw new Exception("Category not found", 404);
         }
 
         return $category;
@@ -34,11 +37,11 @@ class CategoryService implements CategoryServiceInterface
     public function createCategory(CreateCategoryDTO $dto): Category
     {
         $category = new Category(
-            null,
+            0,
             $dto->nom,
             $dto->description,
-            new \DateTimeImmutable(),
-            new \DateTimeImmutable()
+            new DateTimeImmutable(),
+            new DateTimeImmutable()
         );
 
         return $this->categoryRepository->create($category);

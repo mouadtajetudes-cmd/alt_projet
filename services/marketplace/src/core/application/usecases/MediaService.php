@@ -1,9 +1,12 @@
 <?php
 
-namespace alt\core\services;
+namespace alt\core\application\usecases;
 
-use alt\core\repositories\MediaRepositoryInterface;
+use alt\core\application\ports\spi\repositoryInterfaces\MediaRepositoryInterface;
+use alt\core\application\ports\api\MediaServiceInterface;
 use alt\core\domain\entities\Media;
+use Exception;
+use DateTimeImmutable;
 
 class MediaService implements MediaServiceInterface
 {
@@ -19,20 +22,20 @@ class MediaService implements MediaServiceInterface
         $media = $this->mediaRepository->findById($id);
         
         if (!$media) {
-            throw new \Exception("Media not found", 404);
+            throw new Exception("Media not found", 404);
         }
 
         return $media;
     }
 
-    public function createMedia(string $titre, string $url, ?string $type = null): Media
+    public function createMedia(string $titre, string $url, string $type = 'image/jpeg'): Media
     {
         $media = new Media(
-            null,
+            0,
             $titre,
             $url,
             $type,
-            new \DateTimeImmutable()
+            new DateTimeImmutable()
         );
 
         return $this->mediaRepository->create($media);
@@ -42,7 +45,7 @@ class MediaService implements MediaServiceInterface
     {
         $media = $this->mediaRepository->findById($mediaId);
         if (!$media) {
-            throw new \Exception("Media not found", 404);
+            throw new Exception("Media not found", 404);
         }
 
         return $this->mediaRepository->attachToProduct($mediaId, $productId, $ordre);

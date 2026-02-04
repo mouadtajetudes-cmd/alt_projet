@@ -1,6 +1,6 @@
 <?php
 
-namespace alt\core\domain\dto;
+namespace alt\core\application\ports\api;
 
 class CreateCategoryDTO
 {

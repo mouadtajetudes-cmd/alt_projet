@@ -1,10 +1,7 @@
 <?php
 
-namespace alt\core\services;
+namespace alt\core\application\ports\api;
 
-use alt\core\domain\dto\CreateProductDTO;
-use alt\core\domain\dto\UpdateProductDTO;
-use alt\core\domain\dto\ProductFiltersDTO;
 use alt\core\domain\entities\Product;
 
 interface ProductServiceInterface

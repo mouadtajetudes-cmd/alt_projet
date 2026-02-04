@@ -2,20 +2,23 @@
 
 namespace alt\core\domain\entities;
 
+use DateTimeInterface;
+use DateTimeImmutable;
+
 class Media
 {
-    private ?int $id;
+    private int $id;
     private string $titre;
     private string $url;
-    private ?string $type;
-    private ?\DateTimeInterface $createdAt;
+    private string $type;
+    private DateTimeInterface $createdAt;
 
     public function __construct(
-        ?int $id,
+        int $id,
         string $titre,
         string $url,
-        ?string $type = null,
-        ?\DateTimeInterface $createdAt = null
+        string $type,
+        DateTimeInterface $createdAt
     ) {
         $this->id = $id;
         $this->titre = $titre;
@@ -24,7 +27,7 @@ class Media
         $this->createdAt = $createdAt;
     }
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
@@ -51,18 +54,18 @@ class Media
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
 
-    public function setType(?string $type): self
+    public function setType(string $type): self
     {
         $this->type = $type;
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): DateTimeInterface
     {
         return $this->createdAt;
     }
@@ -74,18 +77,18 @@ class Media
             'titre' => $this->titre,
             'url' => $this->url,
             'type' => $this->type,
-            'created_at' => $this->createdAt?->format('Y-m-d H:i:s'),
+            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
         ];
     }
 
     public static function fromArray(array $data): self
     {
         return new self(
-            $data['id_media'] ?? null,
+            $data['id_media'],
             $data['titre'],
             $data['url'],
-            $data['type'] ?? null,
-            isset($data['created_at']) ? new \DateTimeImmutable($data['created_at']) : null
+            $data['type'] ?? 'image/jpeg',
+            isset($data['created_at']) ? new DateTimeImmutable($data['created_at']) : new DateTimeImmutable()
         );
     }
 }

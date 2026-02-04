@@ -1,6 +1,6 @@
 <?php
 
-namespace alt\core\repositories;
+namespace alt\core\application\ports\spi\repositoryInterfaces;
 
 use alt\core\domain\entities\Category;
 

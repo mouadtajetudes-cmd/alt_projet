@@ -1,13 +1,16 @@
 <?php
 
-namespace alt\core\services;
+namespace alt\core\application\usecases;
 
-use alt\core\repositories\ProductRepositoryInterface;
-use alt\core\repositories\MediaRepositoryInterface;
-use alt\core\domain\dto\CreateProductDTO;
-use alt\core\domain\dto\UpdateProductDTO;
-use alt\core\domain\dto\ProductFiltersDTO;
+use alt\core\application\ports\spi\repositoryInterfaces\ProductRepositoryInterface;
+use alt\core\application\ports\spi\repositoryInterfaces\MediaRepositoryInterface;
+use alt\core\application\ports\api\CreateProductDTO;
+use alt\core\application\ports\api\UpdateProductDTO;
+use alt\core\application\ports\api\ProductFiltersDTO;
+use alt\core\application\ports\api\ProductServiceInterface;
 use alt\core\domain\entities\Product;
+use Exception;
+use DateTimeImmutable;
 
 class ProductService implements ProductServiceInterface
 {
@@ -43,7 +46,7 @@ class ProductService implements ProductServiceInterface
         $product = $this->productRepository->findById($id);
         
         if (!$product) {
-            throw new \Exception("Product not found", 404);
+            throw new Exception("Product not found", 404);
         }
 
         $medias = $this->mediaRepository->findByProductId($id);
@@ -55,7 +58,7 @@ class ProductService implements ProductServiceInterface
     public function createProduct(CreateProductDTO $dto): Product
     {
         $product = new Product(
-            null,
+            0,
             $dto->nom,
             $dto->prix,
             $dto->idUtilisateur,
@@ -63,9 +66,9 @@ class ProductService implements ProductServiceInterface
             $dto->description,
             $dto->statut,
             $dto->quantite,
-            new \DateTimeImmutable(),
-            new \DateTimeImmutable(),
-            new \DateTimeImmutable()
+            new DateTimeImmutable(),
+            new DateTimeImmutable(),
+            new DateTimeImmutable()
         );
 
         $createdProduct = $this->productRepository->create($product);
@@ -82,7 +85,7 @@ class ProductService implements ProductServiceInterface
         $product = $this->productRepository->findById($dto->id);
         
         if (!$product) {
-            throw new \Exception("Product not found", 404);
+            throw new Exception("Product not found", 404);
         }
 
         if ($dto->nom !== null) {
@@ -125,7 +128,7 @@ class ProductService implements ProductServiceInterface
         $product = $this->productRepository->findById($id);
         
         if (!$product) {
-            throw new \Exception("Product not found", 404);
+            throw new Exception("Product not found", 404);
         }
 
         return $this->productRepository->delete($id);
