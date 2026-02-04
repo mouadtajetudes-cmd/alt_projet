@@ -14,13 +14,19 @@ use alt\api\actions\UpdateAdAction;
 use alt\api\actions\DeleteAdAction;
 use alt\api\actions\LoginAction;
 use alt\api\actions\RegisterAction;
+use alt\api\actions\ValidateTokenAction;
+use alt\api\actions\RefreshTokenAction;
 use alt\api\actions\GetUserGroupsAction;
 use alt\api\actions\GetGroupMembersAction;
 use alt\api\actions\RemoveMemberAction;
+use alt\api\middlewares\AuthMiddleware;
+use alt\api\middlewares\AdminMiddleware;
+use alt\api\middlewares\PremiumMiddleware;
 use alt\core\application\ports\api\UserServiceInterface;
 use alt\core\application\ports\api\GroupServiceInterface;
 use alt\core\application\ports\api\AdServiceInterface;
 use alt\core\application\ports\api\AuthServiceInterface;
+use alt\core\application\ports\api\provider\AuthProviderInterface;
 
 return [
 
@@ -102,6 +108,18 @@ return [
         );
     },
 
+    ValidateTokenAction::class => function ($c) {
+        return new ValidateTokenAction(
+            $c->get(AuthProviderInterface::class)
+        );
+    },
+
+    RefreshTokenAction::class => function ($c) {
+        return new RefreshTokenAction(
+            $c->get(AuthServiceInterface::class)
+        );
+    },
+
     GetUserGroupsAction::class => function ($c) {
         return new GetUserGroupsAction(
             $c->get(GroupServiceInterface::class)
@@ -118,5 +136,19 @@ return [
         return new RemoveMemberAction(
             $c->get(GroupServiceInterface::class)
         );
+    },
+
+    AuthMiddleware::class => function ($c) {
+        return new AuthMiddleware(
+            $c->get(AuthProviderInterface::class)
+        );
+    },
+
+    AdminMiddleware::class => function ($c) {
+        return new AdminMiddleware();
+    },
+
+    PremiumMiddleware::class => function ($c) {
+        return new PremiumMiddleware();
     },
 ];

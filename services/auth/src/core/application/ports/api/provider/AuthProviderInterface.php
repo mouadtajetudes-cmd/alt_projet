@@ -9,5 +9,6 @@ interface AuthProviderInterface
 {
     public function authenticate(string $email, string $password): ?User;
     public function generateToken(User $user): string;
+    public function generateRefreshToken(User $user): string;
     public function validateToken(string $token): ?array;
 }

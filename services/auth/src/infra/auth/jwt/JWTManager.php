@@ -13,6 +13,7 @@ class JWTManager implements JwtManagerInterface
     private string $secret;
     private string $algorithm = 'HS256';
     private int $expirationDays = 7;
+    private int $refreshExpirationDays = 30;
 
     public function __construct(string $secret)
     {
@@ -49,6 +50,19 @@ class JWTManager implements JwtManagerInterface
                 'administrateur' => $user->administrateur,
                 'premium' => $user->premium
             ]
+        ];
+    }
+
+    public function createRefreshPayload(User $user): array
+    {
+        $now = time();
+        
+        return [
+            'iss' => 'alt-auth',
+            'iat' => $now,
+            'exp' => $now + ($this->refreshExpirationDays * 24 * 60 * 60),
+            'sub' => (string) $user->id_utilisateur,
+            'type' => 'refresh'
         ];
     }
 }

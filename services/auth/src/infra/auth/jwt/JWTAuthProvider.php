@@ -38,6 +38,12 @@ class JWTAuthProvider implements AuthProviderInterface
         return $this->jwtManager->encode($payload);
     }
 
+    public function generateRefreshToken(User $user): string
+    {
+        $payload = $this->jwtManager->createRefreshPayload($user);
+        return $this->jwtManager->encode($payload);
+    }
+
     public function validateToken(string $token): ?array
     {
         return $this->jwtManager->decode($token);

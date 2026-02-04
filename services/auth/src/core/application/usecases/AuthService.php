@@ -32,9 +32,11 @@ class AuthService implements AuthServiceInterface
         }
         
         $token = $this->authProvider->generateToken($user);
+        $refreshToken = $this->authProvider->generateRefreshToken($user);
         
         return [
             'token' => $token,
+            'refresh_token' => $refreshToken,
             'user' => [
                 'id' => $user->id_utilisateur,
                 'nom' => $user->nom,
@@ -68,14 +70,48 @@ class AuthService implements AuthServiceInterface
         $user = $this->userRepository->create($user);
         
         $token = $this->authProvider->generateToken($user);
+        $refreshToken = $this->authProvider->generateRefreshToken($user);
         
         return [
             'token' => $token,
+            'refresh_token' => $refreshToken,
             'user' => [
                 'id' => $user->id_utilisateur,
                 'nom' => $user->nom,
                 'prenom' => $user->prenom,
                 'email' => $user->email
+            ]
+        ];
+    }
+
+    public function refreshToken(string $refreshToken): array
+    {
+        $payload = $this->authProvider->validateToken($refreshToken);
+        
+        if (!$payload || !isset($payload['type']) || $payload['type'] !== 'refresh') {
+            throw new \Exception('Invalid refresh token', 401);
+        }
+        
+        $userId = (int) $payload['sub'];
+        $user = $this->userRepository->findById($userId);
+        
+        if (!$user) {
+            throw new \Exception('User not found', 401);
+        }
+        
+        $newToken = $this->authProvider->generateToken($user);
+        $newRefreshToken = $this->authProvider->generateRefreshToken($user);
+        
+        return [
+            'token' => $newToken,
+            'refresh_token' => $newRefreshToken,
+            'user' => [
+                'id' => $user->id_utilisateur,
+                'nom' => $user->nom,
+                'prenom' => $user->prenom,
+                'email' => $user->email,
+                'administrateur' => $user->administrateur,
+                'premium' => $user->premium
             ]
         ];
     }

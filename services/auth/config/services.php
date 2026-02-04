@@ -19,7 +19,6 @@ use alt\infra\repositories\PdoGroupRepository;
 use alt\infra\repositories\PdoAdRepository;
 use alt\infra\auth\jwt\JWTManager;
 use alt\infra\auth\jwt\JWTAuthProvider;
-use PDO;
 
 return [
     'pdo' => static function ($c): PDO {

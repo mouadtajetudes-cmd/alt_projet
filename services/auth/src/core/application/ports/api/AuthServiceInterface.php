@@ -7,4 +7,5 @@ interface AuthServiceInterface
 {
     public function login(LoginDTO $dto): array;
     public function register(CreateUserDTO $dto): array;
+    public function refreshToken(string $refreshToken): array;
 }

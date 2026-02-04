@@ -87,14 +87,14 @@ class PdoGroupRepository implements GroupRepositoryInterface
     public function getGroupMembers(int $groupId): array
     {
         $stmt = $this->pdo->prepare('
-            SELECT u.*, mg.role, mg.date_ajout
+            SELECT u.*, mg.role, mg.joined_at
             FROM utilisateurs u
             INNER JOIN membre_groupe mg ON u.id_utilisateur = mg.id_utilisateur
             WHERE mg.id_groupe = ?
         ');
         
         $stmt->execute([$groupId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     public function removeMember(int $groupId, int $userId): bool
