@@ -1,0 +1,43 @@
+<?php
+declare(strict_types=1);
+
+namespace alt\core\application\usecases;
+
+use alt\core\application\ports\api\UserServiceInterface;
+use alt\core\application\ports\api\CreateUserDTO;
+use alt\core\application\ports\spi\repositoryInterfaces\UserRepositoryInterface;
+use alt\core\domain\entities\User;
+
+class UserService implements UserServiceInterface
+{
+    public function __construct(
+        private UserRepositoryInterface $userRepository
+    ) {}
+
+    public function getAllUsers(): array
+    {
+        return $this->userRepository->findAll();
+    }
+
+    public function getUserById(int $id): User
+    {
+        return $this->userRepository->findById($id);
+    }
+
+    public function createUser(CreateUserDTO $dto): User
+    {
+        $user = new User();
+        $user->nom = $dto->nom;
+        $user->prenom = $dto->prenom;
+        $user->email = $dto->email;
+        $user->telephone = $dto->telephone;
+        $user->password = password_hash($dto->password, PASSWORD_BCRYPT);
+        $user->administrateur = false;
+        $user->premium = false;
+        $user->auth_provider = 'local';
+        $user->points = 0;
+        $user->id_avatar = 1;
+        
+        return $this->userRepository->create($user);
+    }
+}
