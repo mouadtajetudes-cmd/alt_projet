@@ -1,67 +1,85 @@
-# Toubilib
+# Alt Project - Réseau Social Étudiant
 
-API de gestion de rendez-vous médicaux (Prise de RDV, gestion praticiens/patients). Ce projet répond aux besoins de gestion de rendez-vous médicaux via une architecture micro-services simulée avec Docker.
+Projet de réseau social avec marketplace et chat en temps réel. Architecture micro-services avec Docker.
 
-## Prérequis
+## 🚀 Prérequis
 
-- [Docker](https://www.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/)
+- Docker Desktop
+- Git
 
-## Installation et Configuration
+## 📦 Installation
 
-### Fichiers `.env`
-
-Le projet utilise plusieurs fichiers `.env` situés à la racine pour configurer les bases de données (PostgreSQL). Pour obtenir ces fichiers, il faut les copier depuis les fichiers `.env.dist` :
-
-- `toubipratdb.env` : Base praticiens
-- `toubiauthdb.env` : Base authentification
-- `toubirdvdb.env` : Base rendez-vous
-- `toubipatientdb.env` : Base patients
-
-Il faut également copier les fichiers `.env.dist` dans `app/config/`.
-
-### Démarrage
-
-Pour construire et lancer l'application :
-
+1. Cloner le projet :
 ```bash
-docker-compose build
+git clone <repo-url>
+cd Alt_Project
+```
+
+2. Lancer les services :
+```bash
 docker-compose up -d
 ```
 
-### Arrêt
-
-Pour arrêter les conteneurs :
-
+3. Arrêter les services :
 ```bash
 docker-compose down
 ```
 
-## Fonctionnalités Réalisées
+## 🏗️ Architecture
 
-L'API exposes les points de terminaisons suivants. Certaines routes nécessitent une authentification (JWT).
+Le projet est composé de plusieurs micro-services :
 
-### Authentification
-- `POST /auth/signin` : Connexion (obtention du token JWT).
-- `POST /auth/refresh` : Rafraîchissement du token.
+- **Gateway** : Point d'entrée unique (API Gateway)
+- **Auth** : Authentification et gestion utilisateurs/groupes/publicités
+- **Social** : Posts, commentaires, interactions sociales
+- **Marketplace** : Gestion des produits et transactions
+- **Avatar** : Gestion des avatars et niveaux
+- **Chat** : Messagerie en temps réel (MongoDB + WebSocket)
+- **WS** : Serveur WebSocket pour le chat
+- **Frontend** : Interface utilisateur (Vite.js)
 
-### Praticiens
-- `GET /praticiens` : Lister tous les praticiens.
-- `GET /praticiens/{id}` : Obtenir les détails d'un praticien.
-- `GET /praticiens/villes/{ville}` : Rechercher des praticiens par ville.
-- `GET /praticiens/specialites/{specialite}` : Rechercher des praticiens par spécialité.
-- `GET /praticiens/{id}/agenda` : Consulter l'agenda d'un praticien **(Authentification requise)**.
-- `GET /praticiens/{id}/rdvs` : Lister les rendez-vous d'un praticien.
-- `GET /praticiens/{id}/creneaux` : Lister les créneaux occupés.
+## 🔗 Services
 
-### Rendez-vous
-- `POST /rdvs` : Créer un rendez-vous **(Authentification requise + Validation)**.
-- `GET /rdvs/{id}` : Consulter un rendez-vous **(Authentification requise)**.
-- `PATCH /rdvs/{id}/annuler` : Annuler un rendez-vous **(Authentification requise)**.
-- `PATCH /rdvs/{id}/honorer` : Marquer un rendez-vous comme honoré **(Authentification requise)**.
-- `PATCH /rdvs/{id}/ne-pas-honorer` : Marquer un rendez-vous comme non honoré **(Authentification requise)**.
+- **Gateway** : http://localhost:6080
+- **Frontend** : http://localhost:3000
+- **Auth Service** : http://localhost:6081
+- **Social Service** : http://localhost:6085
+- **Marketplace** : http://localhost:6082
+- **Chat** : http://localhost:6084   (Pas encore)
+- **Avatar Service** : http://localhost:6083
+- **WebSocket** : ws://localhost:3001
+- **Mongo DB** : http://localhost:27017
 
-## Accès
+## 📝 Fonctionnalités
 
-- **API** : Accessible via [http://localhost:6080](http://localhost:6080).
-- **Adminer** (Gestion BDD) : Accessible via [http://localhost:8080](http://localhost:8080).
+### Service Auth
+- Authentification JWT
+- CRUD Utilisateurs
+- CRUD Groupes
+- CRUD Publicités (Ads)
+
+### Service Social
+- Posts et commentaires
+- Likes et partages
+- Timeline
+
+### Service Marketplace
+- Produits
+- Transactions
+
+### Service Chat
+- Messages en temps réel
+- Conversations
+
+### Service Avatar
+- Gestion avatars
+- Système de niveaux
+
+## 👥 Équipe
+
+Projet étudiant - Architecture micro-services
+
+ASHRAFI Hanan
+HMEM Wiem
+NIKIEMA Faozia
+TAJ Mouad

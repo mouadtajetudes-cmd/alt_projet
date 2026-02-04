@@ -10,4 +10,5 @@ interface UserServiceInterface
     public function getAllUsers(): array;
     public function getUserById(int $id): User;
     public function createUser(CreateUserDTO $dto): User;
+    public function updateUser(int $id, UpdateUserDTO $dto): User;
 }

@@ -5,14 +5,19 @@ namespace alt\core\application\usecases;
 
 use alt\core\application\ports\api\UserServiceInterface;
 use alt\core\application\ports\api\CreateUserDTO;
+use alt\core\application\ports\api\UpdateUserDTO;
 use alt\core\application\ports\spi\repositoryInterfaces\UserRepositoryInterface;
 use alt\core\domain\entities\User;
 
 class UserService implements UserServiceInterface
 {
+    private UserRepositoryInterface $userRepository;
+
     public function __construct(
-        private UserRepositoryInterface $userRepository
-    ) {}
+        UserRepositoryInterface $userRepository
+    ) {
+        $this->userRepository = $userRepository;
+    }
 
     public function getAllUsers(): array
     {
@@ -39,5 +44,17 @@ class UserService implements UserServiceInterface
         $user->id_avatar = 1;
         
         return $this->userRepository->create($user);
+    }
+
+    public function updateUser(int $id, UpdateUserDTO $dto): User
+    {
+        $data = [
+            'nom' => $dto->nom,
+            'prenom' => $dto->prenom,
+            'email' => $dto->email,
+            'telephone' => $dto->telephone
+        ];
+        
+        return $this->userRepository->update($id, $data);
     }
 }
