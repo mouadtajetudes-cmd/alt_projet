@@ -48,11 +48,10 @@ class PdoReactionRepository implements ReactionRepositoryInterface
             'INSERT INTO reactions (type, id_post, id_utilisateur)
              VALUES (:type, :post, :user)'
         );
-        $postId = $react->getPost()->getIdPost();
 
         $stmt->execute([
             'type' => $react->getType(),
-            'post' => $postId,
+            'post' => $react->getPost(),
             'user' => $react->getIdUtilisateur(),
         ]);
         

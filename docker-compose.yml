@@ -38,14 +38,14 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
+      - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
 
   # service api.social : microservice pour le réseau social
   #
   api.social:
     build:
-      context: build
+      context: ./build
       dockerfile: 8.4-cli.Dockerfile
     ports:
       - '6085:80'
@@ -55,7 +55,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
+      - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
 
   # service api.marketplace : microservice pour la marketplace
@@ -72,7 +72,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
+      - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
 
   # service api.avatar : microservice pour les avatars
@@ -89,7 +89,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
+      - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
   
   # service api.chat : microservice pour le chat avec MongoDB
@@ -114,7 +114,7 @@ services:
 
   # service alt.db : base de données PostgreSQL
   #
-  alt.db:
+  alt_db:
     image: 'postgres:16-alpine'
     env_file: ./alt-db.env
     ports:
@@ -169,13 +169,13 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
+      - alt_db
       - alt.mongo
     environment:
       - WS_PORT=3001
       - WS_HOST=0.0.0.0
       - MONGO_URI=mongodb://alt.mongo:27017/chat_db
-      - DB_HOST=alt.db
+      - DB_HOST=alt_db
       - DB_PORT=5432
     command: sh -c "npm install && npm start"
 

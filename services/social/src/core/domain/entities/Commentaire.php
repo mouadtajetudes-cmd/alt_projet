@@ -6,15 +6,15 @@ class Commentaire
     private int $idCommentaire;
     private string $details;
     private int $idUtilisateur;
-    private Post $idPost;
-    private \DateTime $createdAt;
+    private int $idPost;
+    private string $createdAt;
 
     public function __construct(
         int $idCommentaire,
         string $details,
         int $idUtilisateur,
-        Post $idPost,
-        \DateTime $createdAt,
+        int $idPost,
+        string $createdAt,
     ) {
         $this->idCommentaire = $idCommentaire;
         $this->details = $details;
@@ -39,11 +39,11 @@ class Commentaire
         return $this->idUtilisateur;
     }
 
-    public function getIdPost(): Post
+    public function getIdPost(): int
     {
         return $this->idPost;
     }
-    public function getCreatedAt(): \DateTime
+    public function getCreatedAt(): string
     {
         return $this->createdAt;
     }

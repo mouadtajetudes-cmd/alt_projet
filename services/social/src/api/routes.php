@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 
+use alt\api\actions\CreateCommentAction;
 use alt\api\actions\CreateReactionAction;
+use alt\api\actions\GetCommentsByPostAction;
 use alt\api\actions\GetReactionsByPostAction;
 use alt\core\application\action\CreatePostAction;
 use alt\core\application\action\GetAllPostsAction;
@@ -27,6 +29,10 @@ return function(\Slim\App $app): \Slim\App {
 
     $app->get('/posts/{id}/reactions', GetReactionsByPostAction::class);
     $app->post('/posts/{id}/reactions',CreateReactionAction::class);
+    $app->delete('/reactions/{id}', CreateReactionAction::class);
+
+    $app->get('/posts/{id}/comments', GetCommentsByPostAction::class);
+    $app->post('/posts/{id}/comments',CreateCommentAction::class);
 
 
     return $app;
