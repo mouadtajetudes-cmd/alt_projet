@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use alt\core\application\ports\api\AvatarServiceInterface;
 
-class GetAvatarAction
+class GetUserAvatarAction
 {
     private AvatarServiceInterface $avatarService;
 
@@ -22,6 +22,18 @@ class GetAvatarAction
     ): ResponseInterface {
         
         $userId = $args['userId'] ?? null;
+
+        if (!$userId) {
+            $response->getBody()->write(json_encode([
+                'type' => 'error',
+                'error' => 400,
+                'message' => 'User ID is required'
+            ]));
+            
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(400);
+        }
 
         try {
             $avatars = $this->avatarService->getAvatarsByUserId($userId);
