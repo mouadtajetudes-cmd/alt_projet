@@ -39,32 +39,17 @@ class CreateReactionAction
                 throw new \InvalidArgumentException('type ou idutilisateur manquant');
             }
 
-            $post = $this->postService->getById($postId);
-            
-            
-
            $reactiondto = new CreateReactionDTO(
-                $post,
+                $postId,
                 $data['idutilisateur'],
                 $data['type']
             );
             
             $reaction = $this->reactionService->createReaction($reactiondto);
 
-            $reactionArray = [
-    'post' => [
-        'id' => $reaction->getPost()->getIdPost(),
-        'titre' => $reaction->getPost()->getTitre(),
-        'description' => $reaction->getPost()->getDescription(),
-        'date_publication' => $reaction->getPost()->getDatePublication(),
-        'id_utilisateur' => $reaction->getPost()->getIdUtilisateur(),
-    ],
-    'id_utilisateur' => $reaction->getIdUtilisateur(),
-    'type' => $reaction->getType(),
-];
 $response->getBody()->write(json_encode([
     'status' => 'success',
-    'data' => $reactionArray
+    'data' => $reaction
 ]));
 
             return $response

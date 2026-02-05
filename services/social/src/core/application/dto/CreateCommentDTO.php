@@ -4,21 +4,15 @@ namespace alt\core\application\dto;
 use OpenApi\Attributes\Post;
 
 class CreateCommentDTO{
-    private int $idCommentaire;
     private string $details;
     private int $idUtilisateur;
-    private Post $idPost;
+    private int $idPost;
 
-    public function __construct(int $idCommentaire, int $idUtilisateur, Post $idPost, string $details)
+    public function __construct( int $idUtilisateur, int $idPost, string $details)
     {
-        $this->idCommentaire = $idCommentaire;
         $this->details = $details;
         $this->idUtilisateur = $idUtilisateur;
         $this->idPost = $idPost;
-    }
-    public function getIdCommentaire(): int
-    {
-        return $this->idCommentaire;
     }
 
     public function getDetails(): string
@@ -31,7 +25,7 @@ class CreateCommentDTO{
         return $this->idUtilisateur;
     }
 
-    public function getIdPost(): Post
+    public function getIdPost(): int
     {
         return $this->idPost;
     }

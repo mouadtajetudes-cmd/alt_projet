@@ -18,21 +18,18 @@ class PdoCommentRepository implements CommentRepositoryInterface
 
     public function findByPost(int $idPost): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT id_commentaire, details, created_at, id_post, id_utilisateur
-             FROM commentaires
-             WHERE id_post = :post
-             ORDER BY created_at ASC'
+         $stmt = $this->pdo->prepare(
+            'SELECT c.id_commentaire, c.details, c.created_at, c.id_post, c.id_utilisateur,
+                    p.titre AS post_titre, p.description AS post_description
+             FROM commentaires c
+             INNER JOIN posts p ON c.id_post = p.id_post
+             WHERE c.id_post = :post
+             ORDER BY c.created_at ASC'
         );
 
         $stmt->execute(['post' => $idPost]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $commentaires = [];
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $commentaires[] = $this->mapToCommentaire($row);
-        }
-
-        return $commentaires;
     }
 
     public function create(CreateCommentDTO $commentaire): CreateCommentDTO
@@ -51,21 +48,10 @@ class PdoCommentRepository implements CommentRepositoryInterface
         $id = (int) $this->pdo->lastInsertId();
 
         return new CreateCommentDTO(
-            $id,
             $commentaire->getIdUtilisateur(),
             $commentaire->getIdPost(),
             $commentaire->getDetails()
         );
     }
 
-    private function mapToCommentaire(array $row): Commentaire
-    {
-        return new Commentaire(
-            (int) $row['id_commentaire'],
-            $row['details'],
-            $row['id_utilisateur'],
-            $row['id_post'],
-           $row['created_at'],
-        );
-    }
 }

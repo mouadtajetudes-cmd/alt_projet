@@ -3,6 +3,7 @@ FROM php:8.4-cli
 # System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git unzip zip curl cron openssl \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # PHP extensions installer

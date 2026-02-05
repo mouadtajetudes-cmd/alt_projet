@@ -1,9 +1,6 @@
 <?php
 
-
 namespace alt\core\domain\entities;
-
-use function DI\string;
 
 class Post
 {

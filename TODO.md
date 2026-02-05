@@ -46,9 +46,9 @@
 - [❌] Routes
 
 ### 👤 Faozia - Service Social
-- [❌] Entités Posts/Commentaires
-- [❌] Repositories
-- [❌] Services
+- [ok] Entités Posts/Commentaires
+- [ok] Repositories
+- [ok] Services
 - [❌] Actions API
 - [❌] Routes
 

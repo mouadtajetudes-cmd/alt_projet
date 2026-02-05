@@ -7,13 +7,13 @@ class Reaction
     private int $idReaction;
     private string $type;
     private int $idUtilisateur;
-    private Post $post;
+    private int $post;
 
     public function __construct(
         int $idReaction,
         string $type,
         int $idUtilisateur,
-        Post $post,
+        int $post,
     ) {
         $this->idReaction = $idReaction;
         $this->type = $type;
@@ -37,7 +37,7 @@ class Reaction
         return $this->idUtilisateur;
     }
 
-    public function getPost(): Post
+    public function getPost(): int
     {
         return $this->post;
     }

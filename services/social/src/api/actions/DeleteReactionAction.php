@@ -24,7 +24,7 @@ class DeleteReactionAction
         try {
             
             $reactionId = $request->getAttribute('id');
-            $idUtilisateur=$request->getAttribute('id');
+            $idUtilisateur=$request->getAttribute('id_utilisateur');
 
             if ($reactionId === null) {
                 throw new \InvalidArgumentException('reactionId manquant');
