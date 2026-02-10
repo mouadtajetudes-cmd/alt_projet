@@ -41,9 +41,14 @@ return function(\Slim\App $app): \Slim\App {
     $app->post('/auth/refresh', RefreshTokenAction::class);
 
     // Protected routes
-    $app->get('/users', GetAllUsersAction::class)->add(AuthMiddleware::class);
-    $app->get('/users/{id}', GetUserByIdAction::class)->add(AuthMiddleware::class);
-    $app->get('/users/{id}/groups', GetUserGroupsAction::class)->add(AuthMiddleware::class);
+    $app->get('/users', GetAllUsersAction::class);
+    // ->add(AuthMiddleware::class);
+
+    $app->get('/users/{id}', GetUserByIdAction::class);
+    // ->add(AuthMiddleware::class);
+
+    $app->get('/users/{id}/groups', GetUserGroupsAction::class);
+    // ->add(AuthMiddleware::class);
     
     $app->get('/groups', GetAllGroupsAction::class)->add(AuthMiddleware::class);
     $app->get('/groups/{id}/members', GetGroupMembersAction::class)->add(AuthMiddleware::class);
@@ -51,8 +56,10 @@ return function(\Slim\App $app): \Slim\App {
     $app->get('/ads', GetAllAdsAction::class)->add(AuthMiddleware::class);
 
     // Admin only
-    $app->post('/users', CreateUserAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
-    $app->put('/users/{id}', UpdateUserAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
+    $app->post('/users', CreateUserAction::class);
+    // ->add(AdminMiddleware::class)->add(AuthMiddleware::class);
+    $app->put('/users/{id}', UpdateUserAction::class);
+    // ->add(AdminMiddleware::class)->add(AuthMiddleware::class);
     
     $app->post('/groups', CreateGroupAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
     $app->post('/groups/{id}/members', AddMemberToGroupAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);

@@ -109,8 +109,26 @@ class MongoMessageRepository implements MessageRepositoryInterface
         $message->content = $document['content'];
         $message->type = $document['type'] ?? 'text';
         $message->isRead = $document['isRead'] ?? false;
-        $message->createdAt = $document['createdAt']->toDateTime();
-        $message->updatedAt = $document['updatedAt']->toDateTime();
+        
+        if (isset($document['createdAt'])) {
+            if ($document['createdAt'] instanceof \MongoDB\BSON\UTCDateTime) {
+                $message->createdAt = $document['createdAt']->toDateTime();
+            } else {
+                $message->createdAt = new \DateTime();
+            }
+        } else {
+            $message->createdAt = new \DateTime();
+        }
+        
+        if (isset($document['updatedAt'])) {
+            if ($document['updatedAt'] instanceof \MongoDB\BSON\UTCDateTime) {
+                $message->updatedAt = $document['updatedAt']->toDateTime();
+            } else {
+                $message->updatedAt = new \DateTime();
+            }
+        } else {
+            $message->updatedAt = $message->createdAt;
+        }
 
         return $message;
     }

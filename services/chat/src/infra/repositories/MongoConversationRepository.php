@@ -7,6 +7,7 @@ use alt\core\application\ports\spi\repositoryInterfaces\ConversationRepositoryIn
 use alt\core\domain\entities\Conversation;
 use MongoDB\Client;
 use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\UTCDateTime;
 
 class MongoConversationRepository implements ConversationRepositoryInterface
 {
@@ -105,8 +106,26 @@ class MongoConversationRepository implements ConversationRepositoryInterface
         $conversation->participants = $document['participants'];
         $conversation->type = $document['type'] ?? 'private';
         $conversation->lastMessageId = $document['lastMessageId'] ?? null;
-        $conversation->createdAt = $document['createdAt']->toDateTime();
-        $conversation->updatedAt = $document['updatedAt']->toDateTime();
+        
+        if (isset($document['createdAt'])) {
+            if ($document['createdAt'] instanceof UTCDateTime) {
+                $conversation->createdAt = $document['createdAt']->toDateTime();
+            } else {
+                $conversation->createdAt = new \DateTime();
+            }
+        } else {
+            $conversation->createdAt = new \DateTime();
+        }
+        
+        if (isset($document['updatedAt'])) {
+            if ($document['updatedAt'] instanceof \MongoDB\BSON\UTCDateTime) {
+                $conversation->updatedAt = $document['updatedAt']->toDateTime();
+            } else {
+                $conversation->updatedAt = new \DateTime();
+            }
+        } else {
+            $conversation->updatedAt = $conversation->createdAt;
+        }
 
         return $conversation;
     }
