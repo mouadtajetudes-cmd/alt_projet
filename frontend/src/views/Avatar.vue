@@ -24,20 +24,6 @@
           </button>
         </div>
         
-        <div class="filter-box">
-          <label for="level-filter">Filtrer par niveau:</label>
-          <select 
-            id="level-filter"
-            v-model="selectedLevel" 
-            class="level-select"
-          >
-            <option value="">Tous les niveaux</option>
-            <option v-for="level in availableLevels" :key="level" :value="level">
-              Niveau {{ level }}
-            </option>
-          </select>
-        </div>
-        
         <div class="results-count">
           {{ filteredAvatars.length }} avatar(s) trouvé(s)
         </div>
@@ -59,31 +45,27 @@
       </div>
       
       <div v-else class="avatars-grid">
-        <div 
+        <div
           v-for="avatar in filteredAvatars" 
-          :key="avatar.id_avatar" 
+          :key="avatar.id_avatar"
           class="avatar-card"
         >
           <div class="card-header">
             <div class="avatar-icon">🎭</div>
-            <span class="level-badge">Niv. {{ avatar.niveau }}</span>
           </div>
           
           <div class="card-body">
             <h3 class="avatar-name">{{ avatar.nom }}</h3>
-            <div class="stats">
-              <div class="stat-item">
-                <span class="stat-icon">⭐</span>
-                <span class="stat-value">{{ avatar.points }}</span>
-                <span class="stat-label">points</span>
-              </div>
-            </div>
+            <p class="avatar-description">Prêt à évoluer avec vous</p>
           </div>
           
           <div class="card-footer">
-            <button class="btn-select">
-              Sélectionner
+            <button @click="chooseAvatar(avatar)" class="btn-choose">
+              ✓ Choisir cet avatar
             </button>
+            <router-link :to="`/avatar/${avatar.id_avatar}`" class="btn-details">
+              Voir les détails →
+            </router-link>
           </div>
         </div>
       </div>
@@ -93,15 +75,16 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'Avatar',
   setup() {
+    const router = useRouter()
     const avatars = ref([])
     const loading = ref(true)
     const error = ref(null)
     const searchQuery = ref('')
-    const selectedLevel = ref('')
     
     const loadAvatars = async () => {
       try {
@@ -126,11 +109,6 @@ export default {
       }
     }
     
-    const availableLevels = computed(() => {
-      const levels = [...new Set(avatars.value.map(a => a.niveau))]
-      return levels.sort((a, b) => a - b)
-    })
-    
     const filteredAvatars = computed(() => {
       let filtered = avatars.value
       
@@ -141,14 +119,13 @@ export default {
         )
       }
       
-      if (selectedLevel.value !== '') {
-        filtered = filtered.filter(avatar => 
-          avatar.niveau === parseInt(selectedLevel.value)
-        )
-      }
-      
       return filtered
     })
+    
+    const chooseAvatar = (avatar) => {
+      console.log('[AVATAR] Avatar choisi:', avatar.nom)
+      alert(`Vous avez choisi "${avatar.nom}" !`)
+    }
     
     onMounted(() => {
       loadAvatars()
@@ -159,10 +136,9 @@ export default {
       loading,
       error,
       searchQuery,
-      selectedLevel,
-      availableLevels,
       filteredAvatars,
-      loadAvatars
+      loadAvatars,
+      chooseAvatar
     }
   }
 }
@@ -206,7 +182,7 @@ export default {
   margin-bottom: 2rem;
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   gap: 1.5rem;
   align-items: center;
 }
@@ -253,35 +229,6 @@ export default {
 
 .clear-btn:hover {
   color: #333;
-}
-
-.filter-box {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  white-space: nowrap;
-}
-
-.filter-box label {
-  font-weight: 500;
-  color: #555;
-}
-
-.level-select {
-  padding: 0.75rem 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  font-size: 1rem;
-  cursor: pointer;
-  background: white;
-  transition: all 0.3s ease;
-  min-width: 150px;
-}
-
-.level-select:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .results-count {
@@ -387,16 +334,19 @@ export default {
 }
 
 .avatar-card {
+  display: block;
   background: white;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  cursor: pointer;
+  cursor: default;
+  text-decoration: none;
+  color: inherit;
 }
 
 .avatar-card:hover {
-  transform: translateY(-12px) scale(1.02);
+  transform: translateY(-8px);
   box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
 }
 
@@ -419,19 +369,6 @@ export default {
   50% { transform: translateY(-10px); }
 }
 
-.level-badge {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(255,255,255,0.95);
-  color: #667eea;
-  padding: 0.4rem 0.9rem;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 0.8rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-
 .card-body {
   padding: 1.5rem;
 }
@@ -440,46 +377,25 @@ export default {
   font-size: 1.35rem;
   font-weight: 700;
   color: #333;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   text-align: center;
 }
 
-.stats {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.stat-icon {
-  font-size: 1.5rem;
-}
-
-.stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #667eea;
-}
-
-.stat-label {
-  font-size: 0.75rem;
+.avatar-description {
+  text-align: center;
   color: #999;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 .card-footer {
   padding: 0 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.btn-select {
+.btn-choose {
   width: 100%;
   padding: 1rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -489,17 +405,36 @@ export default {
   cursor: pointer;
   font-size: 1rem;
   font-weight: 600;
+  text-align: center;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.btn-select:hover {
+.btn-choose:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
-.btn-select:active {
-  transform: translateY(0);
+.btn-details {
+  display: block;
+  width: 100%;
+  padding: 0.875rem;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn-details:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
 }
 
 @media (max-width: 768px) {

@@ -5,6 +5,7 @@ import Login from "../views/Login.vue";
 import Marketplace from "../views/Marketplace.vue";
 import Social from "../views/Social.vue";
 import Avatar from "../views/Avatar.vue";
+import AvatarDetail from "../views/AvatarDetail.vue";
 
 const routes = [
   {
@@ -37,6 +38,11 @@ const routes = [
     path: "/avatar",
     name: "Avatar",
     component: Avatar,
+  },
+  {
+    path: "/avatar/:id",
+    name: "AvatarDetail",
+    component: AvatarDetail,
   },
 ];
 

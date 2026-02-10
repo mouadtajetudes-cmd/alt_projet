@@ -8,6 +8,8 @@ interface AvatarRepositoryInterface
 {
     public function findAll(): array;
     
+    public function findById(int $avatarId): ?array;
+    
     public function findByUserId(int $userId): ?array;
 
     public function create(Avatar $avatar): array;

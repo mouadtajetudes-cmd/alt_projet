@@ -34,6 +34,33 @@ class PdoAvatarRepository implements AvatarRepositoryInterface
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public function findById(int $avatarId): ?array
+    {
+        $sql = '
+            SELECT 
+                a.id_avatar,
+                a.nom,
+                a.image,
+                a.id_utilisateur,
+                a.created_at,
+                av.id_avatar_version,
+                av.surnom,
+                av.level as niveau,
+                n.id_niveau,
+                n.nom as niveau_nom,
+                n.description as niveau_description,
+                n.points
+            FROM avatars a
+            LEFT JOIN avatars_versions av ON a.id_avatar = av.id_avatar
+            LEFT JOIN niveaux n ON av.id_niveau = n.id_niveau
+            WHERE a.id_avatar = :id_avatar
+        ';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['id_avatar' => $avatarId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
     public function findByUserId(int $userId): ?array
     {
         $stmt = $this->pdo->prepare('SELECT * FROM avatars WHERE id_utilisateur = :id_utilisateur');
