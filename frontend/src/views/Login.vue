@@ -59,9 +59,12 @@ export default {
         })
         
         const data = await response.json()
+        console.log('[LOGIN] Response data:', data)
         
         if (response.ok) {
-          localStorage.setItem('token', data.access_token)
+          console.log('[LOGIN] Token:', data.token)
+          console.log('[LOGIN] User:', data.user)
+          localStorage.setItem('token', data.token)
           localStorage.setItem('user', JSON.stringify(data.user))
           this.$router.push('/chat')
         } else {

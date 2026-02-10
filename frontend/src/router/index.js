@@ -3,6 +3,8 @@ import Home from '../views/Home.vue'
 import Chat from '../views/Chat.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
+import Profile from '../views/Profile.vue'
+import { requireAuth } from '../middleware/auth'
 
 const routes = [
   {
@@ -21,9 +23,16 @@ const routes = [
     component: Register
   },
   {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile,
+    beforeEnter: requireAuth
+  },
+  {
     path: '/chat',
     name: 'Chat',
-    component: Chat
+    component: Chat,
+    beforeEnter: requireAuth
   }
   // ,
   // {
