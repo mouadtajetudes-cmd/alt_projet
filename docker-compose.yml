@@ -125,8 +125,6 @@ services:
       - alt_postgres_data:/var/lib/postgresql/data
       - ./sql/auth_schema.sql:/docker-entrypoint-initdb.d/1-auth_schema.sql
       - ./sql/auth_data.sql:/docker-entrypoint-initdb.d/2-auth_data.sql
-      - ./sql/avatar_schema.sql:/docker-entrypoint-initdb.d/3-avatar_schema.sql
-      - ./sql/avatar_data.sql:/docker-entrypoint-initdb.d/4-avatar_data.sql
 
   # service alt.mongo : base de données MongoDB pour le chat
   #
@@ -142,21 +140,26 @@ services:
       - alt_mongo_data:/data/db
 
   #
-  # service frontend : interface utilisateur
+  # service frontend : interface utilisateur Vue.js + Vite
   #
   frontend:
     image: node:20-alpine
     ports:
-      - '3000:3000'
+      - '5173:5173'
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     working_dir: /app
     networks:
       - alt.net
     depends_on:
       - alt.gateway
       - ws
-    command: sh -c "npm install && npm run dev"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_GATEWAY=http://localhost:6090
+      - VITE_WS_URL=ws://localhost:3001
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
 
   #
   # service ws : serveur WebSocket temps réel

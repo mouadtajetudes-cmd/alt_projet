@@ -4,6 +4,7 @@ declare(strict_types=1);
 use alt\api\actions\CreateAvatarAction;
 use alt\api\actions\UpdateAvatarAction;
 use alt\api\actions\GetUserAvatarAction;
+use alt\api\actions\GetAllAvatarsAction;
 use alt\api\actions\GetLevelsAction;
 use alt\api\actions\LevelUpAvatarAction;
 use alt\api\middlewares\AuthMiddleware;
@@ -19,6 +20,8 @@ return function(\Slim\App $app): \Slim\App {
         return $response->withHeader('Content-Type', 'application/json');
     });
 
+    $app->get('/avatars', GetAllAvatarsAction::class);
+        //->add(AuthMiddleware::class);
     $app->post('/avatars', CreateAvatarAction::class);
         //->add(AuthMiddleware::class);
     $app->get('/users/{userId}/avatars', GetUserAvatarAction::class);

@@ -18,6 +18,11 @@ class AvatarService implements AvatarServiceInterface
         $this->avatarRepository = $avatarRepository;
     }
 
+    public function getAllAvatars(): array
+    {
+        return $this->avatarRepository->findAll();
+    }
+
     public function getAvatarsByUserId(string $userId): array
     {
         return $this->avatarRepository->findByUserId($userId) ?? [];
