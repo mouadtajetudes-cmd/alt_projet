@@ -12,10 +12,9 @@ use alt\core\application\usecases\LevelService;
 use alt\infra\repositories\PdoAvatarRepository;
 use alt\infra\repositories\PdoAvatarVersionRepository;
 use alt\infra\repositories\PdoLevelRepository;
-use PDO;
 
 return [
-    'pdo' => static function ($c): PDO {
+    'pdo' => static function ($c): \PDO {
         $dbConfig = $c->get('settings')['database'];
         $driver  = $dbConfig['driver'] ?? 'pgsql';
         $host    = $dbConfig['host'] ?? 'alt.db';
@@ -25,9 +24,9 @@ return [
 
         $dsn = "{$driver}:host={$host};dbname={$dbname}";
         
-        $pdo = new PDO($dsn, $user, $pass, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        $pdo = new \PDO($dsn, $user, $pass, [
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
         ]);
 
         return $pdo;

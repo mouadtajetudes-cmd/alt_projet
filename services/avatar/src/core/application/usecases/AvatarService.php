@@ -33,7 +33,7 @@ class AvatarService implements AvatarServiceInterface
             new DateTime()
         );
         $result = $this->avatarRepository->create($avatar);
-        return $result['id_avatar'];
+        return $result;
     }
 
     public function updateAvatar(UpdateAvatarDTO $dto): bool
