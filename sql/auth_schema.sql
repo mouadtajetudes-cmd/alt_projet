@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
     premium BOOLEAN DEFAULT FALSE,
     auth_provider VARCHAR(50) DEFAULT 'local',
     points INTEGER DEFAULT 0,
-    id_niveau INTEGER,
     id_avatar INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
