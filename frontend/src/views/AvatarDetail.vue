@@ -158,6 +158,9 @@ export default {
     
     const customizeAvatar = () => {
       console.log('[AVATAR DETAIL] Personnaliser avatar:', avatar.value.id_avatar)
+      // TODO: Créer page de personnalisation utilisateur (CustomizeUserAvatar.vue)
+      alert('Fonctionnalité de personnalisation utilisateur à venir !')
+      // router.push(`/my-avatar/customize`)
     }
     
     onMounted(() => {

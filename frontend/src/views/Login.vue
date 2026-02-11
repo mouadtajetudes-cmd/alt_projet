@@ -27,11 +27,13 @@
 <script>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 export default {
   name: 'Login',
   setup() {
     const router = useRouter()
+    const { login } = useAuth()
     const email = ref('')
     const password = ref('')
     const error = ref('')
@@ -54,8 +56,7 @@ export default {
         const data = await response.json()
         
         if (response.ok) {
-          localStorage.setItem('token', data.access_token)
-          localStorage.setItem('user', JSON.stringify(data.user))
+          login(data.user, data.access_token)
           router.push('/')
         } else {
           error.value = data.message || 'Erreur de connexion'

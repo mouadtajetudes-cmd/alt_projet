@@ -4,6 +4,19 @@
       <div class="header">
         <h1>🎭 Galerie des Avatars</h1>
         <p class="subtitle">Découvrez tous les avatars disponibles</p>
+        
+        <router-link 
+          v-if="isAdmin" 
+          to="/avatar/create" 
+          class="btn-admin-create"
+        >
+          ➕ Créer un avatar
+        </router-link>
+      </div>
+      
+      <div v-if="errorMessage" class="alert-error">
+        <span class="alert-icon">⚠️</span>
+        {{ errorMessage }}
       </div>
       
       <div class="filters-section">
@@ -75,16 +88,35 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 export default {
   name: 'Avatar',
   setup() {
     const router = useRouter()
+    const route = useRoute()
+    const { isAdmin, isAuthenticated, getUserId, initAuth } = useAuth()
+    
     const avatars = ref([])
     const loading = ref(true)
     const error = ref(null)
     const searchQuery = ref('')
+    const errorMessage = ref(null)
+    
+    initAuth()
+    
+    onMounted(() => {
+      if (route.query.error === 'admin-required') {
+        errorMessage.value = '⛔ Accès refusé : seuls les administrateurs peuvent créer des avatars.'
+        setTimeout(() => errorMessage.value = null, 5000)
+      } else if (route.query.error === 'login-required') {
+        errorMessage.value = '🔒 Veuillez vous connecter pour accéder à cette page.'
+        setTimeout(() => errorMessage.value = null, 5000)
+      }
+      
+      loadAvatars()
+    })
     
     const loadAvatars = async () => {
       try {
@@ -122,9 +154,47 @@ export default {
       return filtered
     })
     
-    const chooseAvatar = (avatar) => {
+    const chooseAvatar = async (avatar) => {
       console.log('[AVATAR] Avatar choisi:', avatar.nom)
-      alert(`Vous avez choisi "${avatar.nom}" !`)
+      
+      try {
+        // Récupérer l'ID utilisateur depuis l'auth
+        const userId = getUserId()
+        
+        if (!userId) {
+          alert('Veuillez vous connecter pour choisir un avatar.')
+          return
+        }
+        
+        // Créer une copie de l'avatar template pour l'utilisateur
+        const response = await fetch('http://localhost:6083/avatars', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            nom: avatar.nom,
+            image: avatar.image,
+            id_utilisateur: userId
+          })
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`)
+        }
+        
+        const result = await response.json()
+        console.log('[AVATAR] Avatar assigné:', result)
+        
+        alert(`Vous avez choisi "${avatar.nom}" ! Votre compagnon commence son aventure à 0 points.`)
+        
+        // TODO: Rediriger vers le profil utilisateur ou la page de personnalisation
+        // router.push('/my-avatar')
+        
+      } catch (err) {
+        console.error('[AVATAR] Erreur lors du choix:', err)
+        alert('Une erreur est survenue. Veuillez réessayer.')
+      }
     }
     
     onMounted(() => {
@@ -138,7 +208,9 @@ export default {
       searchQuery,
       filteredAvatars,
       loadAvatars,
-      chooseAvatar
+      chooseAvatar,
+      isAdmin,
+      errorMessage
     }
   }
 }
@@ -435,6 +507,56 @@ export default {
   background: #667eea;
   color: white;
   transform: translateY(-2px);
+}
+
+.btn-admin-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);
+}
+
+.btn-admin-create:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(40, 167, 69, 0.4);
+}
+
+.alert-error {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.3);
+  animation: slideDown 0.4s ease-out;
+}
+
+.alert-icon {
+  font-size: 1.5rem;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 768px) {
