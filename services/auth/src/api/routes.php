@@ -2,9 +2,11 @@
 declare(strict_types=1);
 
 use alt\api\actions\GetAllUsersAction;
+use alt\api\actions\GetAllUsersAdminAction;
 use alt\api\actions\GetUserByIdAction;
 use alt\api\actions\CreateUserAction;
 use alt\api\actions\UpdateUserAction;
+use alt\api\actions\DeleteUserAction;
 use alt\api\actions\GetAllGroupsAction;
 use alt\api\actions\CreateGroupAction;
 use alt\api\actions\AddMemberToGroupAction;
@@ -42,8 +44,12 @@ return function(\Slim\App $app): \Slim\App {
     $app->post('/auth/refresh', RefreshTokenAction::class);
 
     // Protected routes - User management
-    $app->get('/users', GetAllUsersAction::class);
-        // ->add(AuthMiddleware::class);
+    $app->get('/users', GetAllUsersAction::class)
+        ->add(AuthMiddleware::class);
+
+    $app->get('/ausers', GetAllUsersAdminAction::class)
+        ->add(AdminMiddleware::class)
+        ->add(AuthMiddleware::class);
 
     $app->get('/users/{id}', GetUserByIdAction::class)
         ->add(SelfOrAdminMiddleware::class)
@@ -65,6 +71,10 @@ return function(\Slim\App $app): \Slim\App {
         
     $app->put('/users/{id}', UpdateUserAction::class)
         ->add(SelfOrAdminMiddleware::class)
+        ->add(AuthMiddleware::class);
+    
+    $app->delete('/users/{id}', DeleteUserAction::class)
+        ->add(AdminMiddleware::class)
         ->add(AuthMiddleware::class);
     
     $app->post('/groups', CreateGroupAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);

@@ -18,7 +18,20 @@ class GetUserByIdAction
         $id = (int) $args['id'];
         $user = $this->userService->getUserById($id);
         
-        $response->getBody()->write(json_encode($user));
+        $response->getBody()->write(json_encode([
+            'id_utilisateur' => $user->id_utilisateur,
+            'nom' => $user->nom,
+            'prenom' => $user->prenom,
+            'email' => $user->email,
+            'telephone' => $user->telephone ?? '',
+            'administrateur' => $user->administrateur,
+            'premium' => $user->premium,
+            'auth_provider' => $user->auth_provider ?? 'local',
+            'points' => $user->points ?? 0,
+            'id_avatar' => $user->id_avatar ?? null,
+            'created_at' => $user->created_at ?? null,
+            'updated_at' => $user->updated_at ?? null
+        ]));
         return $response->withHeader('Content-Type', 'application/json');
     }
 }

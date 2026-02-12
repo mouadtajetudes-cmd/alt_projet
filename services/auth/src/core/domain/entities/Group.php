@@ -10,4 +10,13 @@ class Group
     public string $description;
     public string $niveau;
     public string $created_at;
+
+    public function __construct($id_groupe, $nom, $description, $niveau, $created_at)
+    {
+        $this->id_groupe = $id_groupe;
+        $this->nom = $nom;
+        $this->description = $description;
+        $this->niveau = $niveau;
+        $this->created_at = $created_at;
+    }
 }

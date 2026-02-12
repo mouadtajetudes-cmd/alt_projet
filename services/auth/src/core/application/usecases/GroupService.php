@@ -30,10 +30,13 @@ class GroupService implements GroupServiceInterface
 
     public function createGroup(CreateGroupDTO $dto): Group
     {
-        $group = new Group();
-        $group->nom = $dto->nom;
-        $group->description = $dto->description;
-        $group->niveau = $dto->niveau;
+        $group = new Group(
+            null,
+            $dto->nom,
+            $dto->description,
+            $dto->niveau,
+            null
+        );
         
         return $this->groupRepository->create($group);
     }

@@ -31,30 +31,41 @@ class UserService implements UserServiceInterface
 
     public function createUser(CreateUserDTO $dto): User
     {
-        $user = new User();
-        $user->nom = $dto->nom;
-        $user->prenom = $dto->prenom;
-        $user->email = $dto->email;
-        $user->telephone = $dto->telephone;
-        $user->password = password_hash($dto->password, PASSWORD_BCRYPT);
-        $user->administrateur = false;
-        $user->premium = false;
-        $user->auth_provider = 'local';
-        $user->points = 0;
-        $user->id_avatar = 1;
+        $hashedPassword = password_hash($dto->password, PASSWORD_BCRYPT);
+        
+        $user = new User(
+            null,
+            $dto->nom,
+            $dto->prenom,
+            $dto->email,
+            $hashedPassword,
+            $dto->telephone,
+            $dto->administrateur,
+            $dto->premium,
+            'local',
+            0,
+            1
+        );
         
         return $this->userRepository->create($user);
     }
 
     public function updateUser(int $id, UpdateUserDTO $dto): User
     {
-        $data = [
-            'nom' => $dto->nom,
-            'prenom' => $dto->prenom,
-            'email' => $dto->email,
-            'telephone' => $dto->telephone
-        ];
+        $updateData = [];
         
-        return $this->userRepository->update($id, $data);
+        $updateData['nom'] = $dto->nom;
+        $updateData['prenom'] = $dto->prenom;
+        $updateData['email'] = $dto->email;
+        $updateData['telephone'] = $dto->telephone;
+        $updateData['administrateur'] = $dto->administrateur;
+        $updateData['premium'] = $dto->premium;
+        
+        return $this->userRepository->update($id, $updateData);
+    }
+
+    public function deleteUser(int $id): bool
+    {
+        return $this->userRepository->delete($id);
     }
 }

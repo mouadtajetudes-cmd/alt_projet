@@ -3,29 +3,27 @@ declare(strict_types=1);
 
 namespace alt\api\actions;
 
-use alt\core\application\ports\api\AuthServiceInterface;
-use alt\core\application\ports\api\LoginDTO;
+use alt\core\application\ports\api\UserServiceInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class LoginAction
+class DeleteUserAction
 {
     public function __construct(
-        private AuthServiceInterface $authService
+        private UserServiceInterface $userService
     ) {}
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
-        $body = $request->getParsedBody();
-        
-        $dto = new LoginDTO(
-            $body['email'] ?? '',
-            $body['password'] ?? ''
-        );
+        $id = (int) $args['id'];
         
         try {
-            $result = $this->authService->login($dto);
-            $response->getBody()->write(json_encode($result));
+            $this->userService->deleteUser($id);
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => 'User deleted successfully'
+            ]));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
@@ -33,7 +31,7 @@ class LoginAction
             ]));
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withStatus($e->getCode() ?: 500);
+                ->withStatus(500);
         }
     }
 }

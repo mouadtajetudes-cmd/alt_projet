@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace alt\core\application\ports\api;
 
+use alt\core\application\ports\api\CreateAdDTO;
+use alt\core\application\ports\api\UpdateAdDTO;
 use alt\core\domain\entities\Ad;
 
 interface AdServiceInterface

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace alt\core\application\ports\api;
 
 use alt\core\domain\entities\Group;
+use alt\core\application\ports\api\CreateGroupDTO;
 
 interface GroupServiceInterface
 {
