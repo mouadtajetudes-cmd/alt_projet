@@ -7,6 +7,7 @@ import Social from "../views/Social.vue";
 import Avatar from "../views/Avatar.vue";
 import AvatarDetail from "../views/AvatarDetail.vue";
 import CreateAvatar from "../views/CreateAvatar.vue";
+import Levels from "../views/Levels.vue";
 import { useAuth } from "../composables/useAuth";
 
 const routes = [
@@ -45,12 +46,18 @@ const routes = [
     path: "/avatar/create",
     name: "CreateAvatar",
     component: CreateAvatar,
-    meta: { requiresAdmin: true },
+    // TODO: Réactiver quand authentification sera prête
+    // meta: { requiresAdmin: true },
   },
   {
     path: "/avatar/:id",
     name: "AvatarDetail",
     component: AvatarDetail,
+  },
+  {
+    path: "/levels",
+    name: "Levels",
+    component: Levels,
   },
 ];
 
@@ -59,22 +66,23 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
-  const { isAdmin, isAuthenticated, initAuth } = useAuth();
+// TODO: Réactiver quand authentification sera prête
+// router.beforeEach((to, from, next) => {
+//   const { isAdmin, isAuthenticated, initAuth } = useAuth();
 
-  initAuth();
+//   initAuth();
 
-  if (to.meta.requiresAdmin) {
-    if (!isAuthenticated.value) {
-      next({ name: "Home", query: { error: "login-required" } });
-    } else if (!isAdmin.value) {
-      next({ name: "Avatar", query: { error: "admin-required" } });
-    } else {
-      next();
-    }
-  } else {
-    next();
-  }
-});
+//   if (to.meta.requiresAdmin) {
+//     if (!isAuthenticated.value) {
+//       next({ name: "Home", query: { error: "login-required" } });
+//     } else if (!isAdmin.value) {
+//       next({ name: "Avatar", query: { error: "admin-required" } });
+//     } else {
+//       next();
+//     }
+//   } else {
+//     next();
+//   }
+// });
 
 export default router;

@@ -5,19 +5,21 @@
         <h1>🎭 Galerie des Avatars</h1>
         <p class="subtitle">Découvrez tous les avatars disponibles</p>
         
-        <router-link 
+        <!-- TODO: Réactiver quand le backend admin sera prêt -->
+        <!-- <router-link 
           v-if="isAdmin" 
           to="/avatar/create" 
           class="btn-admin-create"
         >
           ➕ Créer un avatar
-        </router-link>
+        </router-link> -->
       </div>
       
-      <div v-if="errorMessage" class="alert-error">
+      <!-- TODO: Réactiver quand authentification sera prête -->
+      <!-- <div v-if="errorMessage" class="alert-error">
         <span class="alert-icon">⚠️</span>
         {{ errorMessage }}
-      </div>
+      </div> -->
       
       <div class="filters-section">
         <div class="search-box">
@@ -89,34 +91,39 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuth } from '../composables/useAuth'
+// TODO: Réactiver quand authentification sera prête
+// import { useAuth } from '../composables/useAuth'
 
 export default {
   name: 'Avatar',
   setup() {
     const router = useRouter()
     const route = useRoute()
-    const { isAdmin, isAuthenticated, getUserId, initAuth } = useAuth()
+    // TODO: Réactiver quand authentification sera prête
+    // const { isAdmin, isAuthenticated, getUserId, initAuth } = useAuth()
     
     const avatars = ref([])
     const loading = ref(true)
     const error = ref(null)
     const searchQuery = ref('')
-    const errorMessage = ref(null)
+    // TODO: Réactiver quand authentification sera prête
+    // const errorMessage = ref(null)
     
-    initAuth()
+    // TODO: Réactiver quand authentification sera prête
+    // initAuth()
     
-    onMounted(() => {
-      if (route.query.error === 'admin-required') {
-        errorMessage.value = '⛔ Accès refusé : seuls les administrateurs peuvent créer des avatars.'
-        setTimeout(() => errorMessage.value = null, 5000)
-      } else if (route.query.error === 'login-required') {
-        errorMessage.value = '🔒 Veuillez vous connecter pour accéder à cette page.'
-        setTimeout(() => errorMessage.value = null, 5000)
-      }
-      
-      loadAvatars()
-    })
+    // TODO: Réactiver quand authentification sera prête
+    // onMounted(() => {
+    //   if (route.query.error === 'admin-required') {
+    //     errorMessage.value = '⛔ Accès refusé : seuls les administrateurs peuvent créer des avatars.'
+    //     setTimeout(() => errorMessage.value = null, 5000)
+    //   } else if (route.query.error === 'login-required') {
+    //     errorMessage.value = '🔒 Veuillez vous connecter pour accéder à cette page.'
+    //     setTimeout(() => errorMessage.value = null, 5000)
+    //   }
+    //   
+    //   loadAvatars()
+    // })
     
     const loadAvatars = async () => {
       try {
@@ -158,13 +165,14 @@ export default {
       console.log('[AVATAR] Avatar choisi:', avatar.nom)
       
       try {
+        // TODO: Réactiver quand authentification sera prête
         // Récupérer l'ID utilisateur depuis l'auth
-        const userId = getUserId()
+        // const userId = getUserId()
         
-        if (!userId) {
-          alert('Veuillez vous connecter pour choisir un avatar.')
-          return
-        }
+        // if (!userId) {
+        //   alert('Veuillez vous connecter pour choisir un avatar.')
+        //   return
+        // }
         
         // Créer une copie de l'avatar template pour l'utilisateur
         const response = await fetch('http://localhost:6083/avatars', {
@@ -174,8 +182,9 @@ export default {
           },
           body: JSON.stringify({
             nom: avatar.nom,
-            image: avatar.image,
-            id_utilisateur: userId
+            image: avatar.image
+            // TODO: Réactiver quand authentification sera prête
+            // id_utilisateur: userId
           })
         })
         
@@ -208,9 +217,10 @@ export default {
       searchQuery,
       filteredAvatars,
       loadAvatars,
-      chooseAvatar,
-      isAdmin,
-      errorMessage
+      chooseAvatar
+      // TODO: Réactiver quand authentification sera prête
+      // isAdmin,
+      // errorMessage
     }
   }
 }

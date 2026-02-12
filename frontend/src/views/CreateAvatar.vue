@@ -1,6 +1,7 @@
 <template>
   <div class="create-avatar-page">
-    <div v-if="!isAdmin && !loading" class="unauthorized-overlay">
+    <!-- TODO: Réactiver quand authentification sera prête -->
+    <!-- <div v-if="!isAdmin && !loading" class="unauthorized-overlay">
       <div class="unauthorized-card">
         <div class="unauthorized-icon">⛔</div>
         <h2>Accès refusé</h2>
@@ -9,9 +10,9 @@
           ← Retour à la galerie
         </router-link>
       </div>
-    </div>
+    </div> -->
     
-    <div v-else class="container">
+    <div class="container">
       <div class="back-button-wrapper">
         <router-link to="/avatar" class="btn-back">
           ← Retour à la galerie
@@ -19,7 +20,6 @@
       </div>
 
       <div class="avatar-form-card">
-        <!-- Preview Avatar -->
         <div class="avatar-preview">
           <div class="avatar-display">
             <div class="avatar-icon-3d">{{ formData.icon || '🦊' }}</div>
@@ -27,9 +27,7 @@
           <div class="preview-name">{{ formData.nom || 'Nouveau compagnon' }}</div>
         </div>
 
-        <!-- Form Fields -->
         <form @submit.prevent="handleSubmit" class="avatar-form">
-          <!-- Type de compagnon -->
           <div class="form-field">
             <div class="field-icon">👥</div>
             <div class="field-content">
@@ -48,7 +46,6 @@
             </div>
           </div>
 
-          <!-- Tête -->
           <div class="form-field">
             <div class="field-icon">💎</div>
             <div class="field-content">
@@ -63,7 +60,6 @@
             </div>
           </div>
 
-          <!-- Lunettes -->
           <div class="form-field">
             <div class="field-icon">🔄</div>
             <div class="field-content">
@@ -77,7 +73,6 @@
             </div>
           </div>
 
-          <!-- Haut -->
           <div class="form-field">
             <div class="field-icon">👕</div>
             <div class="field-content">
@@ -93,7 +88,6 @@
             </div>
           </div>
 
-          <!-- Nom -->
           <div class="form-field">
             <div class="field-icon">📝</div>
             <div class="field-content">
@@ -110,7 +104,6 @@
             </div>
           </div>
 
-          <!-- Description (optionnel) -->
           <div class="form-field">
             <div class="field-icon">📄</div>
             <div class="field-content">
@@ -126,7 +119,6 @@
             </div>
           </div>
 
-          <!-- Error Message -->
           <div v-if="error" class="error-message">
             ⚠️ {{ error }}
           </div>
@@ -136,7 +128,6 @@
             ✓ {{ success }}
           </div>
 
-          <!-- Submit Button -->
           <div class="form-actions">
             <button 
               type="submit" 
@@ -156,18 +147,21 @@
 <script>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '../composables/useAuth'
+// TODO: Réactiver quand authentification sera prête
+// import { useAuth } from '../composables/useAuth'
 
 export default {
   name: 'CreateAvatar',
   setup() {
     const router = useRouter()
-    const { isAdmin, getUserId, initAuth } = useAuth()
+    // TODO: Réactiver quand authentification sera prête
+    // const { isAdmin, getUserId, initAuth } = useAuth()
     const loading = ref(false)
     const error = ref(null)
     const success = ref(null)
     
-    initAuth()
+    // TODO: Réactiver quand authentification sera prête
+    // initAuth()
     
     const formData = ref({
       type: '',
@@ -179,7 +173,6 @@ export default {
       icon: '🦊'
     })
 
-    // Map type d'avatar à l'icône
     const typeToIcon = {
       fox: '🦊',
       cat: '🐱',
@@ -191,7 +184,6 @@ export default {
       lion: '🦁'
     }
 
-    // Update icon when type changes
     watch(() => formData.value.type, (newType) => {
       if (newType && typeToIcon[newType]) {
         formData.value.icon = typeToIcon[newType]
@@ -208,17 +200,17 @@ export default {
         return
       }
 
-      if (!isAdmin.value) {
-        error.value = 'Accès refusé : droits administrateur requis'
-        return
-      }
+      // TODO: Réactiver quand authentification sera prête
+      // if (!isAdmin.value) {
+      //   error.value = 'Accès refusé : droits administrateur requis'
+      //   return
+      // }
 
       try {
         loading.value = true
         error.value = null
         success.value = null
 
-        // Préparer les données pour l'API (simplifié selon backend actuel)
         const avatarData = {
           nom: formData.value.nom,
           image: formData.value.icon
@@ -263,8 +255,9 @@ export default {
       error,
       success,
       isFormValid,
-      handleSubmit,
-      isAdmin
+      handleSubmit
+      // TODO: Réactiver quand authentification sera prête
+      // isAdmin
     }
   }
 }
@@ -277,7 +270,6 @@ export default {
   padding: 2rem 0;
 }
 
-/* Overlay d'erreur unauthorized */
 .unauthorized-overlay {
   min-height: 100vh;
   display: flex;
