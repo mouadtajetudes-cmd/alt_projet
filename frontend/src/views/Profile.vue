@@ -1,65 +1,59 @@
 <template>
-  <div class="profile-page">
+  <div class="page">
     <div class="container">
-      <div class="profile-card">
-        <h2>Mon Profil</h2>
+      <div class="card">
+        <h2>👤 Mon Profil</h2>
         
-        <div v-if="loading" class="loading">Chargement...</div>
+        <div v-if="loading">Chargement...</div>
         
         <div v-else-if="user">
-          <div v-if="!editing" class="profile-info">
-            <div class="info-item">
-              <label>Nom</label>
-              <p>{{ user.nom }}</p>
+          <div v-if="!editing" class="info">
+            <div class="item">
+              <strong>Nom:</strong> {{ user.nom }}
             </div>
-            
-            <div class="info-item">
-              <label>Prénom</label>
-              <p>{{ user.prenom }}</p>
+            <div class="item">
+              <strong>Prénom:</strong> {{ user.prenom }}
             </div>
-            
-            <div class="info-item">
-              <label>Email</label>
-              <p>{{ user.email }}</p>
+            <div class="item">
+              <strong>Email:</strong> {{ user.email }}
             </div>
-            
-            <div class="info-item">
-              <label>Créé le</label>
-              <p>{{ formatDate(user.created_at) }}</p>
+            <div class="item">
+              <strong>Téléphone:</strong> {{ user.telephone || 'Non renseigné' }}
+            </div>
+            <div class="item">
+              <strong>Statut:</strong>
+              <span :class="isAdmin ? 'badge-admin' : 'badge-user'">
+                {{ isAdmin ? 'Administrateur' : 'Utilisateur' }}
+              </span>
+              <span v-if="isPremium" class="badge-premium">Premium</span>
+            </div>
+            <div class="item">
+              <strong>Créé le:</strong> {{ formatDate(user.created_at) }}
             </div>
             
             <div class="actions">
-              <button class="btn-primary" @click="editing = true">Modifier</button>
-              <button class="btn-secondary" @click="logout">Déconnexion</button>
+              <button @click="editing = true" class="btn-primary">Modifier</button>
+              <router-link to="/users" class="btn">Utilisateurs</router-link>
+              <router-link to="/chat" class="btn">Chat</router-link>
+              <button @click="logout" class="btn-danger">Déconnexion</button>
             </div>
           </div>
-          
-          <form v-else @submit.prevent="updateProfile" class="profile-form">
-            <div class="form-group">
-              <label>Nom</label>
-              <input v-model="editForm.nom" type="text" required>
-            </div>
-            
-            <div class="form-group">
-              <label>Prénom</label>
-              <input v-model="editForm.prenom" type="text" required>
-            </div>
-            
-            <div class="form-group">
-              <label>Email</label>
-              <input v-model="editForm.email" type="email" required>
-            </div>
-            
-            <p v-if="error" class="error">{{ error }}</p>
-            <p v-if="success" class="success">{{ success }}</p>
-            
-            <div class="actions">
+
+          <div v-else>
+            <form @submit.prevent="updateProfile">
+              <input v-model="form.nom" placeholder="Nom" required>
+              <input v-model="form.prenom" placeholder="Prénom" required>
+              <input v-model="form.email" type="email" placeholder="Email" required>
+              
               <button type="submit" class="btn-primary" :disabled="saving">
                 {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
               </button>
-              <button type="button" class="btn-secondary" @click="cancelEdit">Annuler</button>
-            </div>
-          </form>
+              <button type="button" @click="cancelEdit" class="btn">Annuler</button>
+              
+              <p v-if="error" class="error">{{ error }}</p>
+              <p v-if="success" class="success">{{ success }}</p>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -77,11 +71,21 @@ export default {
       saving: false,
       error: '',
       success: '',
-      editForm: {
+      form: {
         nom: '',
         prenom: '',
         email: ''
       }
+    }
+  },
+  computed: {
+    isAdmin() {
+      if (!this.user) return false
+      return this.user.administrateur === 'true'
+    },
+    isPremium() {
+      if (!this.user) return false
+      return this.user.premium === 'true'
     }
   },
   mounted() {
@@ -93,35 +97,26 @@ export default {
       const token = localStorage.getItem('token')
       const userData = JSON.parse(localStorage.getItem('user') || '{}')
       
-      console.log('[PROFILE] Token:', token)
-      console.log('[PROFILE] User data:', userData)
-      console.log('[PROFILE] User ID:', userData.id)
-      
       if (!token || !userData.id) {
-        this.error = 'Session expirée, veuillez vous reconnecter'
         this.$router.push('/login')
         return
       }
       
       try {
         const response = await fetch(`http://localhost:6090/auth/users/${userData.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         })
         
         if (response.ok) {
           this.user = await response.json()
-          this.editForm = {
+          this.form = {
             nom: this.user.nom,
             prenom: this.user.prenom,
             email: this.user.email
           }
-        } else {
-          this.error = 'Impossible de charger le profil'
         }
       } catch (err) {
-        this.error = 'Erreur de connexion'
+        this.error = 'Erreur de chargement'
       } finally {
         this.loading = false
       }
@@ -142,7 +137,7 @@ export default {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(this.editForm)
+          body: JSON.stringify(this.form)
         })
         
         if (response.ok) {
@@ -164,7 +159,7 @@ export default {
       this.editing = false
       this.error = ''
       this.success = ''
-      this.editForm = {
+      this.form = {
         nom: this.user.nom,
         prenom: this.user.prenom,
         email: this.user.email
@@ -178,7 +173,9 @@ export default {
     },
     
     formatDate(dateString) {
+      if (!dateString) return 'Non disponible'
       const date = new Date(dateString)
+      if (isNaN(date.getTime())) return 'Non disponible'
       return date.toLocaleDateString('fr-FR')
     }
   }
@@ -186,136 +183,163 @@ export default {
 </script>
 
 <style scoped>
-.profile-page {
-  padding: 3rem 0;
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
 }
 
 .container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-.profile-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.profile-card h2 {
-  margin-bottom: 2rem;
-  text-align: center;
-  color: #333;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-
-.profile-info {
-  margin-bottom: 1rem;
-}
-
-.info-item {
-  margin-bottom: 1.5rem;
-}
-
-.info-item label {
-  display: block;
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-}
-
-.info-item p {
-  font-size: 1.1rem;
-  color: #333;
-  padding: 0.5rem 0;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #333;
-  font-weight: 500;
-}
-
-.form-group input {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 1rem;
+  max-width: 600px;
 }
 
-.form-group input:focus {
-  outline: none;
-  border-color: #0d6efd;
+.card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.card h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 2rem;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.item {
+  padding: 0.75rem;
+  background: #f5f7fa;
+  border-radius: 8px;
+}
+
+.item strong {
+  color: #666;
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.badge-admin {
+  background: #FF6B35;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+}
+
+.badge-user {
+  background: #e0e0e0;
+  color: #666;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+}
+
+.badge-premium {
+  background: #FFD700;
+  color: #333;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
 }
 
 .actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
 }
 
-.btn-primary, .btn-secondary {
-  flex: 1;
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+input {
   padding: 0.75rem;
-  border: none;
-  border-radius: 4px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
   font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+.btn {
+  padding: 0.75rem 1rem;
+  background: #f5f7fa;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s;
+  text-decoration: none;
+  color: #333;
+  text-align: center;
+}
+
+.btn:hover {
+  background: #e0e0e0;
 }
 
 .btn-primary {
-  background: #0d6efd;
+  padding: 0.75rem 1rem;
+  background: #2196F3;
   color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
 }
 
 .btn-primary:hover {
-  background: #0b5ed7;
+  background: #1976D2;
 }
 
 .btn-primary:disabled {
-  background: #6c757d;
+  background: #ccc;
   cursor: not-allowed;
 }
 
-.btn-secondary {
-  background: #6c757d;
+.btn-danger {
+  padding: 0.75rem 1rem;
+  background: #f44336;
   color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.btn-secondary:hover {
-  background: #5a6268;
+.btn-danger:hover {
+  background: #d32f2f;
 }
 
 .error {
-  margin-top: 1rem;
   padding: 0.75rem;
-  background: #f8d7da;
-  color: #721c24;
-  border-radius: 4px;
-  text-align: center;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 8px;
+  font-size: 0.9rem;
 }
 
 .success {
-  margin-top: 1rem;
   padding: 0.75rem;
-  background: #d4edda;
-  color: #155724;
-  border-radius: 4px;
-  text-align: center;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 8px;
+  font-size: 0.9rem;
 }
 </style>

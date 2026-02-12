@@ -1,47 +1,26 @@
 <template>
-  <div class="register-page">
-    <div class="container">
-      <div class="register-card">
-        <h2>Inscription</h2>
+  <div class="page">
+    <div class="card">
+      <h2>✍️ Inscription</h2>
+      
+      <form @submit.prevent="handleRegister">
+        <input v-model="nom" type="text" required placeholder="Nom">
+        <input v-model="prenom" type="text" required placeholder="Prénom">
+        <input v-model="email" type="email" required placeholder="Email">
+        <input v-model="password" type="password" required placeholder="Mot de passe (8 car. min)">
+        <input v-model="confirmPassword" type="password" required placeholder="Confirmer mot de passe">
         
-        <form @submit.prevent="handleRegister">
-          <div class="form-group">
-            <label>Nom</label>
-            <input v-model="nom" type="text" required placeholder="Votre nom">
-          </div>
-
-          <div class="form-group">
-            <label>Prénom</label>
-            <input v-model="prenom" type="text" required placeholder="Votre prénom">
-          </div>
-          
-          <div class="form-group">
-            <label>Email</label>
-            <input v-model="email" type="email" required placeholder="votre@email.com">
-          </div>
-          
-          <div class="form-group">
-            <label>Mot de passe</label>
-            <input v-model="password" type="password" required placeholder="••••••••">
-          </div>
-
-          <div class="form-group">
-            <label>Confirmer mot de passe</label>
-            <input v-model="confirmPassword" type="password" required placeholder="••••••••">
-          </div>
-          
-          <button type="submit" class="btn-primary" :disabled="loading">
-            {{ loading ? 'Inscription...' : "S'inscrire" }}
-          </button>
-          
-          <p v-if="error" class="error">{{ error }}</p>
-          <p v-if="success" class="success">{{ success }}</p>
-          
-          <p class="login-link">
-            Déjà un compte ? <router-link to="/login">Se connecter</router-link>
-          </p>
-        </form>
-      </div>
+        <button type="submit" :disabled="loading">
+          {{ loading ? 'Inscription...' : "S'inscrire" }}
+        </button>
+        
+        <p v-if="error" class="error">{{ error }}</p>
+        <p v-if="success" class="success">{{ success }}</p>
+        
+        <p class="link">
+          Déjà un compte ? <router-link to="/login">Se connecter</router-link>
+        </p>
+      </form>
     </div>
   </div>
 </template>
@@ -111,94 +90,96 @@ export default {
 </script>
 
 <style scoped>
-.register-page {
-  padding: 3rem 0;
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
 }
 
-.container {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-.register-card {
+.card {
   background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 400px;
 }
 
-.register-card h2 {
-  margin-bottom: 1.5rem;
+.card h2 {
   text-align: center;
   color: #333;
+  margin-bottom: 2rem;
 }
 
-.form-group {
-  margin-bottom: 1rem;
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #333;
+input {
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+button {
+  padding: 0.75rem;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
   font-weight: 500;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 1rem;
+button:hover {
+  background: #1976D2;
 }
 
-.form-group input:focus {
-  outline: none;
-  border-color: #0d6efd;
-}
-
-.btn-primary {
-  width: 100%;
-  padding: 0.75rem;
-  background: #0d6efd;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover {
-  background: #0b5ed7;
-}
-
-.btn-primary:disabled {
-  background: #6c757d;
+button:disabled {
+  background: #ccc;
   cursor: not-allowed;
 }
 
 .error {
-  margin-top: 1rem;
   padding: 0.75rem;
-  background: #f8d7da;
-  color: #721c24;
-  border-radius: 4px;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 8px;
   text-align: center;
+  font-size: 0.9rem;
 }
 
 .success {
-  margin-top: 1rem;
   padding: 0.75rem;
-  background: #d4edda;
-  color: #155724;
-  border-radius: 4px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 8px;
   text-align: center;
+  font-size: 0.9rem;
 }
 
-.login-link {
-  margin-top: 1.5rem;
+.link {
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.link a {
+  color: #2196F3;
+  text-decoration: none;
+    margin-top: 1.5rem;
   text-align: center;
   color: #666;
 }
@@ -212,4 +193,5 @@ export default {
 .login-link a:hover {
   text-decoration: underline;
 }
+
 </style>

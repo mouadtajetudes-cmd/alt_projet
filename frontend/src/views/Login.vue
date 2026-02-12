@@ -1,31 +1,22 @@
 <template>
-  <div class="login-page">
-    <div class="container">
-      <div class="login-card">
-        <h2>Connexion</h2>
+  <div class="page">
+    <div class="card">
+      <h2>🔐 Connexion</h2>
+      
+      <form @submit.prevent="handleLogin">
+        <input v-model="email" type="email" required placeholder="Email">
+        <input v-model="password" type="password" required placeholder="Mot de passe">
         
-        <form @submit.prevent="handleLogin">
-          <div class="form-group">
-            <label>Email</label>
-            <input v-model="email" type="email" required placeholder="votre@email.com">
-          </div>
-          
-          <div class="form-group">
-            <label>Mot de passe</label>
-            <input v-model="password" type="password" required placeholder="••••••••">
-          </div>
-          
-          <button type="submit" class="btn-primary" :disabled="loading">
-            {{ loading ? 'Connexion...' : 'Se connecter' }}
-          </button>
-          
-          <p v-if="error" class="error">{{ error }}</p>
-          
-          <p class="register-link">
-            Pas de compte ? <router-link to="/register">S'inscrire</router-link>
-          </p>
-        </form>
-      </div>
+        <button type="submit" :disabled="loading">
+          {{ loading ? 'Connexion...' : 'Se connecter' }}
+        </button>
+        
+        <p v-if="error" class="error">{{ error }}</p>
+        
+        <p class="link">
+          Pas de compte ? <router-link to="/register">S'inscrire</router-link>
+        </p>
+      </form>
     </div>
   </div>
 </template>
@@ -59,11 +50,8 @@ export default {
         })
         
         const data = await response.json()
-        console.log('[LOGIN] Response data:', data)
         
         if (response.ok) {
-          console.log('[LOGIN] Token:', data.token)
-          console.log('[LOGIN] User:', data.user)
           localStorage.setItem('token', data.token)
           localStorage.setItem('user', JSON.stringify(data.user))
           this.$router.push('/chat')
@@ -81,96 +69,85 @@ export default {
 </script>
 
 <style scoped>
-.login-page {
-  padding: 3rem 0;
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
 }
 
-.container {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-.login-card {
+.card {
   background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 400px;
 }
 
-.login-card h2 {
-  margin-bottom: 1.5rem;
+.card h2 {
   text-align: center;
   color: #333;
+  margin-bottom: 2rem;
 }
 
-.form-group {
-  margin-bottom: 1rem;
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #333;
+input {
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+button {
+  padding: 0.75rem;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
   font-weight: 500;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 1rem;
+button:hover {
+  background: #1976D2;
 }
 
-.form-group input:focus {
-  outline: none;
-  border-color: #0d6efd;
-}
-
-.btn-primary {
-  width: 100%;
-  padding: 0.75rem;
-  background: #0d6efd;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover {
-  background: #0b5ed7;
-}
-
-.btn-primary:disabled {
-  background: #6c757d;
+button:disabled {
+  background: #ccc;
   cursor: not-allowed;
 }
 
 .error {
-  margin-top: 1rem;
   padding: 0.75rem;
-  background: #f8d7da;
-  color: #721c24;
-  border-radius: 4px;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 8px;
   text-align: center;
+  font-size: 0.9rem;
 }
 
-.register-link {
-  margin-top: 1.5rem;
+.link {
   text-align: center;
   color: #666;
+  font-size: 0.9rem;
 }
 
-.register-link a {
-  color: #0d6efd;
+.link a {
+  color: #2196F3;
   text-decoration: none;
-  font-weight: 500;
-}
-
-.register-link a:hover {
-  text-decoration: underline;
 }
 </style>
