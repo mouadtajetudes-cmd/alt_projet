@@ -7,6 +7,7 @@ import Social from "../views/Social.vue";
 import Avatar from "../views/Avatar.vue";
 import AvatarDetail from "../views/AvatarDetail.vue";
 import CreateAvatar from "../views/CreateAvatar.vue";
+import EditAvatar from "../views/EditAvatar.vue";
 import Levels from "../views/Levels.vue";
 import UserAvatar from "../views/UserAvatar.vue";
 import { useAuth } from "../composables/useAuth";
@@ -49,6 +50,11 @@ const routes = [
     component: CreateAvatar,
     // TODO: Réactiver quand authentification sera prête
     // meta: { requiresAdmin: true },
+  },
+  {
+    path: "/avatar/:id/edit",
+    name: "EditAvatar",
+    component: EditAvatar,
   },
   {
     path: "/avatar/:id",
