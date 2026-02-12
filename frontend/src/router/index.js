@@ -8,6 +8,7 @@ import Avatar from "../views/Avatar.vue";
 import AvatarDetail from "../views/AvatarDetail.vue";
 import CreateAvatar from "../views/CreateAvatar.vue";
 import Levels from "../views/Levels.vue";
+import UserAvatar from "../views/UserAvatar.vue";
 import { useAuth } from "../composables/useAuth";
 
 const routes = [
@@ -58,6 +59,11 @@ const routes = [
     path: "/levels",
     name: "Levels",
     component: Levels,
+  },
+  {
+    path: "/user/:id/avatars",
+    name: "UserAvatar",
+    component: UserAvatar,
   },
 ];
 
