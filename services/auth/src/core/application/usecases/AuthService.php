@@ -68,7 +68,9 @@ class AuthService implements AuthServiceInterface
             "false",
             'local',
             0,
-            1
+            1,
+            null,
+            null
         );
         
         $user = $this->userRepository->create($user);

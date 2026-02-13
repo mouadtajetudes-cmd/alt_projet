@@ -9,7 +9,7 @@ class CreateUserDTO
     public string $prenom;
     public string $email;
     public string $password;
-    public string $telephone;
+    public ?string $telephone;
     public mixed $administrateur;
     public mixed $premium;
 
@@ -18,7 +18,7 @@ class CreateUserDTO
         string $prenom,
         string $email,
         string $password,
-        string $telephone = '',
+        ?string $telephone = null,
         mixed $administrateur = false,
         mixed $premium = false
     ) {

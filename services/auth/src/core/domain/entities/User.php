@@ -9,17 +9,17 @@ class User
     public string $nom;
     public string $prenom;
     public string $email;
-    public string $telephone;
+    public ?string $telephone;
     public string $password;
     public string $administrateur;
     public string $premium;
     public string $auth_provider;
     public int $points;
     public ?int $id_avatar;
-    public string $created_at;
-    public string $updated_at;
+    public ?string $created_at;
+    public ?string $updated_at;
 
-    public function __construct($id_utilisateur = null, $nom = '', $prenom = '', $email = '', $password = '', $telephone = '', $administrateur = null, $premium = null, $auth_provider = 'local', $points = 0, $id_avatar = null, $created_at = '', $updated_at = '')
+    public function __construct($id_utilisateur = null, $nom = '', $prenom = '', $email = '', $password = '', $telephone = null, $administrateur = null, $premium = null, $auth_provider = 'local', $points = 0, $id_avatar = null, $created_at = null, $updated_at = null)
     {
         if ($id_utilisateur !== null) {
             $this->id_utilisateur = $id_utilisateur;
@@ -31,7 +31,7 @@ class User
         $this->password = $password;
         $this->administrateur = $administrateur ?? 'false';
         $this->premium = $premium ?? 'false';
-        $this->auth_provider = $auth_provider;
+        $this->auth_provider = $auth_provider ?? 'local';
         $this->points = $points ?? 0;
         $this->id_avatar = $id_avatar;
         $this->created_at = $created_at;

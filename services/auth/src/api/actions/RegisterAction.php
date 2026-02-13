@@ -23,7 +23,7 @@ class RegisterAction
             $body['prenom'] ?? '',
             $body['email'] ?? '',
             $body['password'] ?? '',
-            $body['telephone'] ?? '',
+            !empty($body['telephone']) ? $body['telephone'] : null,
             'false', 
             'false'  
         );

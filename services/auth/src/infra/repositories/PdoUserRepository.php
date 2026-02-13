@@ -19,14 +19,14 @@ class PdoUserRepository implements UserRepositoryInterface
     public function findAll(): array
     {
         $stmt = $this->pdo->query('SELECT * FROM utilisateurs ORDER BY created_at DESC');
-        return $stmt->fetchAll(PDO::FETCH_CLASS, User::class);
+        return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
     }
 
     public function findById(int $id): User
     {
         $stmt = $this->pdo->prepare('SELECT * FROM utilisateurs WHERE id_utilisateur = ?');
         $stmt->execute([$id]);
-        $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
         return $stmt->fetch();
     }
 
@@ -34,7 +34,7 @@ class PdoUserRepository implements UserRepositoryInterface
     {
         $stmt = $this->pdo->prepare('SELECT * FROM utilisateurs WHERE email = ?');
         $stmt->execute([$email]);
-        $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
         $result = $stmt->fetch();
         return $result ?: null;
     }
@@ -60,7 +60,7 @@ class PdoUserRepository implements UserRepositoryInterface
             $user->id_avatar
         ]);
         
-        $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
         return $stmt->fetch();
     }
 
@@ -80,7 +80,7 @@ class PdoUserRepository implements UserRepositoryInterface
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($values);
         
-        $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
         return $stmt->fetch();
     }
 
