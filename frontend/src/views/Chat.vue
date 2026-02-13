@@ -28,7 +28,10 @@
               {{ wsConnected ? 'Connecté' : 'Déconnecté' }}
             </div>
           </div>
-          <button class="btn-logout" @click="logout">Changer d'utilisateur</button>
+          <div class="header-actions">
+            <router-link to="/profile" class="btn-profile">Mon Profil</router-link>
+            <button class="btn-logout" @click="logout">Changer d'utilisateur</button>
+          </div>
         </div>
         
         <div class="messages-area" ref="messagesArea">
@@ -324,6 +327,26 @@ export default {
 
 .status-badge.disconnected {
   background: #f44336;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-profile {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-profile:hover {
+  background: rgba(255,255,255,0.3);
 }
 
 .btn-logout {

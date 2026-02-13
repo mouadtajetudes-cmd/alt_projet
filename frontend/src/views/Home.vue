@@ -15,7 +15,14 @@
         </div>
 
         <div class="feature-card">
-          <div class="icon">💬</div>
+          <div class="icon">👤</div>
+          <h3>Mon Profil</h3>
+          <p>Gérer mes informations</p>
+          <router-link to="/profile" class="btn">Voir Profil</router-link>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon"></div>
           <h3>Chat Temps Réel</h3>
           <p>Discutez instantanément</p>
           <router-link to="/chat" class="btn">Accéder au Chat</router-link>
