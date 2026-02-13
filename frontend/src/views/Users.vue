@@ -1,358 +1,482 @@
 <template>
-  <div class="page">
-    <div class="container">
-      <div class="header">
-        <h2>👥 Utilisateurs</h2>
-        <div>
-          <router-link to="/chat" class="btn">Chat</router-link>
-          <router-link to="/profile" class="btn">Profil</router-link>
-          <button v-if="isAdmin" @click="showModal = true" class="btn-primary">+ Créer</button>
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+      
+      <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-fade-in">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-3xl font-bold text-dark flex items-center gap-3">
+              <font-awesome-icon icon="users" class="text-primary" />
+              Gestion des utilisateurs
+            </h1>
+            <p class="text-dark-muted mt-1">{{ users.length }} utilisateur(s) au total</p>
+          </div>
+          
+          <div class="flex gap-2">
+            <router-link 
+              to="/chat"
+              class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-primary rounded-xl hover:bg-blue-100 transition-colors"
+            >
+              <font-awesome-icon icon="comments" />
+              <span>Chat</span>
+            </router-link>
+            <router-link 
+              to="/profile"
+              class="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-100 transition-colors"
+            >
+              <font-awesome-icon icon="user-circle" />
+              <span>Profil</span>
+            </router-link>
+            <button 
+              v-if="isAdmin"
+              @click="openCreateModal"
+              class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-primary-light text-white rounded-xl hover:shadow-lg transition-all"
+            >
+              <font-awesome-icon icon="plus" />
+              <span>Nouvel utilisateur</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <input v-model="search" placeholder="Rechercher..." @input="filterUsers">
-
-      <div v-if="loading">Chargement...</div>
-
-      <div v-else class="table">
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Prénom</th>
-              <th v-if="isAdmin">Email</th>
-              <th v-if="isAdmin">Admin</th>
-              <th v-if="isAdmin">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="user in filtered" :key="user.id_utilisateur">
-              <td>{{ user.nom }}</td>
-              <td>{{ user.prenom }}</td>
-              <td v-if="isAdmin">{{ user.email }}</td>
-              <td v-if="isAdmin">
-                <span :class="user.administrateur === 'true' ? 'badge-admin' : 'badge-user'">
-                  {{ user.administrateur === 'true' ? 'Admin' : 'User' }}
-                </span>
-              </td>
-              <td v-if="isAdmin">
-                <button @click="editUser(user)" class="btn-sm">✏️</button>
-                <button @click="deleteUser(user.id_utilisateur)" class="btn-sm">🗑️</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-if="filtered.length === 0">Aucun utilisateur</p>
+      
+      <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slide-up">
+        <div class="grid md:grid-cols-3 gap-4">
+          
+          <div class="md:col-span-2">
+            <div class="relative">
+              <font-awesome-icon icon="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                v-model="search"
+                @input="filterUsers"
+                type="text"
+                placeholder="Rechercher par nom, prénom ou email..."
+                class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
+          
+          
+          <div v-if="isAdmin">
+            <select 
+              v-model="roleFilter"
+              @change="filterUsers"
+              class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            >
+              <option value="">Tous les rôles</option>
+              <option value="admin">Administrateurs</option>
+              <option value="user">Utilisateurs</option>
+              <option value="premium">Premium</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div v-if="showModal" class="modal" @click.self="showModal = false">
-        <div class="modal-content">
-          <h3>{{ editing ? 'Modifier' : 'Créer' }} Utilisateur</h3>
-          <form @submit.prevent="saveUser">
-            <input v-model="form.nom" placeholder="Nom" required>
-            <input v-model="form.prenom" placeholder="Prénom" required>
-            <input v-model="form.email" type="email" placeholder="Email" required>
-            <input v-if="!editing" v-model="form.password" type="password" placeholder="Mot de passe" required>
-            <input v-model="form.telephone" placeholder="Téléphone">
-            <label><input v-model="form.administrateur" type="checkbox"> Admin</label>
-            <label><input v-model="form.premium" type="checkbox"> Premium</label>
-            <button type="submit" class="btn-primary">{{ editing ? 'Modifier' : 'Créer' }}</button>
-            <button type="button" @click="showModal = false" class="btn">Annuler</button>
-            <p v-if="error" class="error">{{ error }}</p>
+      
+      <BaseTable
+        title="Liste des utilisateurs"
+        icon="users"
+        :columns="tableColumns"
+        :rows="filtered"
+        :loading="loading"
+        row-key="id_utilisateur"
+        empty-message="Aucun utilisateur trouvé. Essayez de modifier vos filtres de recherche."
+        class="animate-slide-up"
+        style="animation-delay: 0.1s"
+      >
+        
+        <template #cell-user="{ row }">
+          <div class="flex items-center gap-3">
+            <div 
+              v-if="row.avatar_url"
+              class="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200"
+            >
+              <img 
+                :src="`http://localhost:6081${row.avatar_url}`" 
+                :alt="`${row.prenom} ${row.nom}`"
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div 
+              v-else
+              class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white font-semibold"
+            >
+              {{ row.nom[0] }}{{ row.prenom[0] }}
+            </div>
+            <div>
+              <div class="font-semibold text-dark">{{ row.prenom }} {{ row.nom }}</div>
+              <div v-if="!isAdmin" class="text-sm text-dark-muted">{{ row.email }}</div>
+            </div>
+          </div>
+        </template>
+
+        
+        <template #cell-status="{ row }">
+          <div class="flex gap-2">
+            <span 
+              class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
+              :class="row.administrateur === 'true' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'"
+            >
+              <font-awesome-icon :icon="row.administrateur === 'true' ? 'crown' : 'user'" />
+              {{ row.administrateur === 'true' ? 'Admin' : 'User' }}
+            </span>
+            <span 
+              v-if="row.premium === 'true'"
+              class="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium"
+            >
+              <font-awesome-icon icon="gem" />
+              Premium
+            </span>
+          </div>
+        </template>
+
+        
+        <template #cell-actions="{ row }">
+          <div class="flex items-center justify-end gap-2">
+            <button 
+              @click="editUser(row)"
+              class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Modifier"
+            >
+              <font-awesome-icon icon="edit" />
+            </button>
+            <button 
+              @click="deleteUser(row.id_utilisateur)"
+              class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Supprimer"
+            >
+              <font-awesome-icon icon="trash" />
+            </button>
+          </div>
+        </template>
+      </BaseTable>
+    </div>
+
+    
+    <transition name="modal">
+      <div 
+        v-if="showModal" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        @click.self="closeModal"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slide-down">
+          <div class="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-dark flex items-center gap-2">
+              <font-awesome-icon :icon="editing ? 'edit' : 'plus'" class="text-primary" />
+              {{ editing ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur' }}
+            </h2>
+            <button 
+              @click="closeModal"
+              class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <font-awesome-icon icon="times" class="text-gray-600" />
+            </button>
+          </div>
+
+          <form @submit.prevent="saveUser" class="p-8 space-y-6">
+            
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-dark mb-2">Prénom</label>
+                <input
+                  v-model="form.prenom"
+                  type="text"
+                  required
+                  class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-dark mb-2">Nom</label>
+                <input
+                  v-model="form.nom"
+                  type="text"
+                  required
+                  class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-dark mb-2">Email</label>
+                <input
+                  v-model="form.email"
+                  type="email"
+                  required
+                  class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-dark mb-2">Téléphone</label>
+                <input
+                  v-model="form.telephone"
+                  type="text"
+                  class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            
+            <div v-if="!editing">
+              <label class="block text-sm font-medium text-dark mb-2">Mot de passe</label>
+              <input
+                v-model="form.password"
+                type="password"
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              />
+            </div>
+
+            
+            <div class="flex gap-6">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  v-model="form.administrateur"
+                  type="checkbox"
+                  class="w-5 h-5 text-primary rounded focus:ring-2 focus:ring-primary"
+                />
+                <span class="flex items-center gap-2 text-dark font-medium">
+                  <font-awesome-icon icon="crown" class="text-orange-500" />
+                  Administrateur
+                </span>
+              </label>
+              
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  v-model="form.premium"
+                  type="checkbox"
+                  class="w-5 h-5 text-primary rounded focus:ring-2 focus:ring-primary"
+                />
+                <span class="flex items-center gap-2 text-dark font-medium">
+                  <font-awesome-icon icon="gem" class="text-yellow-500" />
+                  Premium
+                </span>
+              </label>
+            </div>
+
+            
+            <div 
+              v-if="error" 
+              class="flex items-center gap-2 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl"
+            >
+              <font-awesome-icon icon="info-circle" />
+              <span>{{ error }}</span>
+            </div>
+
+            
+            <div class="flex gap-3 pt-4">
+              <button
+                type="submit"
+                class="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-primary to-primary-light text-white font-semibold rounded-xl shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200"
+              >
+                <font-awesome-icon :icon="editing ? 'check' : 'plus'" />
+                <span>{{ editing ? 'Enregistrer' : 'Créer' }}</span>
+              </button>
+              
+              <button
+                type="button"
+                @click="closeModal"
+                class="px-6 py-3 bg-gray-200 text-dark font-semibold rounded-xl hover:bg-gray-300 transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
           </form>
         </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Users',
-  data() {
-    return {
-      users: [],
-      filtered: [],
-      search: '',
-      loading: true,
-      isAdmin: false,
-      showModal: false,
-      editing: false,
-      error: '',
-      form: {
-        nom: '',
-        prenom: '',
-        email: '',
-        telephone: '',
-        password: '',
-        administrateur: false,
-        premium: false
-      },
-      editId: null
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import BaseTable from '@/components/BaseTable.vue'
+import './views.css'
+
+const users = ref([])
+const filtered = ref([])
+const search = ref('')
+const roleFilter = ref('')
+const loading = ref(true)
+const isAdmin = ref(false)
+const showModal = ref(false)
+const editing = ref(false)
+const error = ref('')
+
+const form = ref({
+  nom: '',
+  prenom: '',
+  email: '',
+  telephone: '',
+  password: '',
+  administrateur: false,
+  premium: false
+})
+
+const editId = ref(null)
+
+const tableColumns = computed(() => {
+  const cols = [{ key: 'user', label: 'Utilisateur' }]
+  
+  if (isAdmin.value) {
+    cols.push(
+      { key: 'email', label: 'Email' },
+      { key: 'status', label: 'Statut' },
+      { key: 'actions', label: 'Actions', cellClass: 'text-right' }
+    )
+  }
+  
+  return cols
+})
+
+const loadUsers = async () => {
+  loading.value = true
+  const token = localStorage.getItem('token')
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    const userId = payload.sub || payload.user?.id
+    
+    const userResponse = await fetch(`http://localhost:6090/auth/users/${userId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    
+    if (userResponse.ok) {
+      const userData = await userResponse.json()
+      isAdmin.value = (userData.administrateur === 'true')
     }
-  },
-  mounted() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    this.isAdmin = (user.administrateur === 'true')
-    this.loadUsers()
-  },
-  methods: {
-    async loadUsers() {
-      this.loading = true
-      const token = localStorage.getItem('token')
-      const endpoint = this.isAdmin ? 'http://localhost:6090/auth/ausers' : 'http://localhost:6090/auth/users'
-      
-      try {
-        const response = await fetch(endpoint, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        if (response.ok) {
-          this.users = await response.json()
-          this.filtered = this.users
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        this.loading = false
-      }
-    },
-
-    filterUsers() {
-      const q = this.search.toLowerCase()
-      this.filtered = this.users.filter(u => 
-        u.nom.toLowerCase().includes(q) || 
-        u.prenom.toLowerCase().includes(q) ||
-        (u.email && u.email.toLowerCase().includes(q))
-      )
-    },
-
-    editUser(user) {
-      this.editing = true
-      this.editId = user.id_utilisateur
-      this.form = {
-        nom: user.nom,
-        prenom: user.prenom,
-        email: user.email,
-        telephone: user.telephone || '',
-        administrateur: user.administrateur === 'true',
-        premium: user.premium === 'true'
-      }
-      this.showModal = true
-    },
-
-    async saveUser() {
-      this.error = ''
-      const token = localStorage.getItem('token')
-      
-      try {
-        let url = 'http://localhost:6090/auth/users'
-        let method = 'POST'
-        let body = { ...this.form }
-
-        if (this.editing) {
-          url = `${url}/${this.editId}`
-          method = 'PUT'
-          delete body.password
-        }
-
-        const response = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(body)
-        })
-
-        if (response.ok) {
-          this.showModal = false
-          this.loadUsers()
-        } else {
-          const data = await response.json()
-          this.error = data.message || 'Erreur'
-        }
-      } catch (err) {
-        this.error = 'Erreur de connexion'
-      }
-    },
-
-    async deleteUser(id) {
-      if (!confirm('Supprimer cet utilisateur ?')) return
-
-      const token = localStorage.getItem('token')
-      
-      try {
-        const response = await fetch(`http://localhost:6090/auth/users/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-
-        if (response.ok) this.loadUsers()
-      } catch (err) {
-        console.error(err)
-      }
+  } catch (err) {
+    console.error('Error checking admin status:', err)
+  }
+  
+  const endpoint = isAdmin.value ? 'http://localhost:6090/auth/ausers' : 'http://localhost:6090/auth/users'
+  
+  try {
+    const response = await fetch(endpoint, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      users.value = await response.json()
+      filtered.value = users.value
     }
+  } catch (err) {
+    console.error(err)
+  } finally {
+    loading.value = false
   }
 }
+
+const filterUsers = () => {
+  const q = search.value.toLowerCase()
+  let result = users.value.filter(u => 
+    u.nom.toLowerCase().includes(q) || 
+    u.prenom.toLowerCase().includes(q) ||
+    (u.email && u.email.toLowerCase().includes(q))
+  )
+  
+  if (roleFilter.value === 'admin') {
+    result = result.filter(u => u.administrateur === 'true')
+  } else if (roleFilter.value === 'user') {
+    result = result.filter(u => u.administrateur !== 'true')
+  } else if (roleFilter.value === 'premium') {
+    result = result.filter(u => u.premium === 'true')
+  }
+  
+  filtered.value = result
+}
+
+const openCreateModal = () => {
+  editing.value = false
+  error.value = ''
+  form.value = {
+    nom: '',
+    prenom: '',
+    email: '',
+    telephone: '',
+    password: '',
+    administrateur: false,
+    premium: false
+  }
+  showModal.value = true
+}
+
+const editUser = (user) => {
+  editing.value = true
+  editId.value = user.id_utilisateur
+  error.value = ''
+  form.value = {
+    nom: user.nom,
+    prenom: user.prenom,
+    email: user.email,
+    telephone: user.telephone || '',
+    administrateur: user.administrateur === 'true',
+    premium: user.premium === 'true'
+  }
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  error.value = ''
+}
+
+const saveUser = async () => {
+  error.value = ''
+  const token = localStorage.getItem('token')
+  
+  try {
+    let url = 'http://localhost:6090/auth/users'
+    let method = 'POST'
+    let body = { ...form.value }
+
+    if (editing.value) {
+      url = `${url}/${editId.value}`
+      method = 'PUT'
+      delete body.password
+    }
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(body)
+    })
+
+    if (response.ok) {
+      showModal.value = false
+      loadUsers()
+    } else {
+      const data = await response.json()
+      error.value = data.message || 'Erreur lors de l\'opération'
+    }
+  } catch (err) {
+    error.value = 'Erreur de connexion au serveur'
+  }
+}
+
+const deleteUser = async (id) => {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) return
+
+  const token = localStorage.getItem('token')
+  
+  try {
+    const response = await fetch(`http://localhost:6090/auth/users/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+
+    if (response.ok) loadUsers()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+onMounted(() => {
+  loadUsers()
+})
 </script>
-
-<style scoped>
-.page {
-  min-height: 100vh;
-  background: #f5f7fa;
-  padding: 2rem 1rem;
-}
-
-.container {
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.header {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px 12px 0 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header h2 {
-  color: #333;
-  margin: 0;
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  background: #f5f7fa;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  text-decoration: none;
-  color: #333;
-  margin-left: 0.5rem;
-}
-
-.btn:hover {
-  background: #e0e0e0;
-}
-
-.btn-primary {
-  padding: 0.5rem 1rem;
-  background: #2196F3;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: white;
-  margin-left: 0.5rem;
-}
-
-.btn-primary:hover {
-  background: #1976D2;
-}
-
-input[type="text"], input[type="email"], input[type="password"] {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  margin: 0.5rem 0;
-}
-
-.table {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th {
-  text-align: left;
-  padding: 0.75rem;
-  border-bottom: 2px solid #e0e0e0;
-  color: #666;
-  font-weight: 600;
-}
-
-td {
-  padding: 0.75rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.badge-admin {
-  background: #FF6B35;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
-}
-
-.badge-user {
-  background: #e0e0e0;
-  color: #666;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
-}
-
-.btn-sm {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-  margin: 0 0.25rem;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-}
-
-.modal-content h3 {
-  margin-bottom: 1rem;
-}
-
-.modal-content form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.modal-content label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.error {
-  padding: 0.75rem;
-  background: #ffebee;
-  color: #c62828;
-  border-radius: 8px;
-  font-size: 0.9rem;
-}
-</style>

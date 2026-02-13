@@ -1,153 +1,180 @@
 <template>
-  <div class="page">
-    <div class="card">
-      <h2>🔐 Connexion</h2>
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-5xl grid md:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
       
-      <form @submit.prevent="handleLogin">
-        <input v-model="email" type="email" required placeholder="Email">
-        <input v-model="password" type="password" required placeholder="Mot de passe">
-        
-        <button type="submit" :disabled="loading">
-          {{ loading ? 'Connexion...' : 'Se connecter' }}
-        </button>
-        
-        <p v-if="error" class="error">{{ error }}</p>
-        
-        <p class="link">
-          Pas de compte ? <router-link to="/register">S'inscrire</router-link>
-        </p>
-      </form>
+      <div class="hidden md:flex flex-col justify-center p-12 bg-gradient-to-br from-primary to-purple-600 text-white">
+        <div class="space-y-6">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl">
+            <font-awesome-icon icon="sign-in-alt" class="text-3xl" />
+          </div>
+          
+          <h2 class="text-4xl font-bold">Bon retour !</h2>
+          <p class="text-white/90 text-lg">
+            Connectez-vous pour accéder à votre espace et reprendre vos conversations
+          </p>
+          
+          <div class="space-y-4 pt-8">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                <font-awesome-icon icon="comments" />
+              </div>
+              <div>
+                <div class="font-semibold">Chat en temps réel</div>
+                <div class="text-white/70 text-sm">Messagerie instantanée</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                <font-awesome-icon icon="users" />
+              </div>
+              <div>
+                <div class="font-semibold">Communauté active</div>
+                <div class="text-white/70 text-sm">Échangez avec les membres</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                <font-awesome-icon icon="lock" />
+              </div>
+              <div>
+                <div class="font-semibold">Sécurité maximale</div>
+                <div class="text-white/70 text-sm">Protection de vos données</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="p-8 md:p-12 flex flex-col justify-center">
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold text-dark mb-2">Connexion</h1>
+          <p class="text-dark-muted">Accédez à votre compte Alt Platform</p>
+        </div>
+
+        <form @submit.prevent="handleLogin" class="space-y-6">
+          
+          <div>
+            <label class="block text-sm font-medium text-dark mb-2">
+              Adresse e-mail
+            </label>
+            <div class="relative">
+              <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <font-awesome-icon icon="envelope" />
+              </div>
+              <input
+                v-model="email"
+                type="email"
+                required
+                placeholder="exemple@email.com"
+                class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
+
+          
+          <div>
+            <label class="block text-sm font-medium text-dark mb-2">
+              Mot de passe
+            </label>
+            <div class="relative">
+              <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <font-awesome-icon icon="lock" />
+              </div>
+              <input
+                v-model="password"
+                type="password"
+                required
+                placeholder="••••••••"
+                class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
+
+          
+          <div 
+            v-if="error" 
+            class="flex items-center gap-2 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl animate-slide-down"
+          >
+            <font-awesome-icon icon="info-circle" />
+            <span>{{ error }}</span>
+          </div>
+
+          
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full py-3 bg-gradient-to-r from-primary to-primary-light text-white font-semibold rounded-xl shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+          >
+            <span v-if="!loading" class="flex items-center justify-center gap-2">
+              <font-awesome-icon icon="sign-in-alt" />
+              Se connecter
+            </span>
+            <span v-else class="flex items-center justify-center gap-2">
+              <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Connexion...
+            </span>
+          </button>
+
+          
+          <div class="text-center pt-4">
+            <p class="text-dark-muted">
+              Pas encore de compte ?
+              <router-link 
+                to="/register" 
+                class="text-primary font-semibold hover:underline ml-1"
+              >
+                Créer un compte
+              </router-link>
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Login',
-  data() {
-    return {
-      email: '',
-      password: '',
-      error: '',
-      loading: false
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const email = ref('')
+const password = ref('')
+const error = ref('')
+const loading = ref(false)
+
+const handleLogin = async () => {
+  error.value = ''
+  loading.value = true
+  
+  try {
+    const response = await fetch('http://localhost:6090/auth/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value
+      })
+    })
+    
+    const data = await response.json()
+    
+    if (response.ok) {
+      localStorage.setItem('token', data.token)
+      router.push('/chat')
+    } else {
+      error.value = data.message || 'Email ou mot de passe incorrect'
     }
-  },
-  methods: {
-    async handleLogin() {
-      this.error = ''
-      this.loading = true
-      
-      try {
-        const response = await fetch('http://localhost:6090/auth/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email: this.email,
-            password: this.password
-          })
-        })
-        
-        const data = await response.json()
-        
-        if (response.ok) {
-          localStorage.setItem('token', data.token)
-          localStorage.setItem('user', JSON.stringify(data.user))
-          this.$router.push('/chat')
-        } else {
-          this.error = data.message || 'Email ou mot de passe incorrect'
-        }
-      } catch (err) {
-        this.error = 'Impossible de se connecter'
-      } finally {
-        this.loading = false
-      }
-    }
+  } catch (err) {
+    error.value = 'Impossible de se connecter au serveur'
+  } finally {
+    loading.value = false
   }
 }
 </script>
-
-<style scoped>
-.page {
-  min-height: 100vh;
-  background: #f5f7fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem;
-}
-
-.card {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  width: 100%;
-  max-width: 400px;
-}
-
-.card h2 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 2rem;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-input {
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-input:focus {
-  outline: none;
-  border-color: #2196F3;
-}
-
-button {
-  padding: 0.75rem;
-  background: #2196F3;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-button:hover {
-  background: #1976D2;
-}
-
-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.error {
-  padding: 0.75rem;
-  background: #ffebee;
-  color: #c62828;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-.link {
-  text-align: center;
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.link a {
-  color: #2196F3;
-  text-decoration: none;
-}
-</style>

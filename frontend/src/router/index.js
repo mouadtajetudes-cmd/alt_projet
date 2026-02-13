@@ -5,6 +5,7 @@ import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
 import Users from '../views/Users.vue'
+import Groups from '../views/Groups.vue'
 import { requireAuth } from '../middleware/auth'
 
 const routes = [
@@ -39,6 +40,12 @@ const routes = [
     path: '/chat',
     name: 'Chat',
     component: Chat,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/groups',
+    name: 'Groups',
+    component: Groups,
     beforeEnter: requireAuth
   }
   // ,
