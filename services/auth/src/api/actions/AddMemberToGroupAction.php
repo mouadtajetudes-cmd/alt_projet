@@ -17,7 +17,12 @@ class AddMemberToGroupAction
     {
         $groupId = (int) $args['id'];
         $data = $request->getParsedBody();
-        $userId = (int) $data['user_id'];
+        $userId = (int) ($data['userId'] ?? $data['user_id'] ?? 0);
+        
+        if ($userId === 0) {
+            $response->getBody()->write(json_encode(['error' => 'Missing userId']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
         
         $success = $this->groupService->addMember($groupId, $userId);
         

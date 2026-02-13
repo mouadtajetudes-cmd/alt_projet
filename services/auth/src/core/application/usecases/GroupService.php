@@ -38,9 +38,14 @@ class GroupService implements GroupServiceInterface
         return $this->groupRepository->create($group);
     }
 
-    public function addMember(int $groupId, int $userId): bool
+    public function updateGroup(Group $group): Group
     {
-        return $this->groupRepository->addMember($groupId, $userId);
+        return $this->groupRepository->update($group);
+    }
+
+    public function addMember(int $groupId, int $userId, string $role = 'member'): bool
+    {
+        return $this->groupRepository->addMember($groupId, $userId, $role);
     }
 
     public function getMembers(int $groupId): array

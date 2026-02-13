@@ -18,9 +18,10 @@ class LoginAction
     {
         $body = $request->getParsedBody();
         
-        $dto = new LoginDTO();
-        $dto->email = $body['email'] ?? '';
-        $dto->password = $body['password'] ?? '';
+        $dto = new LoginDTO(
+            $body['email'] ?? '',
+            $body['password'] ?? ''
+        );
         
         try {
             $result = $this->authService->login($dto);

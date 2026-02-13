@@ -18,6 +18,21 @@ class RemoveMemberAction
         $groupId = (int)$args['id'];
         $userId = (int)$args['userId'];
         
+        // Get all members to check if user is owner
+        $members = $this->groupService->getGroupMembers($groupId);
+        $memberToRemove = array_filter($members, fn($m) => $m['id_utilisateur'] == $userId);
+        
+        if (!empty($memberToRemove)) {
+            $member = array_values($memberToRemove)[0];
+            if ($member['role'] === 'owner') {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Cannot remove the owner of the group'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+            }
+        }
+        
         $success = $this->groupService->removeMember($groupId, $userId);
         
         $response->getBody()->write(json_encode([

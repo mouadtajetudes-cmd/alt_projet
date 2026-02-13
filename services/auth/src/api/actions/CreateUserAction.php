@@ -18,16 +18,27 @@ class CreateUserAction
     {
         $data = $request->getParsedBody();
         
-        $dto = new CreateUserDTO();
-        $dto->nom = $data['nom'];
-        $dto->prenom = $data['prenom'];
-        $dto->email = $data['email'];
-        $dto->password = $data['password'];
-        $dto->telephone = $data['telephone'] ?? '';
+        $dto = new CreateUserDTO(
+            $data['nom'],
+            $data['prenom'],
+            $data['email'],
+            $data['password'],
+            $data['telephone'] ?? '',
+            $data['administrateur'] ?? false,
+            $data['premium'] ?? false
+        );
         
         $user = $this->userService->createUser($dto);
         
-        $response->getBody()->write(json_encode($user));
+        $response->getBody()->write(json_encode([
+            'id_utilisateur' => $user->id_utilisateur,
+            'nom' => $user->nom,
+            'prenom' => $user->prenom,
+            'email' => $user->email,
+            'telephone' => $user->telephone ?? '',
+            'administrateur' => $user->administrateur,
+            'premium' => $user->premium
+        ]));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
     }
 }
