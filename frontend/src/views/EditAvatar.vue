@@ -130,7 +130,7 @@ export default {
         
         console.log(`[EDIT_AVATAR] Chargement de l'avatar ${avatarId.value}`)
         
-        const response = await fetch(`http://localhost:6083/avatars/${avatarId.value}`)
+        const response = await fetch(`http://localhost:6090/avatar/avatars/${avatarId.value}`)
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -184,7 +184,7 @@ export default {
 
         console.log('[EDIT_AVATAR] Envoi des modifications:', formData.value)
 
-        const response = await fetch(`http://localhost:6083/avatars/${avatarId.value}`, {
+        const response = await fetch(`http://localhost:6090/avatar/avatars/${avatarId.value}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'

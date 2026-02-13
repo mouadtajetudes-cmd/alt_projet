@@ -135,7 +135,7 @@ export default {
     
     const loadLevels = async () => {
       try {
-        const response = await fetch('http://localhost:6083/levels')
+        const response = await fetch('http://localhost:6090/avatar/levels')
         if (!response.ok) throw new Error('Erreur chargement niveaux')
         
         const data = await response.json()
@@ -154,7 +154,7 @@ export default {
         
         console.log('[AVATAR DETAIL] Chargement avatar ID:', avatarId)
         
-        const response = await fetch(`http://localhost:6083/avatars/${avatarId}`)
+        const response = await fetch(`http://localhost:6090/avatar/avatars/${avatarId}`)
         
         if (!response.ok) {
           if (response.status === 404) {

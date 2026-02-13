@@ -29,7 +29,7 @@ export default {
     
     const loadProducts = async () => {
       try {
-        const response = await fetch('http://localhost:6086/products')
+        const response = await fetch('http://localhost:6090/marketplace/products')
         const data = await response.json()
         products.value = data
       } catch (error) {

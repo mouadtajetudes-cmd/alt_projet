@@ -147,21 +147,18 @@
 <script>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-// TODO: Réactiver quand authentification sera prête
-// import { useAuth } from '../composables/useAuth'
+import { useAuth } from '../composables/useAuth'
 
 export default {
   name: 'CreateAvatar',
   setup() {
     const router = useRouter()
-    // TODO: Réactiver quand authentification sera prête
-    // const { isAdmin, getUserId, initAuth } = useAuth()
+    const { isAdmin, getUserId, initAuth } = useAuth()
     const loading = ref(false)
     const error = ref(null)
     const success = ref(null)
     
-    // TODO: Réactiver quand authentification sera prête
-    // initAuth()
+    initAuth()
     
     const formData = ref({
       type: '',
@@ -211,16 +208,21 @@ export default {
         error.value = null
         success.value = null
 
-        const avatarData = {
-          nom: formData.value.nom,
-          image: formData.value.icon
+        const userId = getUserId()
+        if (!userId) {
+          error.value = 'Vous devez être connecté pour créer un avatar'
+          return
         }
 
-        avatarData.id_utilisateur = null 
+        const avatarData = {
+          nom: formData.value.nom,
+          image: formData.value.icon,
+          id_utilisateur: userId
+        }
 
         console.log('[CREATE AVATAR] Envoi des données:', avatarData)
 
-        const response = await fetch('http://localhost:6083/avatars', {
+        const response = await fetch('http://localhost:6090/avatar/avatars', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

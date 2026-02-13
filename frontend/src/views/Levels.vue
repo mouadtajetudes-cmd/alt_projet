@@ -137,9 +137,9 @@ export default {
       try {
         loading.value = true
         error.value = null
-        console.log('[LEVELS] Chargement des niveaux depuis http://localhost:6083/levels')
+        console.log('[LEVELS] Chargement des niveaux depuis http://localhost:6090/avatar/levels')
         
-        const response = await fetch('http://localhost:6083/levels')
+        const response = await fetch('http://localhost:6090/avatar/levels')
         
         if (!response.ok) {
           throw new Error(`Erreur HTTP: ${response.status}`)

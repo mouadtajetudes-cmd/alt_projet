@@ -129,9 +129,9 @@ export default {
       try {
         loading.value = true
         error.value = null
-        console.log('[AVATAR] Chargement des avatars depuis http://localhost:6083/avatars')
+        console.log('[AVATAR] Chargement des avatars depuis http://localhost:6090/avatar/avatars')
         
-        const response = await fetch('http://localhost:6083/avatars')
+        const response = await fetch('http://localhost:6090/avatar/avatars')
         
         if (!response.ok) {
           throw new Error(`Erreur HTTP: ${response.status}`)
@@ -175,7 +175,7 @@ export default {
         // }
         
         // Créer une copie de l'avatar template pour l'utilisateur
-        const response = await fetch('http://localhost:6083/avatars', {
+        const response = await fetch('http://localhost:6090/avatar/avatars', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

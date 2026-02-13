@@ -127,7 +127,7 @@ export default {
 
     const loadLevels = async () => {
       try {
-        const response = await fetch('http://localhost:6083/levels')
+        const response = await fetch('http://localhost:6090/avatar/levels')
         if (!response.ok) {
           throw new Error(`Erreur HTTP: ${response.status}`)
         }
@@ -153,7 +153,7 @@ export default {
         error.value = null
         console.log(`[USER_AVATAR] Chargement des avatars de l'utilisateur ${userId.value}`)
         
-        const response = await fetch(`http://localhost:6083/users/${userId.value}/avatars`)
+        const response = await fetch(`http://localhost:6090/avatar/users/${userId.value}/avatars`)
         
         if (!response.ok) {
           if (response.status === 404) {

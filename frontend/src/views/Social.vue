@@ -33,7 +33,7 @@ export default {
     
     const loadPosts = async () => {
       try {
-        const response = await fetch('http://localhost:6087/posts')
+        const response = await fetch('http://localhost:6090/social/posts')
         const data = await response.json()
         posts.value = data
       } catch (error) {

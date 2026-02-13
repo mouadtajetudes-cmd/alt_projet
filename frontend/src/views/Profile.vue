@@ -13,7 +13,7 @@
                 class="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden"
               >
                 <img 
-                  :src="`http://localhost:6081${user.avatar_url}`" 
+                  :src="`http://localhost:6090/auth${user.avatar_url}`" 
                   :alt="`${user.prenom} ${user.nom}`"
                   class="w-full h-full object-cover"
                 />

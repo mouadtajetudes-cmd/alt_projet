@@ -158,7 +158,10 @@ const menuItems = computed(() => {
     items.push(
       { path: '/chat', label: 'Chat', icon: 'comments' },
       { path: '/users', label: 'Utilisateurs', icon: 'users' },
-      { path: '/groups', label: 'Groupes', icon: 'layer-group' }
+      { path: '/groups', label: 'Groupes', icon: 'layer-group' },
+      { path: '/marketplace', label: 'Marketplace', icon: 'gem' },
+      { path: '/social', label: 'Social', icon: 'heart' },
+      { path: '/avatar', label: 'Avatar', icon: 'user-circle' }
     )
   }
   

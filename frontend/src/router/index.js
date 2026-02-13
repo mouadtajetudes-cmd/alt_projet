@@ -1,35 +1,3 @@
-import { createRouter, createWebHistory } from "vue-router";
-import Home from "../views/Home.vue";
-import Chat from "../views/Chat.vue";
-import Login from "../views/Login.vue";
-import Marketplace from "../views/Marketplace.vue";
-import Social from "../views/Social.vue";
-import Avatar from "../views/Avatar.vue";
-import AvatarDetail from "../views/AvatarDetail.vue";
-import CreateAvatar from "../views/CreateAvatar.vue";
-import EditAvatar from "../views/EditAvatar.vue";
-import Levels from "../views/Levels.vue";
-import UserAvatar from "../views/UserAvatar.vue";
-import { useAuth } from "../composables/useAuth";
-
-const routes = [
-  {
-    path: "/",
-    name: "Home",
-    component: Home,
-  },
-  {
-    path: "/chat",
-    name: "Chat",
-    component: Chat,
-  },
-  // ,
-  // {
-  //   path: '/login',
-  //   name: 'Login',
-  //   component: Login
-  // },
-  // {
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Chat from '../views/Chat.vue'
@@ -38,6 +6,14 @@ import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
 import Users from '../views/Users.vue'
 import Groups from '../views/Groups.vue'
+import Marketplace from '../views/Marketplace.vue'
+import Social from '../views/Social.vue'
+import Avatar from '../views/Avatar.vue'
+import AvatarDetail from '../views/AvatarDetail.vue'
+import CreateAvatar from '../views/CreateAvatar.vue'
+import EditAvatar from '../views/EditAvatar.vue'
+import Levels from '../views/Levels.vue'
+import UserAvatar from '../views/UserAvatar.vue'
 import { requireAuth } from '../middleware/auth'
 
 const routes = [
@@ -79,8 +55,7 @@ const routes = [
     name: 'Groups',
     component: Groups,
     beforeEnter: requireAuth
-  }
-  // ,
+  },
   // {
   //   path: '/marketplace',
   //   name: 'Marketplace',
@@ -92,69 +67,35 @@ const routes = [
   //   component: Social
   // },
   {
-    path: "/avatar",
-    name: "Avatar",
-    component: Avatar,
+    path: '/avatar',
+    name: 'Avatar',
+    component: Avatar
   },
   {
-    path: "/avatar/create",
-    name: "CreateAvatar",
-    component: CreateAvatar,
-    // TODO: Réactiver quand authentification sera prête
-    // meta: { requiresAdmin: true },
+    path: '/avatar/create',
+    name: 'CreateAvatar',
+    component: CreateAvatar
   },
   {
-    path: "/avatar/:id/edit",
-    name: "EditAvatar",
-    component: EditAvatar,
+    path: '/avatar/:id/edit',
+    name: 'EditAvatar',
+    component: EditAvatar
   },
   {
-    path: "/avatar/:id",
-    name: "AvatarDetail",
-    component: AvatarDetail,
+    path: '/avatar/:id',
+    name: 'AvatarDetail',
+    component: AvatarDetail
   },
   {
-    path: "/levels",
-    name: "Levels",
-    component: Levels,
+    path: '/levels',
+    name: 'Levels',
+    component: Levels
   },
   {
-    path: "/user/:id/avatars",
-    name: "UserAvatar",
-    component: UserAvatar,
-  },
-];
-
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-});
-
-// TODO: Réactiver quand authentification sera prête
-// router.beforeEach((to, from, next) => {
-//   const { isAdmin, isAuthenticated, initAuth } = useAuth();
-
-//   initAuth();
-
-//   if (to.meta.requiresAdmin) {
-//     if (!isAuthenticated.value) {
-//       next({ name: "Home", query: { error: "login-required" } });
-//     } else if (!isAdmin.value) {
-//       next({ name: "Avatar", query: { error: "admin-required" } });
-//     } else {
-//       next();
-//     }
-//   } else {
-//     next();
-//   }
-// });
-
-export default router;
-  // {
-  //   path: '/avatar',
-  //   name: 'Avatar',
-  //   component: Avatar
-  // }
+    path: '/user/:id/avatars',
+    name: 'UserAvatar',
+    component: UserAvatar
+  }
 ]
 
 const router = createRouter({

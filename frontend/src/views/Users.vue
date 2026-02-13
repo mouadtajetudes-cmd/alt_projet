@@ -92,7 +92,7 @@
               class="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200"
             >
               <img 
-                :src="`http://localhost:6081${row.avatar_url}`" 
+                :src="`http://localhost:6090/auth${row.avatar_url}`" 
                 :alt="`${row.prenom} ${row.nom}`"
                 class="w-full h-full object-cover"
               />

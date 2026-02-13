@@ -164,7 +164,7 @@ export default {
 
         // TODO: Endpoint actuel attend versionId
         // POST /avatar-versions/{versionId}/level-up
-        const response = await fetch(`http://localhost:6083/avatar-versions/${targetId}/level-up`, {
+        const response = await fetch(`http://localhost:6090/avatar/avatar-versions/${targetId}/level-up`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
