@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use alt\core\application\ports\api\AvatarServiceInterface;
 
-class GetAvatarAction
+class GetAvatarByIdAction
 {
     private AvatarServiceInterface $avatarService;
 
@@ -21,15 +21,36 @@ class GetAvatarAction
         array $args
     ): ResponseInterface {
         
-        $userId = $args['userId'] ?? null;
+        $avatarId = $args['avatarId'] ?? null;
+
+        if (!$avatarId) {
+            $response->getBody()->write(json_encode([
+                'type' => 'error',
+                'error' => 400,
+                'message' => 'Avatar ID is required'
+            ]));
+            
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(400);
+        }
 
         try {
-            $avatars = $this->avatarService->getAvatarsByUserId($userId);
+            $avatar = $this->avatarService->getAvatarById($avatarId);
             
-            $response->getBody()->write(json_encode([
-                'type' => 'collection',
-                'avatars' => $avatars
-            ]));
+            if (!$avatar) {
+                $response->getBody()->write(json_encode([
+                    'type' => 'error',
+                    'error' => 404,
+                    'message' => 'Avatar not found'
+                ]));
+                
+                return $response
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withStatus(404);
+            }
+            
+            $response->getBody()->write(json_encode($avatar));
             
             return $response
                 ->withHeader('Content-Type', 'application/json')
@@ -38,13 +59,13 @@ class GetAvatarAction
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'type' => 'error',
-                'error' => 404,
+                'error' => 500,
                 'message' => $e->getMessage()
             ]));
             
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withStatus(404);
+                ->withStatus(500);
         }
     }
 }
