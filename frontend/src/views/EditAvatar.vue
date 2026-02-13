@@ -72,38 +72,6 @@
             </div>
           </div>
 
-          <!-- TODO: Description (à implémenter dans le backend) -->
-          <!-- <div class="form-field">
-            <div class="field-icon">📄</div>
-            <div class="field-content">
-              <label class="field-label">Description :</label>
-              <textarea 
-                v-model="formData.description" 
-                class="field-textarea" 
-                placeholder="Décrivez votre compagnon..."
-                maxlength="500"
-                rows="3"
-              ></textarea>
-              <span class="field-hint">{{ formData.description?.length || 0 }}/500 caractères</span>
-            </div>
-          </div> -->
-
-          <!-- TODO: Points (à implémenter dans le backend) -->
-          <!-- <div class="form-field">
-            <div class="field-icon">💎</div>
-            <div class="field-content">
-              <label class="field-label">Points :</label>
-              <input 
-                v-model.number="formData.points" 
-                type="number" 
-                class="field-input" 
-                placeholder="Points de l'avatar"
-                min="0"
-              >
-              <span class="field-hint">Points pour déterminer le niveau</span>
-            </div>
-          </div> -->
-
           <div v-if="error" class="error-message">
             ⚠️ {{ error }}
           </div>
@@ -153,8 +121,6 @@ export default {
     const formData = ref({
       nom: '',
       image: ''
-      // description: '',  // TODO: Quand backend sera étendu
-      // points: 0         // TODO: Quand backend sera étendu
     })
 
     const loadAvatar = async () => {

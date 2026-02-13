@@ -89,19 +89,40 @@
             <button @click="customizeAvatar" class="btn-customize">
               ✏️ Personnaliser
             </button>
+            <button @click="openLevelUpModal" class="btn-level-up" :disabled="!canLevelUp">
+              🚀 Level Up
+            </button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Level Up Modal -->
+    <LevelUpModal
+      :show="showLevelUpModal"
+      :avatar-id="avatar?.id_avatar"
+      :version-id="avatar?.id_avatar_version"
+      :avatar-name="avatar?.nom"
+      :avatar-image="avatar?.image || '🦊'"
+      :current-level="currentLevel"
+      :current-points="currentPoints"
+      :required-points="requiredPointsForNextLevel"
+      @close="showLevelUpModal = false"
+      @success="handleLevelUpSuccess"
+    />
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import LevelUpModal from '../components/LevelUpModal.vue'
 
 export default {
   name: 'AvatarDetail',
+  components: {
+    LevelUpModal
+  },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -109,7 +130,22 @@ export default {
     const loading = ref(true)
     const error = ref(null)
     const isPremium = ref(false)
+    const showLevelUpModal = ref(false)
+    const levels = ref([])
     
+    const loadLevels = async () => {
+      try {
+        const response = await fetch('http://localhost:6083/levels')
+        if (!response.ok) throw new Error('Erreur chargement niveaux')
+        
+        const data = await response.json()
+        levels.value = Array.isArray(data) ? data : (data.levels || [])
+        console.log('[AVATAR_DETAIL] Niveaux chargés:', levels.value.length)
+      } catch (err) {
+        console.error('[AVATAR_DETAIL] Erreur niveaux:', err)
+      }
+    }
+
     const loadAvatarDetails = async () => {
       try {
         loading.value = true
@@ -138,33 +174,57 @@ export default {
       }
     }
     
-    const calculatePointsToNextLevel = () => {
-      if (!avatar.value) return 0
+    const currentLevel = computed(() => {
+      if (!avatar.value || levels.value.length === 0) return 1
+      const points = currentPoints.value
       
-      const levelThresholds = {
-        1: 100,   // Débutant → Intermédiaire
-        2: 250,   // Intermédiaire → Avancé
-        3: 500,   // Avancé → Expert
-        4: 1000,  // Expert → Maître
-        5: 1000   // Maître (niveau max)
+      for (let i = levels.value.length - 1; i >= 0; i--) {
+        if (points >= levels.value[i].points) {
+          return levels.value[i].id_niveau
+        }
       }
-      
-      const currentLevel = avatar.value.niveau || 1
-      const currentPoints = avatar.value.points || 0
-      const nextLevelThreshold = levelThresholds[currentLevel] || 1000
-      
-      return Math.max(0, nextLevelThreshold - currentPoints)
+      return 1
+    })
+
+    const currentPoints = computed(() => {
+      return avatar.value?.points || 0
+    })
+
+    const requiredPointsForNextLevel = computed(() => {
+      if (levels.value.length === 0) return 100
+      const nextLevelId = currentLevel.value + 1
+      const nextLevel = levels.value.find(l => l.id_niveau === nextLevelId)
+      return nextLevel ? nextLevel.points : currentPoints.value
+    })
+
+    const canLevelUp = computed(() => {
+      return currentPoints.value >= requiredPointsForNextLevel.value && 
+             currentLevel.value < 5 // Niveau max = 5
+    })
+
+    const calculatePointsToNextLevel = () => {
+      return Math.max(0, requiredPointsForNextLevel.value - currentPoints.value)
     }
     
     const customizeAvatar = () => {
-      console.log('[AVATAR DETAIL] Personnaliser avatar:', avatar.value.id_avatar)
-      // TODO: Créer page de personnalisation utilisateur (CustomizeUserAvatar.vue)
-      alert('Fonctionnalité de personnalisation utilisateur à venir !')
-      // router.push(`/my-avatar/customize`)
+      console.log('[AVATAR DETAIL] Redirection vers édition avatar:', avatar.value.id_avatar)
+      router.push(`/avatar/${avatar.value.id_avatar}/edit`)
+    }
+
+    const openLevelUpModal = () => {
+      console.log('[AVATAR_DETAIL] Ouverture modale Level Up')
+      showLevelUpModal.value = true
+    }
+
+    const handleLevelUpSuccess = async () => {
+      console.log('[AVATAR_DETAIL] Level Up réussi, rechargement...')
+      showLevelUpModal.value = false
+      await loadAvatarDetails()
     }
     
-    onMounted(() => {
-      loadAvatarDetails()
+    onMounted(async () => {
+      await loadLevels()
+      await loadAvatarDetails()
     })
     
     return {
@@ -172,8 +232,15 @@ export default {
       loading,
       error,
       isPremium,
+      showLevelUpModal,
+      currentLevel,
+      currentPoints,
+      requiredPointsForNextLevel,
+      canLevelUp,
       calculatePointsToNextLevel,
-      customizeAvatar
+      customizeAvatar,
+      openLevelUpModal,
+      handleLevelUpSuccess
     }
   }
 }
@@ -359,11 +426,16 @@ export default {
 .action-button-wrapper {
   margin-top: 2rem;
   text-align: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .btn-customize {
-  width: 100%;
-  max-width: 400px;
+  flex: 1;
+  min-width: 180px;
+  max-width: 300px;
   padding: 1rem 2rem;
   background: #95a5a6;
   color: white;
@@ -380,6 +452,34 @@ export default {
   background: #7f8c8d;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+.btn-level-up {
+  flex: 1;
+  min-width: 180px;
+  max-width: 300px;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-level-up:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.btn-level-up:disabled {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
 }
 
 .btn-customize:active {
@@ -412,6 +512,15 @@ export default {
   .info-value-white,
   .info-value-yellow {
     font-size: 0.95rem;
+  }
+
+  .action-button-wrapper {
+    flex-direction: column;
+  }
+
+  .btn-customize,
+  .btn-level-up {
+    max-width: 100%;
   }
 }
 </style>
