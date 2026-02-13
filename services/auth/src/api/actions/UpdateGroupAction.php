@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace alt\api\actions;
 
 use alt\core\application\ports\api\GroupServiceInterface;
+use alt\core\application\ports\api\CreateGroupDTO;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class AddMemberToGroupAction
+class UpdateGroupAction
 {
     public function __construct(
         private GroupServiceInterface $groupService
@@ -17,16 +18,19 @@ class AddMemberToGroupAction
     {
         $groupId = (int) $args['id'];
         $data = $request->getParsedBody();
-        $userId = (int) ($data['userId'] ?? $data['user_id'] ?? 0);
         
-        if ($userId === 0) {
-            $response->getBody()->write(json_encode(['error' => 'Missing userId']));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-        }
+        // Get the existing group
+        $group = $this->groupService->getGroupById($groupId);
         
-        $success = $this->groupService->addMember($groupId, $userId);
+        // Update fields
+        $group->nom = $data['nom'] ?? $group->nom;
+        $group->description = $data['description'] ?? $group->description;
+        $group->niveau = $data['niveau'] ?? $group->niveau;
         
-        $response->getBody()->write(json_encode(['success' => $success]));
+        // Save via repository
+        $updatedGroup = $this->groupService->updateGroup($group);
+        
+        $response->getBody()->write(json_encode($updatedGroup));
         return $response->withHeader('Content-Type', 'application/json');
     }
 }

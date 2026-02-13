@@ -18,15 +18,17 @@ class PremiumMiddleware implements MiddlewareInterface
         
         $user = $request->getAttribute('user');
         
-        if (!$user || !isset($user['premium']) || !$user['premium']) {
-            $response = new Response();
-            $response->getBody()->write(json_encode([
-                'error' => 'Forbidden',
-                'message' => 'Premium membership required'
-            ]));
-            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
+        if ($user && is_array($user)) {
+            if ($user['premium'] === 'true') {
+                return $handler->handle($request);
+            }
         }
-
-        return $handler->handle($request);
+        
+        $response = new Response();
+        $response->getBody()->write(json_encode([
+            'error' => 'Forbidden',
+            'message' => 'Premium membership required'
+        ]));
+        return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
     }
 }

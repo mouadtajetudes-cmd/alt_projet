@@ -19,7 +19,6 @@ class SelfOrAdminMiddleware implements MiddlewareInterface
         $user = $request->getAttribute('user');
         $userId = $request->getAttribute('user_id');
         
-        // Get requested ID from route
         $route = $request->getAttribute('__route__');
         $requestedId = null;
         if ($route) {
@@ -27,20 +26,16 @@ class SelfOrAdminMiddleware implements MiddlewareInterface
             $requestedId = isset($args['id']) ? (int)$args['id'] : null;
         }
         
-        // Admin can access everything
-        if ($user) {
-            $isAdmin = is_array($user) ? ($user['administrateur'] ?? false) : ($user->administrateur ?? false);
-            if ($isAdmin) {
+        if ($user && is_array($user)) {
+            if ($user['administrateur'] === 'true') {
                 return $handler->handle($request);
             }
         }
         
-        // User can access their own data
         if ($userId && $requestedId && (int)$userId === $requestedId) {
             return $handler->handle($request);
         }
         
-        // Forbidden
         $response = new Response();
         $response->getBody()->write(json_encode([
             'error' => 'Forbidden',

@@ -8,7 +8,7 @@ use alt\core\application\ports\api\UserResponseDTO;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class GetAllUsersAction
+class GetAllUsersAdminAction
 {
     public function __construct(
         private UserServiceInterface $userService
@@ -20,7 +20,7 @@ class GetAllUsersAction
         
         $usersArray = [];
         foreach ($users as $user) {
-            $usersArray[] = UserResponseDTO::toArrayPublic($user);
+            $usersArray[] = UserResponseDTO::toArrayFull($user);
         }
         
         $response->getBody()->write(json_encode($usersArray));

@@ -47,15 +47,14 @@ class PdoUserRepository implements UserRepositoryInterface
             RETURNING *
         ');
         
-        //conversion des bool en true/false pour PostgreSQL
         $stmt->execute([
             $user->nom,
             $user->prenom,
             $user->email,
             $user->telephone,
             $user->password,
-            $user->administrateur ? 'true' : 'false',
-            $user->premium ? 'true' : 'false',
+            $user->administrateur,
+            $user->premium,
             $user->auth_provider,
             $user->points,
             $user->id_avatar

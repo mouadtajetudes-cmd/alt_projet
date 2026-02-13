@@ -17,17 +17,28 @@ class UpdateUserAction
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $id = (int)$args['id'];
-        $body = $request->getParsedBody();
+        $data = $request->getParsedBody();
         
-        $dto = new UpdateUserDTO();
-        $dto->nom = $body['nom'] ?? '';
-        $dto->prenom = $body['prenom'] ?? '';
-        $dto->email = $body['email'] ?? '';
-        $dto->telephone = $body['telephone'] ?? '';
+        $dto = new UpdateUserDTO(
+            $data['nom'] ?? null,
+            $data['prenom'] ?? null,
+            $data['email'] ?? null,
+            $data['telephone'] ?? null,
+            $data['administrateur'] ?? null,
+            $data['premium'] ?? null
+        );
         
         $user = $this->userService->updateUser($id, $dto);
         
-        $response->getBody()->write(json_encode($user));
+        $response->getBody()->write(json_encode([
+            'id_utilisateur' => $user->id_utilisateur,
+            'nom' => $user->nom,
+            'prenom' => $user->prenom,
+            'email' => $user->email,
+            'telephone' => $user->telephone ?? '',
+            'administrateur' => $user->administrateur,
+            'premium' => $user->premium
+        ]));
         return $response->withHeader('Content-Type', 'application/json');
     }
 }

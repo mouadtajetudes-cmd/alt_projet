@@ -55,17 +55,21 @@ class AuthService implements AuthServiceInterface
             throw new \Exception('Email already exists', 400);
         }
         
-        $user = new User();
-        $user->nom = $dto->nom;
-        $user->prenom = $dto->prenom;
-        $user->email = $dto->email;
-        $user->telephone = $dto->telephone;
-        $user->password = password_hash($dto->password, PASSWORD_BCRYPT);
-        $user->administrateur = false;
-        $user->premium = false;
-        $user->auth_provider = 'local';
-        $user->points = 0;
-        $user->id_avatar = 1;
+        $hashedPassword = password_hash($dto->password, PASSWORD_BCRYPT);
+        
+        $user = new User(
+            null,
+            $dto->nom,
+            $dto->prenom,
+            $dto->email,
+            $hashedPassword,
+            $dto->telephone,
+            false,
+            false,
+            'local',
+            0,
+            1
+        );
         
         $user = $this->userRepository->create($user);
         
