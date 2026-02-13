@@ -1,240 +1,36 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-    --primary: #4a90e2;
-    --success: #28a745;
-    --error: #dc3545;
-    --warning: #ffc107;
-    --dark: #1a1a2e;
-    --light: #f8f9fa;
-    --border: #dee2e6;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    color: var(--dark);
-}
-
-#app {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-header {
-    background: white;
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-h1 {
-    font-size: 2.5rem;
-    color: var(--primary);
-}
-
-h2 {
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-    color: white;
-}
-
-.status {
-    padding: 0.5rem 1.5rem;
-    border-radius: 2rem;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.status.connected {
-    background: var(--success);
-    color: white;
-}
-
-.status.disconnected {
-    background: var(--error);
-    color: white;
-}
-
-.status.connecting {
-    background: var(--warning);
-    color: var(--dark);
-}
-
-main {
-    display: grid;
-    gap: 2rem;
-}
-
-.services {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.service-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-}
-
-.service-card {
-    background: white;
-    border: 2px solid var(--border);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    transition: all 0.3s ease;
-}
-
-.service-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    border-color: var(--primary);
-}
-
-.service-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    color: var(--dark);
-}
-
-.service-card p {
-    color: #6c757d;
-    margin-bottom: 1rem;
-}
-
-button {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-}
-
-button:hover:not(:disabled) {
-    background: #357abd;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.result {
-    margin-top: 1rem;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-align: center;
-}
-
-.result.loading {
-    background: var(--warning);
-    color: var(--dark);
-}
-
-.result.success {
-    background: var(--success);
-    color: white;
-}
-
-.result.error {
-    background: var(--error);
-    color: white;
-}
-
-.websocket {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.ws-controls {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.ws-controls button {
-    flex: 1;
-}
-
-.ws-messages {
-    background: white;
-    border: 2px solid var(--border);
-    border-radius: 0.75rem;
-    padding: 1rem;
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.ws-message {
-    padding: 0.75rem;
-    border-bottom: 1px solid var(--border);
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 1rem;
-    align-items: center;
-}
-
-.ws-message:last-child {
-    border-bottom: none;
-}
-
-.ws-from {
-    font-weight: 700;
-    color: var(--primary);
-}
-
-.ws-text {
-    color: var(--dark);
-}
-
-.ws-time {
-    font-size: 0.8rem;
-    color: #6c757d;
-}
-
-@media (max-width: 768px) {
-    #app {
-        padding: 1rem;
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
     }
-    
-    header {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-    
-    h1 {
-        font-size: 2rem;
-    }
-    
-    .service-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .ws-controls {
-        flex-direction: column;
-    }
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
