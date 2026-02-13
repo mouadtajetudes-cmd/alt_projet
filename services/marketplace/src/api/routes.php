@@ -1,8 +1,12 @@
 <?php
 declare(strict_types=1);
 
-use alt\api\actions\GetProductAction;
-use alt\api\middlewares\AuthMiddleware;
+use alt\api\actions\GetAllProductsAction;
+use alt\api\actions\GetProductByIdAction;
+use alt\api\actions\CreateProductAction;
+use alt\api\actions\UpdateProductAction;
+use alt\api\actions\GetCategoriesAction;
+use alt\api\actions\CreateCategoryAction;
 
 return function(\Slim\App $app): \Slim\App {
 
@@ -15,8 +19,13 @@ return function(\Slim\App $app): \Slim\App {
         return $response->withHeader('Content-Type', 'application/json');
     });
 
-    $app->get('/products/{id}', GetProductAction::class)
-        ->add(AuthMiddleware::class);
+    $app->get('/categories', GetCategoriesAction::class);
+    $app->post('/categories', CreateCategoryAction::class);
+
+    $app->get('/products', GetAllProductsAction::class);
+    $app->get('/products/{id}', GetProductByIdAction::class);
+    $app->post('/products', CreateProductAction::class);
+    $app->put('/products/{id}', UpdateProductAction::class);
 
     return $app;
 };
