@@ -11,7 +11,4 @@ return [
         );
     },
 
-    AuthMiddleware::class => function ($c) {
-        return new AuthMiddleware();
-    },
 ];
