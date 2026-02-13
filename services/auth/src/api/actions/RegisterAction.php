@@ -18,13 +18,16 @@ class RegisterAction
     {
         $body = $request->getParsedBody();
         
-        $dto = new CreateUserDTO();
-        $dto->nom = $body['nom'] ?? '';
-        $dto->prenom = $body['prenom'] ?? '';
-        $dto->email = $body['email'] ?? '';
-        $dto->telephone = $body['telephone'] ?? '';
-        $dto->password = $body['password'] ?? '';
-        
+        $dto = new CreateUserDTO(
+            $body['nom'] ?? '',
+            $body['prenom'] ?? '',
+            $body['email'] ?? '',
+            $body['password'] ?? '',
+            $body['telephone'] ?? '',
+            'false', 
+            'false'  
+        );
+
         try {
             $result = $this->authService->register($dto);
             $response->getBody()->write(json_encode($result));

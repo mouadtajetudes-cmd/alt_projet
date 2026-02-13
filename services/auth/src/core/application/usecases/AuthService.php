@@ -64,8 +64,8 @@ class AuthService implements AuthServiceInterface
             $dto->email,
             $hashedPassword,
             $dto->telephone,
-            false,
-            false,
+            "false",
+            "false",
             'local',
             0,
             1

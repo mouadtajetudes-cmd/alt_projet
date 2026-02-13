@@ -24,17 +24,17 @@ class User
         if ($id_utilisateur !== null) {
             $this->id_utilisateur = $id_utilisateur;
         }
-        if ($nom) $this->nom = $nom;
-        if ($prenom) $this->prenom = $prenom;
-        if ($email) $this->email = $email;
-        if ($telephone) $this->telephone = $telephone;
-        if ($password) $this->password = $password;
-        if ($administrateur !== null) $this->administrateur = $administrateur;
-        if ($premium !== null) $this->premium = $premium;
-        if ($auth_provider) $this->auth_provider = $auth_provider;
-        if ($points !== null) $this->points = $points;
-        if ($id_avatar !== null) $this->id_avatar = $id_avatar;
-        if ($created_at) $this->created_at = $created_at;
-        if ($updated_at) $this->updated_at = $updated_at;
+        $this->nom = $nom;
+        $this->prenom = $prenom;
+        $this->email = $email;
+        $this->telephone = $telephone;
+        $this->password = $password;
+        $this->administrateur = $administrateur ?? 'false';
+        $this->premium = $premium ?? 'false';
+        $this->auth_provider = $auth_provider;
+        $this->points = $points ?? 0;
+        $this->id_avatar = $id_avatar;
+        $this->created_at = $created_at;
+        $this->updated_at = $updated_at;
     }
 }

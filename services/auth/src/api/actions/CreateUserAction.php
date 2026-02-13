@@ -24,8 +24,8 @@ class CreateUserAction
             $data['email'],
             $data['password'],
             $data['telephone'] ?? '',
-            $data['administrateur'] ?? false,
-            $data['premium'] ?? false
+            isset($data['administrateur']) && $data['administrateur'] ? 'true' : 'false',
+            isset($data['premium']) && $data['premium'] ? 'true' : 'false'
         );
         
         $user = $this->userService->createUser($dto);
