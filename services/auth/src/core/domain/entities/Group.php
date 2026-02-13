@@ -3,20 +3,22 @@ declare(strict_types=1);
 
 namespace alt\core\domain\entities;
 
-class Group
+class Group implements \JsonSerializable
 {
-    public int $id_groupe;
-    public string $nom;
-    public string $description;
-    public string $niveau;
-    public string $created_at;
+    public ?int $id_groupe = null;
+    public string $nom = '';
+    public ?string $description = null;
+    public ?string $niveau = null;
+    public ?string $created_at = null;
 
-    public function __construct($id_groupe, $nom, $description, $niveau, $created_at)
+    public function jsonSerialize(): mixed
     {
-        $this->id_groupe = $id_groupe;
-        $this->nom = $nom;
-        $this->description = $description;
-        $this->niveau = $niveau;
-        $this->created_at = $created_at;
+        return [
+            'id_groupe' => $this->id_groupe,
+            'nom' => $this->nom,
+            'description' => $this->description,
+            'niveau' => $this->niveau,
+            'created_at' => $this->created_at
+        ];
     }
 }

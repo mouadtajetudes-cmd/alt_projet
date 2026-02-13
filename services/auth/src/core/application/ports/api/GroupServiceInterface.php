@@ -11,7 +11,8 @@ interface GroupServiceInterface
     public function getAllGroups(): array;
     public function getGroupById(int $id): Group;
     public function createGroup(CreateGroupDTO $dto): Group;
-    public function addMember(int $groupId, int $userId): bool;
+    public function updateGroup(Group $group): Group;
+    public function addMember(int $groupId, int $userId, string $role = 'member'): bool;
     public function getMembers(int $groupId): array;
     public function getUserGroups(int $userId): array;
     public function getGroupMembers(int $groupId): array;

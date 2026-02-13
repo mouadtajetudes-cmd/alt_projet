@@ -68,4 +68,18 @@ class UserService implements UserServiceInterface
     {
         return $this->userRepository->delete($id);
     }
+
+    public function updateUserAvatar(int $id, string $avatarUrl): bool
+    {
+        return $this->userRepository->update($id, ['avatar_url' => $avatarUrl]) !== null;
+    }
+
+    public function updateOnlineStatus(int $id, bool $isOnline): bool
+    {
+        $data = [
+            'is_online' => $isOnline,
+            'last_seen' => date('Y-m-d H:i:s')
+        ];
+        return $this->userRepository->update($id, $data) !== null;
+    }
 }

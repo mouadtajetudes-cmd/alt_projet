@@ -30,20 +30,22 @@ class GroupService implements GroupServiceInterface
 
     public function createGroup(CreateGroupDTO $dto): Group
     {
-        $group = new Group(
-            null,
-            $dto->nom,
-            $dto->description,
-            $dto->niveau,
-            null
-        );
+        $group = new Group();
+        $group->nom = $dto->nom;
+        $group->description = $dto->description;
+        $group->niveau = $dto->niveau;
         
         return $this->groupRepository->create($group);
     }
 
-    public function addMember(int $groupId, int $userId): bool
+    public function updateGroup(Group $group): Group
     {
-        return $this->groupRepository->addMember($groupId, $userId);
+        return $this->groupRepository->update($group);
+    }
+
+    public function addMember(int $groupId, int $userId, string $role = 'member'): bool
+    {
+        return $this->groupRepository->addMember($groupId, $userId, $role);
     }
 
     public function getMembers(int $groupId): array

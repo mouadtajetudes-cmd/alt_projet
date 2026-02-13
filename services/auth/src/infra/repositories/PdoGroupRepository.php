@@ -48,14 +48,34 @@ class PdoGroupRepository implements GroupRepositoryInterface
         return $stmt->fetch();
     }
 
-    public function addMember(int $groupId, int $userId): bool
+    public function update(Group $group): Group
+    {
+        $stmt = $this->pdo->prepare('
+            UPDATE groupes 
+            SET nom = ?, description = ?, niveau = ?
+            WHERE id_groupe = ?
+            RETURNING *
+        ');
+        
+        $stmt->execute([
+            $group->nom,
+            $group->description,
+            $group->niveau,
+            $group->id_groupe
+        ]);
+        
+        $stmt->setFetchMode(PDO::FETCH_CLASS, Group::class);
+        return $stmt->fetch();
+    }
+
+    public function addMember(int $groupId, int $userId, string $role = 'member'): bool
     {
         $stmt = $this->pdo->prepare('
             INSERT INTO membre_groupe (id_groupe, id_utilisateur, role)
             VALUES (?, ?, ?)
         ');
         
-        return $stmt->execute([$groupId, $userId, 'member']);
+        return $stmt->execute([$groupId, $userId, $role]);
     }
 
     public function getMembers(int $groupId): array

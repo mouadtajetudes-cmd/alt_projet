@@ -9,6 +9,7 @@ use alt\api\actions\UpdateUserAction;
 use alt\api\actions\DeleteUserAction;
 use alt\api\actions\GetAllGroupsAction;
 use alt\api\actions\CreateGroupAction;
+use alt\api\actions\UpdateGroupAction;
 use alt\api\actions\AddMemberToGroupAction;
 use alt\api\actions\GetAllAdsAction;
 use alt\api\actions\CreateAdAction;
@@ -21,6 +22,7 @@ use alt\api\actions\RefreshTokenAction;
 use alt\api\actions\GetUserGroupsAction;
 use alt\api\actions\GetGroupMembersAction;
 use alt\api\actions\RemoveMemberAction;
+use alt\api\actions\UploadAvatarAction;
 use alt\api\middlewares\AuthMiddleware;
 use alt\api\middlewares\AdminMiddleware;
 use alt\api\middlewares\PremiumMiddleware;
@@ -73,11 +75,13 @@ return function(\Slim\App $app): \Slim\App {
         ->add(SelfOrAdminMiddleware::class)
         ->add(AuthMiddleware::class);
     
+    
     $app->delete('/users/{id}', DeleteUserAction::class)
         ->add(AdminMiddleware::class)
         ->add(AuthMiddleware::class);
     
     $app->post('/groups', CreateGroupAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
+    $app->put('/groups/{id}', UpdateGroupAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
     $app->post('/groups/{id}/members', AddMemberToGroupAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
     $app->delete('/groups/{id}/members/{userId}', RemoveMemberAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
     
