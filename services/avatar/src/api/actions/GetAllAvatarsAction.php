@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use alt\core\application\ports\api\AvatarServiceInterface;
 
-class GetAvatarAction
+class GetAllAvatarsAction
 {
     private AvatarServiceInterface $avatarService;
 
@@ -21,15 +21,10 @@ class GetAvatarAction
         array $args
     ): ResponseInterface {
         
-        $userId = $args['userId'] ?? null;
-
         try {
-            $avatars = $this->avatarService->getAvatarsByUserId($userId);
+            $avatars = $this->avatarService->getAllAvatars();
             
-            $response->getBody()->write(json_encode([
-                'type' => 'collection',
-                'avatars' => $avatars
-            ]));
+            $response->getBody()->write(json_encode($avatars));
             
             return $response
                 ->withHeader('Content-Type', 'application/json')
@@ -38,13 +33,13 @@ class GetAvatarAction
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'type' => 'error',
-                'error' => 404,
+                'error' => 500,
                 'message' => $e->getMessage()
             ]));
             
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withStatus(404);
+                ->withStatus(500);
         }
     }
 }
