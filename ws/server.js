@@ -772,9 +772,30 @@ function broadcastUserStatus(userId, status) {
   });
 }
 
+async function cleanupBrokenConversations() {
+  try {
+    const result = await mongoDB.collection('conversations').deleteMany({
+      participants: 'undefined'
+    });
+    if (result.deletedCount > 0) {
+      console.log(`🧹 Nettoyé ${result.deletedCount} conversations corrompues`);
+    }
+
+    const msgResult = await mongoDB.collection('messages').deleteMany({
+      senderId: 'undefined'
+    });
+    if (msgResult.deletedCount > 0) {
+      console.log(`🧹 Nettoyé ${msgResult.deletedCount} messages corrompus`);
+    }
+  } catch (e) {
+    console.error('Erreur nettoyage:', e);
+  }
+}
+
 async function start() {
   try {
     await connectMongoDB();
+    await cleanupBrokenConversations();
     server.listen(PORT, () => {
       console.log(`🚀 WebSocket + REST API sur port ${PORT}`);
       console.log(`📁 Uploads disponibles sur http://localhost:${PORT}/uploads`);
