@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace alt\core\application\ports\api;
 
 use alt\core\domain\entities\User;
-
 use alt\core\application\ports\api\CreateUserDTO;
 use alt\core\application\ports\api\UpdateUserDTO;
 

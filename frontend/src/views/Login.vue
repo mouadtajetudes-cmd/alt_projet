@@ -167,9 +167,14 @@ const handleLogin = async () => {
     
     if (response.ok) {
       localStorage.setItem('token', data.token)
+
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
+
       router.push('/chat')
     } else {
-      error.value = data.message || 'Email ou mot de passe incorrect'
+      error.value = data.message || data.error || 'Email ou mot de passe incorrect'
     }
   } catch (err) {
     error.value = 'Impossible de se connecter au serveur'

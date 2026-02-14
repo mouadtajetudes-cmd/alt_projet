@@ -361,6 +361,7 @@ import { useRouter } from 'vue-router'
 import './views.css'
 
 const router = useRouter()
+const currentUser = ref(null)
 
 const groups = ref([])
 const filteredGroups = ref([])
@@ -388,22 +389,51 @@ const form = ref({
 
 const editId = ref(null)
 
+const loadCurrentUser = async () => {
+  try {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      currentUser.value = JSON.parse(storedUser)
+      return
+    }
+    
+    const token = localStorage.getItem('token')
+    if (!token) { 
+      router.push('/login')
+      return 
+    }
+
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    const userId = payload.sub || payload.user?.id
+    if (!userId) throw new Error('User ID not found')
+
+    const response = await fetch(`http://localhost:6090/auth/users/${userId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (!response.ok) throw new Error('Failed to load user')
+
+    currentUser.value = await response.json()
+    localStorage.setItem('user', JSON.stringify(currentUser.value))
+  } catch (error) {
+    console.error('Error loading user:', error)
+    router.push('/login')
+  }
+}
+
 const loadGroups = async () => {
+  if (!currentUser.value) return
+  
   loading.value = true
   const token = localStorage.getItem('token')
   
   try {
-    const response = await fetch('http://localhost:6090/auth/groups', {
+    const userId = currentUser.value.id_utilisateur || currentUser.value.id
+    const response = await fetch(`http://localhost:3001/groups/user/${userId}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     
     if (response.ok) {
       groups.value = await response.json()
-      
-      for (const group of groups.value) {
-        await loadMemberCount(group)
-      }
-      
       filteredGroups.value = groups.value
     }
   } catch (err) {
@@ -440,7 +470,16 @@ const filterGroups = () => {
 
 const selectGroup = async (group) => {
   selectedGroup.value = group
-  await loadMembers(group.id_groupe)
+  try {
+    const response = await fetch(`http://localhost:3001/groups/${group.id_groupe}`)
+    if (response.ok) {
+      const groupDetails = await response.json()
+      selectedGroup.value = groupDetails
+      members.value = groupDetails.membres || []
+    }
+  } catch (err) {
+    console.error('Error loading group details:', err)
+  }
 }
 
 const loadMembers = async (groupId) => {
@@ -529,12 +568,17 @@ const saveGroup = async () => {
   const token = localStorage.getItem('token')
   
   try {
-    let url = 'http://localhost:6090/auth/groups'
+    let url = 'http://localhost:3001/groups'
     let method = 'POST'
+    let body = {
+      ...form.value,
+      createur_id: currentUser.value.id_utilisateur || currentUser.value.id
+    }
 
     if (editing.value) {
       url = `${url}/${editId.value}`
       method = 'PUT'
+      delete body.createur_id // Don't send createur_id on update
     }
 
     const response = await fetch(url, {
@@ -543,7 +587,7 @@ const saveGroup = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(form.value)
+      body: JSON.stringify(body)
     })
 
     if (response.ok) {
@@ -552,13 +596,14 @@ const saveGroup = async () => {
       
       if (editing.value && selectedGroup.value?.id_groupe === editId.value) {
         const updatedGroup = groups.value.find(g => g.id_groupe === editId.value)
-        if (updatedGroup) selectedGroup.value = updatedGroup
+        if (updatedGroup) await selectGroup(updatedGroup)
       }
     } else {
       const data = await response.json()
-      error.value = data.message || 'Erreur lors de l\'opération'
+      error.value = data.error || 'Erreur lors de l\'opération'
     }
   } catch (err) {
+    console.error('Error saving group:', err)
     error.value = 'Erreur de connexion au serveur'
   } finally {
     saving.value = false
@@ -619,9 +664,10 @@ const formatDate = (dateString) => {
 }
 
 const watchAddMemberModal = computed(() => showAddMemberModal.value)
-watchAddMemberModal.value // Use computed to trigger reactivity
+watchAddMemberModal.value 
 
 onMounted(async () => {
+  await loadCurrentUser()
   await loadGroups()
   await loadUsers()
 })

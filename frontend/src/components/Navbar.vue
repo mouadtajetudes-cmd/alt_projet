@@ -174,6 +174,7 @@ const handleScroll = () => {
 
 const handleLogout = () => {
   localStorage.removeItem('token')
+  localStorage.removeItem('user')
   mobileMenuOpen.value = false
   router.push('/login')
 }

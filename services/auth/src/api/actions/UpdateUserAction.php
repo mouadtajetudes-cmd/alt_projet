@@ -25,7 +25,8 @@ class UpdateUserAction
             $data['email'] ?? null,
             $data['telephone'] ?? null,
             $data['administrateur'] ?? null,
-            $data['premium'] ?? null
+            $data['premium'] ?? null,
+            $data['password'] ?? null
         );
         
         $user = $this->userService->updateUser($id, $dto);

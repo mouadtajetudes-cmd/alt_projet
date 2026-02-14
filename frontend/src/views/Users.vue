@@ -134,6 +134,16 @@
         <template #cell-actions="{ row }">
           <div class="flex items-center justify-end gap-2">
             <button 
+              v-if="!isAdmin"
+              @click="viewProfile(row)"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-primary hover:bg-blue-50 rounded-lg transition-colors text-sm"
+              title="Voir le profil"
+            >
+              <font-awesome-icon icon="eye" />
+              <span>Profil</span>
+            </button>
+            <button 
+              v-if="isAdmin"
               @click="editUser(row)"
               class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               title="Modifier"
@@ -141,6 +151,7 @@
               <font-awesome-icon icon="edit" />
             </button>
             <button 
+              v-if="isAdmin"
               @click="deleteUser(row.id_utilisateur)"
               class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               title="Supprimer"
@@ -229,6 +240,15 @@
                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               />
             </div>
+            <div v-else>
+              <label class="block text-sm font-medium text-dark mb-2">Nouveau mot de passe <span class="text-gray-400 font-normal">(laisser vide pour ne pas changer)</span></label>
+              <input
+                v-model="form.password"
+                type="password"
+                placeholder="••••••••"
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              />
+            </div>
 
             
             <div class="flex gap-6">
@@ -288,13 +308,97 @@
         </div>
       </div>
     </transition>
+
+    <transition name="modal">
+      <div 
+        v-if="showProfileModal" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        @click.self="showProfileModal = false"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-down">
+          <div class="h-24 bg-gradient-to-r from-primary to-purple-600 relative">
+            <button 
+              @click="showProfileModal = false"
+              class="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+            >
+              <font-awesome-icon icon="times" class="text-white" />
+            </button>
+          </div>
+          
+          <div class="px-8 pb-8">
+            <div class="flex justify-center -mt-12 mb-4">
+              <div 
+                v-if="profileUser?.avatar_url"
+                class="w-24 h-24 rounded-full border-4 border-white shadow-xl overflow-hidden"
+              >
+                <img 
+                  :src="`http://localhost:6090/auth${profileUser.avatar_url}`" 
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <div 
+                v-else
+                class="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary-light border-4 border-white shadow-xl flex items-center justify-center text-white text-3xl font-bold"
+              >
+                {{ profileUser?.nom?.[0] }}{{ profileUser?.prenom?.[0] }}
+              </div>
+            </div>
+            
+            <h3 class="text-2xl font-bold text-dark text-center mb-2">
+              {{ profileUser?.prenom }} {{ profileUser?.nom }}
+            </h3>
+            
+            <div class="flex justify-center gap-2 mb-6">
+              <span 
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium"
+                :class="profileUser?.administrateur === 'true' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'"
+              >
+                <font-awesome-icon :icon="profileUser?.administrateur === 'true' ? 'crown' : 'user'" />
+                {{ profileUser?.administrateur === 'true' ? 'Administrateur' : 'Utilisateur' }}
+              </span>
+              <span 
+                v-if="profileUser?.premium === 'true'"
+                class="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium"
+              >
+                <font-awesome-icon icon="gem" />
+                Premium
+              </span>
+            </div>
+            
+            <div class="space-y-3">
+              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <font-awesome-icon icon="envelope" class="text-gray-400 w-5" />
+                <span class="text-dark">{{ profileUser?.email }}</span>
+              </div>
+              <div v-if="profileUser?.telephone" class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <font-awesome-icon icon="phone" class="text-gray-400 w-5" />
+                <span class="text-dark">{{ profileUser?.telephone }}</span>
+              </div>
+            </div>
+            
+            <div class="mt-6 flex justify-center">
+              <button
+                @click="startConversation(profileUser)"
+                class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-light text-white rounded-xl hover:shadow-lg transition-all"
+              >
+                <font-awesome-icon icon="comments" />
+                <span>Envoyer un message</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseTable from '@/components/BaseTable.vue'
 import './views.css'
+
+const router = useRouter()
 
 const users = ref([])
 const filtered = ref([])
@@ -312,11 +416,14 @@ const form = ref({
   email: '',
   telephone: '',
   password: '',
-  administrateur: false,
-  premium: false
+  administrateur: "false",
+  premium: "false"
 })
 
 const editId = ref(null)
+const showProfileModal = ref(false)
+const profileUser = ref(null)
+const currentUserId = ref(null)
 
 const tableColumns = computed(() => {
   const cols = [{ key: 'user', label: 'Utilisateur' }]
@@ -326,6 +433,11 @@ const tableColumns = computed(() => {
       { key: 'email', label: 'Email' },
       { key: 'status', label: 'Statut' },
       { key: 'actions', label: 'Actions', cellClass: 'text-right' }
+    )
+  } else {
+    cols.push(
+      { key: 'status', label: 'Statut' },
+      { key: 'actions', label: '', cellClass: 'text-right' }
     )
   }
   
@@ -337,16 +449,29 @@ const loadUsers = async () => {
   const token = localStorage.getItem('token')
   
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    const userId = payload.sub || payload.user?.id
+    const storedUser = localStorage.getItem('user')
+    let userData = null
     
-    const userResponse = await fetch(`http://localhost:6090/auth/users/${userId}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    
-    if (userResponse.ok) {
-      const userData = await userResponse.json()
-      isAdmin.value = (userData.administrateur === 'true')
+    if (storedUser) {
+      userData = JSON.parse(storedUser)
+      console.log(userData)
+      isAdmin.value = (userData.administrateur === true || userData.administrateur === 'true' || userData.administrateur === 1 || userData.administrateur === "1")
+      currentUserId.value = String(userData.id || userData.id_utilisateur)
+    } else {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const userId = payload.sub || payload.user?.id
+      
+      const userResponse = await fetch(`http://localhost:6090/auth/users/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      
+      if (userResponse.ok) {
+        userData = await userResponse.json()
+        isAdmin.value = (userData.administrateur === true || userData.administrateur === 'true' || userData.administrateur === 1 || userData.administrateur === "1" )
+        currentUserId.value = String(userData.id_utilisateur)
+        console.log(userData);
+        localStorage.setItem('user', JSON.stringify(userData))
+      }
     }
   } catch (err) {
     console.error('Error checking admin status:', err)
@@ -412,6 +537,7 @@ const editUser = (user) => {
     prenom: user.prenom,
     email: user.email,
     telephone: user.telephone || '',
+    password: '',
     administrateur: user.administrateur === 'true',
     premium: user.premium === 'true'
   }
@@ -430,12 +556,18 @@ const saveUser = async () => {
   try {
     let url = 'http://localhost:6090/auth/users'
     let method = 'POST'
-    let body = { ...form.value }
+    let body = { 
+      ...form.value,
+      administrateur: form.value.administrateur ? 'true' : 'false',
+      premium: form.value.premium ? 'true' : 'false'
+    }
 
     if (editing.value) {
       url = `${url}/${editId.value}`
       method = 'PUT'
-      delete body.password
+      if (!body.password) {
+        delete body.password
+      }
     }
 
     const response = await fetch(url, {
@@ -471,6 +603,29 @@ const deleteUser = async (id) => {
     })
 
     if (response.ok) loadUsers()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const viewProfile = (user) => {
+  profileUser.value = user
+  showProfileModal.value = true
+}
+
+const startConversation = async (user) => {
+  try {
+    const response = await fetch('http://localhost:3001/conversations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        participants: [currentUserId.value, String(user.id_utilisateur)]
+      })
+    })
+    if (response.ok) {
+      showProfileModal.value = false
+      router.push('/chat')
+    }
   } catch (err) {
     console.error(err)
   }

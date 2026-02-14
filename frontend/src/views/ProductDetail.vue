@@ -1,28 +1,22 @@
 <template>
   <div class="product-detail-page">
     <div class="container">
-      <!-- Navigation breadcrumb -->
       <nav class="breadcrumb">
         <router-link to="/marketplace">← Retour à la marketplace</router-link>
       </nav>
 
-      <!-- Chargement -->
       <div v-if="loading" class="loading">
         <div class="spinner"></div>
         <p>Chargement du produit...</p>
       </div>
 
-      <!-- Erreur -->
       <div v-else-if="error" class="error-message">
         <p>❌ {{ error }}</p>
         <router-link to="/marketplace" class="btn-back">Retour</router-link>
       </div>
 
-      <!-- Détails du produit -->
       <div v-else-if="product" class="product-detail">
-        <!-- Section principale -->
         <div class="product-main">
-          <!-- Galerie d'images -->
           <div class="product-gallery">
             <div class="main-image">
               <img
@@ -33,7 +27,6 @@
               <div v-else class="placeholder-image">🛍️</div>
             </div>
             
-            <!-- Miniatures -->
             <div v-if="product.images && product.images.length > 1" class="thumbnails">
               <div
                 v-for="(image, index) in product.images"
@@ -47,7 +40,6 @@
             </div>
           </div>
 
-          <!-- Informations produit -->
           <div class="product-info">
             <h1 class="product-title">{{ product.nom }}</h1>
             
@@ -96,7 +88,6 @@
           </div>
         </div>
 
-        <!-- Section produits similaires -->
         <div v-if="similarProducts.length > 0" class="similar-products">
           <h2>Produits similaires</h2>
           <div class="products-grid">
@@ -135,7 +126,6 @@ export default {
 
     const API_BASE = 'http://localhost:6090/marketplace'
 
-    // Charger le produit
     const loadProduct = async () => {
       loading.value = true
       error.value = null
@@ -146,14 +136,12 @@ export default {
         
         product.value = response.data.data
 
-        // Initialiser l'image actuelle
         if (product.value.images && product.value.images.length > 0) {
           currentImage.value = product.value.images[0]
         } else if (product.value.image_url) {
           currentImage.value = product.value.image_url
         }
 
-        // Charger les produits similaires
         if (product.value.id_categorie) {
           loadSimilarProducts(product.value.id_categorie, product.value.id_produit)
         }
@@ -165,14 +153,12 @@ export default {
       }
     }
 
-    // Charger les produits similaires (même catégorie)
     const loadSimilarProducts = async (categoryId, excludeProductId) => {
       try {
         const response = await axios.get(
           `${API_BASE}/products?categorie=${categoryId}&limit=4`
         )
         
-        // Exclure le produit actuel et limiter à 4
         similarProducts.value = (response.data.data || [])
           .filter(p => p.id_produit !== excludeProductId)
           .slice(0, 4)
@@ -181,7 +167,6 @@ export default {
       }
     }
 
-    // Formater le prix
     const formatPrice = (price) => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
@@ -189,7 +174,6 @@ export default {
       }).format(price)
     }
 
-    // Formater la date
     const formatDate = (dateString) => {
       if (!dateString) return 'Date inconnue'
       const date = new Date(dateString)
@@ -200,13 +184,10 @@ export default {
       })
     }
 
-    // Ajouter au panier
     const addToCart = () => {
-      // À implémenter avec Pinia store (Vendredi)
       alert(`"${product.value.nom}" ajouté au panier !`)
     }
 
-    // Partager le produit
     const shareProduct = () => {
       const url = window.location.href
       navigator.clipboard.writeText(url).then(() => {

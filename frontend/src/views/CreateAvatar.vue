@@ -1,17 +1,5 @@
 <template>
   <div class="create-avatar-page">
-    <!-- TODO: Réactiver quand authentification sera prête -->
-    <!-- <div v-if="!isAdmin && !loading" class="unauthorized-overlay">
-      <div class="unauthorized-card">
-        <div class="unauthorized-icon">⛔</div>
-        <h2>Accès refusé</h2>
-        <p>Seuls les administrateurs peuvent créer des avatars.</p>
-        <router-link to="/avatar" class="btn-back-home">
-          ← Retour à la galerie
-        </router-link>
-      </div>
-    </div> -->
-    
     <div class="container">
       <div class="back-button-wrapper">
         <router-link to="/avatar" class="btn-back">
@@ -123,7 +111,6 @@
             ⚠️ {{ error }}
           </div>
 
-          <!-- Success Message -->
           <div v-if="success" class="success-message">
             ✓ {{ success }}
           </div>

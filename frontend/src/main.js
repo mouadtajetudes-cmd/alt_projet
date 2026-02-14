@@ -14,7 +14,7 @@ import {
   faBars, faTimes, faChevronDown, faPhone, faInfoCircle, faPaperPlane,
   faSmile, faPaperclip, faCheck, faSignOutAlt, faEdit, faPlus, faUser,
   faLayerGroup, faUserMinus, faCalendar, faCamera, faImage, faCircle,
-  faInbox, faHeart, faThumbsUp, faReply
+  faInbox, faHeart, faThumbsUp, faReply, faFileAlt, faDownload, faEye
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -23,7 +23,7 @@ library.add(
   faBars, faTimes, faChevronDown, faPhone, faInfoCircle, faPaperPlane,
   faSmile, faPaperclip, faCheck, faSignOutAlt, faEdit, faPlus, faUser,
   faLayerGroup, faUserMinus, faCalendar, faCamera, faImage, faCircle,
-  faInbox, faHeart, faThumbsUp, faReply
+  faInbox, faHeart, faThumbsUp, faReply, faFileAlt, faDownload, faEye
 )
 
 const app = createApp(App)

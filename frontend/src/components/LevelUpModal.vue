@@ -147,7 +147,6 @@ export default {
         return
       }
 
-      // TODO: Vérifier si versionId existe, sinon utiliser avatarId
       const targetId = props.versionId || props.avatarId
       
       if (!targetId) {
@@ -162,8 +161,6 @@ export default {
 
         console.log('[LEVEL_UP] Montée niveau pour versionId:', targetId, 'vers niveau:', nextLevel.value)
 
-        // TODO: Endpoint actuel attend versionId
-        // POST /avatar-versions/{versionId}/level-up
         const response = await fetch(`http://localhost:6090/avatar/avatar-versions/${targetId}/level-up`, {
           method: 'POST',
           headers: {

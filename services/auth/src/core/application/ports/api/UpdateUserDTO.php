@@ -11,6 +11,7 @@ class UpdateUserDTO
     public ?string $telephone;
     public mixed $administrateur;
     public mixed $premium;
+    public ?string $password;
 
     public function __construct(
         ?string $nom = null,
@@ -18,7 +19,8 @@ class UpdateUserDTO
         ?string $email = null,
         ?string $telephone = null,
         mixed $administrateur = null,
-        mixed $premium = null
+        mixed $premium = null,
+        ?string $password = null
     ) {
         $this->nom = $nom;
         $this->prenom = $prenom;
@@ -26,5 +28,6 @@ class UpdateUserDTO
         $this->telephone = $telephone;
         $this->administrateur = $administrateur;
         $this->premium = $premium;
+        $this->password = $password;
     }
 }

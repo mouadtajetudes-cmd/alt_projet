@@ -7,6 +7,7 @@ import Profile from '../views/Profile.vue'
 import Users from '../views/Users.vue'
 import Groups from '../views/Groups.vue'
 import Marketplace from '../views/Marketplace.vue'
+import ProductDetail from '../views/ProductDetail.vue'
 import Social from '../views/Social.vue'
 import Avatar from '../views/Avatar.vue'
 import AvatarDetail from '../views/AvatarDetail.vue'
@@ -56,16 +57,24 @@ const routes = [
     component: Groups,
     beforeEnter: requireAuth
   },
-  // {
-  //   path: '/marketplace',
-  //   name: 'Marketplace',
-  //   component: Marketplace
-  // },
-  // {
-  //   path: '/social',
-  //   name: 'Social',
-  //   component: Social
-  // },
+  {
+    path: '/marketplace',
+    name: 'Marketplace',
+    component: Marketplace,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/marketplace/:id',
+    name: 'ProductDetail',
+    component: ProductDetail,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/social',
+    name: 'Social',
+    component: Social,
+    beforeEnter: requireAuth
+  },
   {
     path: '/avatar',
     name: 'Avatar',

@@ -25,7 +25,6 @@
                 {{ user?.nom?.[0]?.toUpperCase() }}{{ user?.prenom?.[0]?.toUpperCase() }}
               </div>
               
-              <!-- Upload button on hover -->
               <label 
                 for="avatar-upload" 
                 class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
@@ -241,6 +240,29 @@
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                       />
                     </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-dark mb-2">Téléphone</label>
+                      <input
+                        v-model="form.telephone"
+                        type="tel"
+                        placeholder="Ex: 06 12 34 56 78"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-dark mb-2">
+                        Nouveau mot de passe
+                        <span class="text-gray-400 font-normal text-xs">(laisser vide pour ne pas changer)</span>
+                      </label>
+                      <input
+                        v-model="form.password"
+                        type="password"
+                        placeholder="••••••••"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      />
+                    </div>
                   </div>
 
                   
@@ -304,7 +326,9 @@ const success = ref('')
 const form = ref({
   nom: '',
   prenom: '',
-  email: ''
+  email: '',
+  telephone: '',
+  password: ''
 })
 
 const isAdmin = computed(() => {
@@ -327,6 +351,20 @@ const loadProfile = async () => {
   }
   
   try {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      user.value = JSON.parse(storedUser)
+      form.value = {
+        nom: user.value.nom,
+        prenom: user.value.prenom,
+        email: user.value.email,
+        telephone: user.value.telephone || '',
+        password: ''
+      }
+      loading.value = false
+      return
+    }
+    
     const payload = JSON.parse(atob(token.split('.')[1]))
     const userId = payload.sub || payload.user?.id
     
@@ -340,10 +378,13 @@ const loadProfile = async () => {
     
     if (response.ok) {
       user.value = await response.json()
+      localStorage.setItem('user', JSON.stringify(user.value))
       form.value = {
         nom: user.value.nom,
         prenom: user.value.prenom,
-        email: user.value.email
+        email: user.value.email,
+        telephone: user.value.telephone || '',
+        password: ''
       }
     }
   } catch (err) {
@@ -370,11 +411,18 @@ const updateProfile = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(form.value)
+      body: JSON.stringify({
+        nom: form.value.nom,
+        prenom: form.value.prenom,
+        email: form.value.email,
+        telephone: form.value.telephone,
+        ...(form.value.password ? { password: form.value.password } : {})
+      })
     })
     
     if (response.ok) {
       user.value = await response.json()
+      localStorage.setItem('user', JSON.stringify(user.value))
       success.value = 'Profil mis à jour avec succès'
       editing.value = false
       setTimeout(() => {
@@ -445,12 +493,15 @@ const cancelEdit = () => {
   form.value = {
     nom: user.value.nom,
     prenom: user.value.prenom,
-    email: user.value.email
+    email: user.value.email,
+    telephone: user.value.telephone || '',
+    password: ''
   }
 }
 
 const logout = () => {
   localStorage.removeItem('token')
+  localStorage.removeItem('user')
   router.push('/login')
 }
 

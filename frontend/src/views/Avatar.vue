@@ -174,7 +174,6 @@ export default {
         //   return
         // }
         
-        // Créer une copie de l'avatar template pour l'utilisateur
         const response = await fetch('http://localhost:6090/avatar/avatars', {
           method: 'POST',
           headers: {

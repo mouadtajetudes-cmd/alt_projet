@@ -22,10 +22,8 @@ use alt\api\actions\RefreshTokenAction;
 use alt\api\actions\GetUserGroupsAction;
 use alt\api\actions\GetGroupMembersAction;
 use alt\api\actions\RemoveMemberAction;
-use alt\api\actions\UploadAvatarAction;
 use alt\api\middlewares\AuthMiddleware;
 use alt\api\middlewares\AdminMiddleware;
-use alt\api\middlewares\PremiumMiddleware;
 use alt\api\middlewares\SelfOrAdminMiddleware;
 
 return function(\Slim\App $app): \Slim\App {
