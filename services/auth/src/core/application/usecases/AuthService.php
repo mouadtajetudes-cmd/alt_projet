@@ -48,7 +48,9 @@ class AuthService implements AuthServiceInterface
                 'auth_provider' => $user->auth_provider ?? 'local',
                 'points' => $user->points ?? 0,
                 'id_avatar' => $user->id_avatar ?? null,
-                'avatar_url' => $user->avatar_url ?? null
+                'bio' => $user->bio ?? null,
+                'banner_url' => $user->banner_url ?? null,
+                'statut_personnalise' => $user->statut_personnalise ?? null
             ]
         ];
     }
@@ -97,7 +99,9 @@ class AuthService implements AuthServiceInterface
                 'auth_provider' => $user->auth_provider ?? 'local',
                 'points' => $user->points ?? 0,
                 'id_avatar' => $user->id_avatar ?? null,
-                'avatar_url' => $user->avatar_url ?? null
+                'bio' => $user->bio ?? null,
+                'banner_url' => $user->banner_url ?? null,
+                'statut_personnalise' => $user->statut_personnalise ?? null
             ]
         ];
     }
@@ -134,7 +138,9 @@ class AuthService implements AuthServiceInterface
                 'auth_provider' => $user->auth_provider ?? 'local',
                 'points' => $user->points ?? 0,
                 'id_avatar' => $user->id_avatar ?? null,
-                'avatar_url' => $user->avatar_url ?? null
+                'bio' => $user->bio ?? null,
+                'banner_url' => $user->banner_url ?? null,
+                'statut_personnalise' => $user->statut_personnalise ?? null
             ]
         ];
     }

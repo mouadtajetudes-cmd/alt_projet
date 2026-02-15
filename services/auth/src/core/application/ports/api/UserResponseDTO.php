@@ -18,6 +18,9 @@ class UserResponseDTO
             'administrateur' => $user->administrateur,
             'premium' => $user->premium,
             'id_avatar' => $user->id_avatar ?? null,
+            'bio' => $user->bio ?? null,
+            'banner_url' => $user->banner_url ?? null,
+            'statut_personnalise' => $user->statut_personnalise ?? null,
             'created_at' => $user->created_at ?? null
         ];
     }
@@ -30,7 +33,9 @@ class UserResponseDTO
             'prenom' => $user->prenom,
             'email' => $user->email,
             'id_avatar' => $user->id_avatar ?? null,
-            'avatar_url' => $user->avatar_url ?? null
+            'bio' => $user->bio ?? null,
+            'banner_url' => $user->banner_url ?? null,
+            'statut_personnalise' => $user->statut_personnalise ?? null
         ];
     }
 }

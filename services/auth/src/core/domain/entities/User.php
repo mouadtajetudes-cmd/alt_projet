@@ -16,10 +16,13 @@ class User
     public string $auth_provider;
     public int $points;
     public ?int $id_avatar;
+    public ?string $bio;
+    public ?string $banner_url;
+    public ?string $statut_personnalise;
     public ?string $created_at;
     public ?string $updated_at;
 
-    public function __construct($id_utilisateur = null, $nom = '', $prenom = '', $email = '', $password = '', $telephone = null, $administrateur = null, $premium = null, $auth_provider = 'local', $points = 0, $id_avatar = null, $created_at = null, $updated_at = null)
+    public function __construct($id_utilisateur = null, $nom = '', $prenom = '', $email = '', $password = '', $telephone = null, $administrateur = null, $premium = null, $auth_provider = 'local', $points = 0, $id_avatar = null, $bio = null, $banner_url = null, $statut_personnalise = null, $created_at = null, $updated_at = null)
     {
         if ($id_utilisateur !== null) {
             $this->id_utilisateur = $id_utilisateur;
@@ -34,6 +37,9 @@ class User
         $this->auth_provider = $auth_provider ?? 'local';
         $this->points = $points ?? 0;
         $this->id_avatar = $id_avatar;
+        $this->bio = $bio;
+        $this->banner_url = $banner_url;
+        $this->statut_personnalise = $statut_personnalise;
         $this->created_at = $created_at;
         $this->updated_at = $updated_at;
     }
