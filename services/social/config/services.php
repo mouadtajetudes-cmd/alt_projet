@@ -17,9 +17,9 @@ use alt\infra\repositories\PdoReactionRepository;
 return [
     'pdo' => static function ($c): \PDO {
         $dbConfig = $c->get('settings')['database'];
-        $host = $dbConfig['host'] ?? 'alt_db';
+        $host = $dbConfig['host'] ?? 'alt.db';
         $port = $dbConfig['port'] ?? 5432; 
-        $dbname = $dbConfig['database'] ?? 'alt_social';
+        $dbname = $dbConfig['database'] ?? 'alt';
         $user = $dbConfig['username'] ?? 'alt';
         $pass = $dbConfig['password'] ?? 'alt';
 

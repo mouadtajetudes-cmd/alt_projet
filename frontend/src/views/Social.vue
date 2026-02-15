@@ -266,8 +266,4 @@ video.post-media {
 .post-actions button:hover {
   background: #e9ecef;
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> 3f049bf (fix(frontend social))
 </style>
