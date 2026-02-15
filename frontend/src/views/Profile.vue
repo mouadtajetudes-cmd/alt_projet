@@ -37,13 +37,13 @@
         <div class="px-8 pb-8">
           <div class="flex flex-col md:flex-row items-center md:items-end gap-6 -mt-20">
             
-            <div class="relative group">
+            <div class="relative">
               <div 
-                v-if="user?.avatar_url"
+                v-if="user?.id_avatar"
                 class="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden bg-white"
               >
                 <img 
-                  :src="`http://localhost:6090/auth${user.avatar_url}`" 
+                  :src="`http://localhost:6090/avatar/avatars/${user.id_avatar}/image`" 
                   :alt="`${user.prenom} ${user.nom}`"
                   class="w-full h-full object-cover"
                 />
@@ -54,21 +54,6 @@
               >
                 {{ user?.nom?.[0]?.toUpperCase() }}{{ user?.prenom?.[0]?.toUpperCase() }}
               </div>
-              
-              <label 
-                v-if="editing"
-                for="avatar-upload" 
-                class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-              >
-                <font-awesome-icon icon="camera" class="text-white text-2xl" />
-              </label>
-              <input 
-                id="avatar-upload" 
-                type="file" 
-                accept="image/*" 
-                @change="handleAvatarUpload" 
-                class="hidden"
-              />
               
               <div 
                 v-if="isAdmin"
@@ -511,55 +496,6 @@ const updateProfile = async () => {
     error.value = 'Impossible de mettre à jour le profil'
   } finally {
     saving.value = false
-  }
-}
-
-const handleAvatarUpload = async (event) => {
-  const file = event.target.files[0]
-  if (!file) return
-  
-  if (!file.type.startsWith('image/')) {
-    error.value = 'Veuillez sélectionner une image valide'
-    return
-  }
-  
-  if (file.size > 5 * 1024 * 1024) {
-    error.value = "L'image ne doit pas dépasser 5 Mo";
-    return
-  }
-  
-  const token = localStorage.getItem('token')
-  const formData = new FormData()
-  formData.append('avatar', file)
-  
-  loading.value = true
-  error.value = ''
-  
-  try {
-    const response = await fetch('http://localhost:6090/auth/users/upload-avatar', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    })
-    
-    if (response.ok) {
-      const data = await response.json()
-      user.value.avatar_url = data.avatar_url
-      localStorage.setItem('user', JSON.stringify(user.value))
-      success.value = 'Photo de profil mise à jour !'
-      setTimeout(() => {
-        success.value = ''
-      }, 3000)
-    } else {
-      const data = await response.json()
-      error.value = data.error || 'Erreur lors du téléchargement'
-    }
-  } catch (err) {
-    error.value = 'Erreur de connexion au serveur'
-  } finally {
-    loading.value = false
   }
 }
 

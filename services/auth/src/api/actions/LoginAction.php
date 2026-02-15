@@ -28,12 +28,28 @@ class LoginAction
             $response->getBody()->write(json_encode($result));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
+            // Ensure we only use valid HTTP status codes (200-599)
+            $statusCode = 500;
+            $errorCode = $e->getCode();
+            
+            // Check if it's a valid HTTP status code
+            if (is_int($errorCode) && $errorCode >= 200 && $errorCode < 600) {
+                $statusCode = $errorCode;
+            } elseif ($e->getMessage() && (
+                str_contains($e->getMessage(), 'Invalid') ||
+                str_contains($e->getMessage(), 'incorrect') ||
+                str_contains($e->getMessage(), 'not found')
+            )) {
+                // Invalid credentials - Unauthorized
+                $statusCode = 401;
+            }
+            
             $response->getBody()->write(json_encode([
                 'error' => $e->getMessage()
             ]));
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withStatus($e->getCode() ?: 500);
+                ->withStatus($statusCode);
         }
     }
 }

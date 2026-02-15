@@ -41,11 +41,11 @@ class UpdateUserAction
             'telephone' => $user->telephone ?? '',
             'bio' => $user->bio ?? '',
             'statut_personnalise' => $user->statut_personnalise ?? '',
-            'avatar_url' => $user->avatar_url ?? null,
             'banner_url' => $user->banner_url ?? null,
             'administrateur' => $user->administrateur,
             'premium' => $user->premium
         ]));
+
         return $response->withHeader('Content-Type', 'application/json');
     }
 }

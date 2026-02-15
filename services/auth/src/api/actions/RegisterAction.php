@@ -35,12 +35,38 @@ class RegisterAction
                 ->withHeader('Content-Type', 'application/json')
                 ->withStatus(201);
         } catch (\Exception $e) {
+            // Ensure we only use valid HTTP status codes (200-599)
+            $statusCode = 500;
+            $errorCode = $e->getCode();
+            
+            // Check if it's a valid HTTP status code
+            if (is_int($errorCode) && $errorCode >= 200 && $errorCode < 600) {
+                $statusCode = $errorCode;
+            }
+            // Check for common database/validation errors
+            elseif (is_string($e->getMessage())) {
+                $message = strtolower($e->getMessage());
+                // Duplicate entry errors
+                if (strpos($message, 'already exists') !== false || 
+                    strpos($message, 'duplicate') !== false || 
+                    strpos($message, 'unique') !== false ||
+                    strpos($message, '23505') !== false) { // PostgreSQL unique violation
+                    $statusCode = 409; // Conflict
+                }
+                // Validation errors
+                elseif (strpos($message, 'invalid') !== false || 
+                        strpos($message, 'required') !== false ||
+                        strpos($message, 'missing') !== false) {
+                    $statusCode = 400; // Bad Request
+                }
+            }
+            
             $response->getBody()->write(json_encode([
                 'error' => $e->getMessage()
             ]));
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withStatus($e->getCode() ?: 500);
+                ->withStatus($statusCode);
         }
     }
 }

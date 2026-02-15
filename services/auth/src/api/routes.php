@@ -7,7 +7,6 @@ use alt\api\actions\GetUserByIdAction;
 use alt\api\actions\CreateUserAction;
 use alt\api\actions\UpdateUserAction;
 use alt\api\actions\DeleteUserAction;
-use alt\api\actions\UploadAvatarAction;
 use alt\api\actions\UploadBannerAction;
 use alt\api\actions\GetAllGroupsAction;
 use alt\api\actions\CreateGroupAction;
@@ -73,9 +72,6 @@ return function(\Slim\App $app): \Slim\App {
         
     $app->put('/users/{id}', UpdateUserAction::class)
         ->add(SelfOrAdminMiddleware::class)
-        ->add(AuthMiddleware::class);
-    
-    $app->post('/users/upload-avatar', UploadAvatarAction::class)
         ->add(AuthMiddleware::class);
     
     $app->post('/users/upload-banner', UploadBannerAction::class)
