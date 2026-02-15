@@ -96,7 +96,7 @@ export default {
   setup() {
     const router = useRouter()
     const route = useRoute()
-    const { isAdmin, isAuthenticated, getUserId, initAuth } = useAuth()
+    const { isAdmin, isAuthenticated, getUserId, initAuth, user } = useAuth()
     
     const avatars = ref([])
     const loading = ref(true)
@@ -106,7 +106,10 @@ export default {
     
     initAuth()
     
-    // Gestion des messages d'erreur depuis les redirections
+    console.log('[AVATAR] User après initAuth:', user.value)
+    console.log('[AVATAR] isAdmin:', isAdmin.value)
+    console.log('[AVATAR] isAuthenticated:', isAuthenticated.value)
+    
     if (route.query.error === 'admin-required') {
       errorMessage.value = '⛔ Accès refusé : seuls les administrateurs peuvent créer des avatars.'
       setTimeout(() => errorMessage.value = null, 5000)

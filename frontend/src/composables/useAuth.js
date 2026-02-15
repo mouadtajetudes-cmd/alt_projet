@@ -28,13 +28,22 @@ export function useAuth() {
 
   const isAdmin = computed(() => {
     if (!user.value) return false;
-    return (
+    console.log(
+      "[AUTH] Vérification isAdmin - user.value.administrateur:",
+      user.value.administrateur,
+      "type:",
+      typeof user.value.administrateur,
+    );
+    const result =
       user.value.administrateur === true ||
       user.value.administrateur === "true" ||
+      user.value.administrateur === "1" ||
+      user.value.administrateur === 1 ||
       user.value.role === "admin" ||
       user.value.isAdmin === true ||
-      user.value.is_admin === true
-    );
+      user.value.is_admin === true;
+    console.log("[AUTH] isAdmin result:", result);
+    return result;
   });
 
   const login = (userData, authToken) => {

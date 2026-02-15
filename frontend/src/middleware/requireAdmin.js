@@ -1,9 +1,13 @@
 import { useAuth } from "../composables/useAuth";
 
 export function requireAdmin(to, from, next) {
-  const { isAuthenticated, isAdmin, initAuth } = useAuth();
+  const { isAuthenticated, isAdmin, initAuth, user } = useAuth();
 
   initAuth();
+  
+  console.log('[MIDDLEWARE] User:', user.value)
+  console.log('[MIDDLEWARE] isAuthenticated:', isAuthenticated.value)
+  console.log('[MIDDLEWARE] isAdmin:', isAdmin.value)
 
   if (!isAuthenticated.value) {
     console.log("[MIDDLEWARE] Accès refusé : utilisateur non connecté");
