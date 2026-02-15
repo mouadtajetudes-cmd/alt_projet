@@ -3,14 +3,44 @@
     <div class="max-w-5xl mx-auto">
       
       <div class="bg-white rounded-3xl shadow-lg overflow-hidden mb-6 animate-fade-in">
-        <div class="h-32 bg-gradient-to-r from-primary to-purple-600"></div>
+        <div class="relative h-48 group">
+          <img
+            v-if="user?.banner_url"
+            :src="`http://localhost:6090/auth${user.banner_url}`"
+            alt="Bannière"
+            class="w-full h-full object-cover"
+          />
+          <div
+            v-else
+            class="w-full h-full bg-gradient-to-r from-primary to-purple-600"
+          ></div>
+          
+          <label
+            v-if="editing"
+            for="banner-upload"
+            class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          >
+            <div class="text-center text-white">
+              <font-awesome-icon icon="camera" class="text-3xl mb-2" />
+              <p class="text-sm">Changer la bannière</p>
+            </div>
+          </label>
+          <input
+            id="banner-upload"
+            type="file"
+            accept="image/*"
+            @change="handleBannerUpload"
+            class="hidden"
+          />
+        </div>
+        
         <div class="px-8 pb-8">
-          <div class="flex flex-col md:flex-row items-center md:items-end gap-6 -mt-16">
+          <div class="flex flex-col md:flex-row items-center md:items-end gap-6 -mt-20">
             
             <div class="relative group">
               <div 
                 v-if="user?.avatar_url"
-                class="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden"
+                class="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden bg-white"
               >
                 <img 
                   :src="`http://localhost:6090/auth${user.avatar_url}`" 
@@ -25,8 +55,8 @@
                 {{ user?.nom?.[0]?.toUpperCase() }}{{ user?.prenom?.[0]?.toUpperCase() }}
               </div>
               
-              <!-- Upload button on hover -->
               <label 
+                v-if="editing"
                 for="avatar-upload" 
                 class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               >
@@ -54,6 +84,11 @@
               <h1 class="text-3xl font-bold text-dark mb-2">
                 {{ user?.prenom }} {{ user?.nom }}
               </h1>
+              
+              <p v-if="user?.statut_personnalise" class="text-sm text-gray-600 italic mb-2">
+                "{{ user.statut_personnalise }}"
+              </p>
+              
               <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-3">
                 <span 
                   class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium"
@@ -70,9 +105,17 @@
                   Premium
                 </span>
               </div>
-              <p class="text-dark-muted">
+              
+              <p class="text-dark-muted mb-2">
                 <font-awesome-icon icon="envelope" class="mr-2" />
                 {{ user?.email }}
+              </p>
+              
+              <p v-if="user?.bio" class="text-gray-700 text-sm mt-3 max-w-2xl">
+                {{ user.bio }}
+              </p>
+              <p v-else-if="!editing" class="text-gray-400 text-sm italic mt-3">
+                Aucune bio
               </p>
             </div>
 
@@ -241,6 +284,53 @@
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                       />
                     </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-dark mb-2">Téléphone</label>
+                      <input
+                        v-model="form.telephone"
+                        type="tel"
+                        placeholder="Ex: 06 12 34 56 78"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-dark mb-2">Statut personnalisé</label>
+                      <input
+                        v-model="form.statut_personnalise"
+                        type="text"
+                        maxlength="100"
+                        placeholder="Ex: En train de coder..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      />
+                      <p class="text-xs text-gray-400 mt-1">{{ form.statut_personnalise?.length || 0 }}/100 caractères</p>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                      <label class="block text-sm font-medium text-dark mb-2">Biographie</label>
+                      <textarea
+                        v-model="form.bio"
+                        rows="4"
+                        maxlength="500"
+                        placeholder="Parlez-nous de vous..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
+                      ></textarea>
+                      <p class="text-xs text-gray-400 mt-1">{{ form.bio?.length || 0 }}/500 caractères</p>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                      <label class="block text-sm font-medium text-dark mb-2">
+                        Nouveau mot de passe
+                        <span class="text-gray-400 font-normal text-xs">(laisser vide pour ne pas changer)</span>
+                      </label>
+                      <input
+                        v-model="form.password"
+                        type="password"
+                        placeholder="••••••••"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      />
+                    </div>
                   </div>
 
                   
@@ -304,7 +394,11 @@ const success = ref('')
 const form = ref({
   nom: '',
   prenom: '',
-  email: ''
+  email: '',
+  telephone: '',
+  bio: '',
+  statut_personnalise: '',
+  password: ''
 })
 
 const isAdmin = computed(() => {
@@ -327,6 +421,22 @@ const loadProfile = async () => {
   }
   
   try {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      user.value = JSON.parse(storedUser)
+      form.value = {
+        nom: user.value.nom,
+        prenom: user.value.prenom,
+        email: user.value.email,
+        telephone: user.value.telephone || '',
+        bio: user.value.bio || '',
+        statut_personnalise: user.value.statut_personnalise || '',
+        password: ''
+      }
+      loading.value = false
+      return
+    }
+    
     const payload = JSON.parse(atob(token.split('.')[1]))
     const userId = payload.sub || payload.user?.id
     
@@ -340,10 +450,15 @@ const loadProfile = async () => {
     
     if (response.ok) {
       user.value = await response.json()
+      localStorage.setItem('user', JSON.stringify(user.value))
       form.value = {
         nom: user.value.nom,
         prenom: user.value.prenom,
-        email: user.value.email
+        email: user.value.email,
+        telephone: user.value.telephone || '',
+        bio: user.value.bio || '',
+        statut_personnalise: user.value.statut_personnalise || '',
+        password: ''
       }
     }
   } catch (err) {
@@ -370,11 +485,20 @@ const updateProfile = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(form.value)
+      body: JSON.stringify({
+        nom: form.value.nom,
+        prenom: form.value.prenom,
+        email: form.value.email,
+        telephone: form.value.telephone,
+        bio: form.value.bio,
+        statut_personnalise: form.value.statut_personnalise,
+        ...(form.value.password ? { password: form.value.password } : {})
+      })
     })
     
     if (response.ok) {
       user.value = await response.json()
+      localStorage.setItem('user', JSON.stringify(user.value))
       success.value = 'Profil mis à jour avec succès'
       editing.value = false
       setTimeout(() => {
@@ -423,7 +547,57 @@ const handleAvatarUpload = async (event) => {
     if (response.ok) {
       const data = await response.json()
       user.value.avatar_url = data.avatar_url
+      localStorage.setItem('user', JSON.stringify(user.value))
       success.value = 'Photo de profil mise à jour !'
+      setTimeout(() => {
+        success.value = ''
+      }, 3000)
+    } else {
+      const data = await response.json()
+      error.value = data.error || 'Erreur lors du téléchargement'
+    }
+  } catch (err) {
+    error.value = 'Erreur de connexion au serveur'
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleBannerUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  if (!file.type.startsWith('image/')) {
+    error.value = 'Veuillez sélectionner une image valide'
+    return
+  }
+  
+  if (file.size > 10 * 1024 * 1024) {
+    error.value = "L'image ne doit pas dépasser 10 Mo";
+    return
+  }
+  
+  const token = localStorage.getItem('token')
+  const formData = new FormData()
+  formData.append('banner', file)
+  
+  loading.value = true
+  error.value = ''
+  
+  try {
+    const response = await fetch('http://localhost:6090/auth/users/upload-banner', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      user.value.banner_url = data.banner_url
+      localStorage.setItem('user', JSON.stringify(user.value))
+      success.value = 'Bannière mise à jour !'
       setTimeout(() => {
         success.value = ''
       }, 3000)
@@ -445,12 +619,17 @@ const cancelEdit = () => {
   form.value = {
     nom: user.value.nom,
     prenom: user.value.prenom,
-    email: user.value.email
+    email: user.value.email,
+    telephone: user.value.telephone || '',
+    bio: user.value.bio || '',
+    statut_personnalise: user.value.statut_personnalise || '',
+    password: ''
   }
 }
 
 const logout = () => {
   localStorage.removeItem('token')
+  localStorage.removeItem('user')
   router.push('/login')
 }
 

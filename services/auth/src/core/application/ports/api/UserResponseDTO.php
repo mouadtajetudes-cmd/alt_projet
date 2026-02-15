@@ -28,7 +28,9 @@ class UserResponseDTO
             'id_utilisateur' => $user->id_utilisateur,
             'nom' => $user->nom,
             'prenom' => $user->prenom,
-            'id_avatar' => $user->id_avatar ?? null
+            'email' => $user->email,
+            'id_avatar' => $user->id_avatar ?? null,
+            'avatar_url' => $user->avatar_url ?? null
         ];
     }
 }
