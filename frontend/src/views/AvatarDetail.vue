@@ -102,7 +102,6 @@
       </div>
     </div>
 
-    <!-- Level Up Modal -->
     <LevelUpModal
       :show="showLevelUpModal"
       :avatar-id="avatar?.id_avatar"

@@ -24,8 +24,11 @@ class UpdateUserAction
             $data['prenom'] ?? null,
             $data['email'] ?? null,
             $data['telephone'] ?? null,
+            $data['bio'] ?? null,
+            $data['statut_personnalise'] ?? null,
             $data['administrateur'] ?? null,
-            $data['premium'] ?? null
+            $data['premium'] ?? null,
+            $data['password'] ?? null
         );
         
         $user = $this->userService->updateUser($id, $dto);
@@ -36,6 +39,10 @@ class UpdateUserAction
             'prenom' => $user->prenom,
             'email' => $user->email,
             'telephone' => $user->telephone ?? '',
+            'bio' => $user->bio ?? '',
+            'statut_personnalise' => $user->statut_personnalise ?? '',
+            'avatar_url' => $user->avatar_url ?? null,
+            'banner_url' => $user->banner_url ?? null,
             'administrateur' => $user->administrateur,
             'premium' => $user->premium
         ]));

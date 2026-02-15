@@ -5,6 +5,8 @@ use alt\api\actions\GetAllUsersAction;
 use alt\api\actions\GetUserByIdAction;
 use alt\api\actions\CreateUserAction;
 use alt\api\actions\UpdateUserAction;
+use alt\api\actions\UploadAvatarAction;
+use alt\api\actions\UploadBannerAction;
 use alt\api\actions\GetAllGroupsAction;
 use alt\api\actions\CreateGroupAction;
 use alt\api\actions\AddMemberToGroupAction;
@@ -50,6 +52,18 @@ return [
 
     UpdateUserAction::class => function ($c) {
         return new UpdateUserAction(
+            $c->get(UserServiceInterface::class)
+        );
+    },
+
+    UploadAvatarAction::class => function ($c) {
+        return new UploadAvatarAction(
+            $c->get(UserServiceInterface::class)
+        );
+    },
+
+    UploadBannerAction::class => function ($c) {
+        return new UploadBannerAction(
             $c->get(UserServiceInterface::class)
         );
     },

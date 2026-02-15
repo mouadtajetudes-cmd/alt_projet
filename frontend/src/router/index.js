@@ -5,8 +5,11 @@ import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
 import Users from '../views/Users.vue'
+import Friends from '../views/Friends.vue'
 import Groups from '../views/Groups.vue'
+import GroupChat from '../views/GroupChat.vue'
 import Marketplace from '../views/Marketplace.vue'
+import ProductDetail from '../views/ProductDetail.vue'
 import Social from '../views/Social.vue'
 import Avatar from '../views/Avatar.vue'
 import AvatarDetail from '../views/AvatarDetail.vue'
@@ -52,21 +55,41 @@ const routes = [
     beforeEnter: requireAuth
   },
   {
+    path: '/friends',
+    name: 'Friends',
+    component: Friends,
+    beforeEnter: requireAuth
+  },
+  {
     path: '/groups',
     name: 'Groups',
     component: Groups,
     beforeEnter: requireAuth
   },
-  // {
-  //   path: '/marketplace',
-  //   name: 'Marketplace',
-  //   component: Marketplace
-  // },
-  // {
-  //   path: '/social',
-  //   name: 'Social',
-  //   component: Social
-  // },
+  {
+    path: '/groups/:salleId/chat',
+    name: 'GroupChat',
+    component: GroupChat,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/marketplace',
+    name: 'Marketplace',
+    component: Marketplace,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/marketplace/:id',
+    name: 'ProductDetail',
+    component: ProductDetail,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/social',
+    name: 'Social',
+    component: Social,
+    beforeEnter: requireAuth
+  },
   {
     path: '/avatar',
     name: 'Avatar',

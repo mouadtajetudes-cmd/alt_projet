@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace alt\core\application\ports\api;
 
 use alt\core\domain\entities\User;
-
 use alt\core\application\ports\api\CreateUserDTO;
 use alt\core\application\ports\api\UpdateUserDTO;
 
@@ -15,4 +14,6 @@ interface UserServiceInterface
     public function createUser(CreateUserDTO $dto): User;
     public function updateUser(int $id, UpdateUserDTO $dto): User;
     public function deleteUser(int $id): bool;
+    public function updateUserAvatar(int $id, string $avatarUrl): bool;
+    public function updateUserBanner(int $id, string $bannerUrl): bool;
 }

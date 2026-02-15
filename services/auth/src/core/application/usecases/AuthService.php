@@ -38,12 +38,17 @@ class AuthService implements AuthServiceInterface
             'token' => $token,
             'refresh_token' => $refreshToken,
             'user' => [
-                'id' => $user->id_utilisateur,
+                'id_utilisateur' => $user->id_utilisateur,
                 'nom' => $user->nom,
                 'prenom' => $user->prenom,
                 'email' => $user->email,
+                'telephone' => $user->telephone ?? '',
                 'administrateur' => $user->administrateur,
-                'premium' => $user->premium
+                'premium' => $user->premium,
+                'auth_provider' => $user->auth_provider ?? 'local',
+                'points' => $user->points ?? 0,
+                'id_avatar' => $user->id_avatar ?? null,
+                'avatar_url' => $user->avatar_url ?? null
             ]
         ];
     }
@@ -82,10 +87,17 @@ class AuthService implements AuthServiceInterface
             'token' => $token,
             'refresh_token' => $refreshToken,
             'user' => [
-                'id' => $user->id_utilisateur,
+                'id_utilisateur' => $user->id_utilisateur,
                 'nom' => $user->nom,
                 'prenom' => $user->prenom,
-                'email' => $user->email
+                'email' => $user->email,
+                'telephone' => $user->telephone ?? '',
+                'administrateur' => $user->administrateur ?? 'false',
+                'premium' => $user->premium ?? 'false',
+                'auth_provider' => $user->auth_provider ?? 'local',
+                'points' => $user->points ?? 0,
+                'id_avatar' => $user->id_avatar ?? null,
+                'avatar_url' => $user->avatar_url ?? null
             ]
         ];
     }
@@ -112,12 +124,17 @@ class AuthService implements AuthServiceInterface
             'token' => $newToken,
             'refresh_token' => $newRefreshToken,
             'user' => [
-                'id' => $user->id_utilisateur,
+                'id_utilisateur' => $user->id_utilisateur,
                 'nom' => $user->nom,
                 'prenom' => $user->prenom,
                 'email' => $user->email,
+                'telephone' => $user->telephone ?? '',
                 'administrateur' => $user->administrateur,
-                'premium' => $user->premium
+                'premium' => $user->premium,
+                'auth_provider' => $user->auth_provider ?? 'local',
+                'points' => $user->points ?? 0,
+                'id_avatar' => $user->id_avatar ?? null,
+                'avatar_url' => $user->avatar_url ?? null
             ]
         ];
     }

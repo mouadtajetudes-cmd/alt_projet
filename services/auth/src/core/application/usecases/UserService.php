@@ -33,6 +33,10 @@ class UserService implements UserServiceInterface
     {
         $hashedPassword = password_hash($dto->password, PASSWORD_BCRYPT);
         
+        // Ensure administrateur and premium are stored as string 'true' or 'false'
+        $administrateur = ($dto->administrateur === true || $dto->administrateur === 'true' || $dto->administrateur === 1 || $dto->administrateur === '1') ? 'true' : 'false';
+        $premium = ($dto->premium === true || $dto->premium === 'true' || $dto->premium === 1 || $dto->premium === '1') ? 'true' : 'false';
+        
         $user = new User(
             null,
             $dto->nom,
@@ -40,8 +44,8 @@ class UserService implements UserServiceInterface
             $dto->email,
             $hashedPassword,
             $dto->telephone,
-            $dto->administrateur,
-            $dto->premium,
+            $administrateur,
+            $premium,
             'local',
             0,
             1
@@ -54,12 +58,35 @@ class UserService implements UserServiceInterface
     {
         $updateData = [];
         
-        $updateData['nom'] = $dto->nom;
-        $updateData['prenom'] = $dto->prenom;
-        $updateData['email'] = $dto->email;
-        $updateData['telephone'] = $dto->telephone;
-        $updateData['administrateur'] = $dto->administrateur;
-        $updateData['premium'] = $dto->premium;
+        if ($dto->nom !== null) {
+            $updateData['nom'] = $dto->nom;
+        }
+        if ($dto->prenom !== null) {
+            $updateData['prenom'] = $dto->prenom;
+        }
+        if ($dto->email !== null) {
+            $updateData['email'] = $dto->email;
+        }
+        if ($dto->telephone !== null) {
+            $updateData['telephone'] = $dto->telephone;
+        }
+        if ($dto->bio !== null) {
+            $updateData['bio'] = $dto->bio;
+        }
+        if ($dto->statut_personnalise !== null) {
+            $updateData['statut_personnalise'] = $dto->statut_personnalise;
+        }
+        if ($dto->administrateur !== null) {
+            // Ensure administrateur is stored as string 'true' or 'false'
+            $updateData['administrateur'] = ($dto->administrateur === true || $dto->administrateur === 'true' || $dto->administrateur === 1 || $dto->administrateur === '1') ? 'true' : 'false';
+        }
+        if ($dto->premium !== null) {
+            // Ensure premium is stored as string 'true' or 'false'
+            $updateData['premium'] = ($dto->premium === true || $dto->premium === 'true' || $dto->premium === 1 || $dto->premium === '1') ? 'true' : 'false';
+        }
+        if (!empty($dto->password)) {
+            $updateData['password'] = password_hash($dto->password, PASSWORD_BCRYPT);
+        }
         
         return $this->userRepository->update($id, $updateData);
     }
@@ -72,6 +99,11 @@ class UserService implements UserServiceInterface
     public function updateUserAvatar(int $id, string $avatarUrl): bool
     {
         return $this->userRepository->update($id, ['avatar_url' => $avatarUrl]) !== null;
+    }
+
+    public function updateUserBanner(int $id, string $bannerUrl): bool
+    {
+        return $this->userRepository->update($id, ['banner_url' => $bannerUrl]) !== null;
     }
 
     public function updateOnlineStatus(int $id, bool $isOnline): bool
