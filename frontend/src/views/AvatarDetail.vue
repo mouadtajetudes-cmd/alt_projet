@@ -102,6 +102,7 @@
       </div>
     </div>
 
+    <!-- Level Up Modal -->
     <LevelUpModal
       :show="showLevelUpModal"
       :avatar-id="avatar?.id_avatar"
@@ -263,101 +264,23 @@ export default {
 </script>
 
 <style scoped>
+@import '@/assets/styles/avatar-variables.css';
+@import '@/assets/styles/avatar-animations.css';
+@import '@/assets/styles/avatar-common.css';
+
+/* === Styles Spécifiques à AvatarDetail.vue === */
+
 .avatar-detail-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--bg-gradient-page);
   padding: 2rem 0;
 }
 
-.container {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.back-button-wrapper {
-  margin-bottom: 2rem;
-}
-
-.btn-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: white;
-  color: #333;
-  text-decoration: none;
-  border-radius: 12px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.btn-back:hover {
-  background: #f8f9fa;
-  transform: translateX(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.loading {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid #e9ecef;
-  border-top-color: #667eea;
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.error-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 16px;
-  color: #dc3545;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.error-icon {
-  font-size: 4rem;
-  display: block;
-  margin-bottom: 1rem;
-}
-
-.btn-retry {
-  display: inline-block;
-  margin-top: 1.5rem;
-  padding: 0.875rem 2rem;
-  background: #667eea;
-  color: white;
-  text-decoration: none;
-  border-radius: 12px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.btn-retry:hover {
-  background: #5568d3;
-  transform: translateY(-2px);
-}
-
 .avatar-detail-card {
-  background: white;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border-radius: var(--border-radius-card);
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .companion-header {
@@ -369,17 +292,6 @@ export default {
 
 .companion-image {
   display: inline-block;
-}
-
-.avatar-icon-large {
-  font-size: 10rem;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
 }
 
 .card-body-dark {
@@ -407,7 +319,7 @@ export default {
   align-items: center;
   justify-content: center;
   background: rgba(255,255,255,0.1);
-  border-radius: 8px;
+  border-radius: var(--border-radius-small);
 }
 
 .info-icon {
@@ -422,19 +334,19 @@ export default {
 }
 
 .info-label-white {
-  color: white;
+  color: var(--text-white);
   font-size: 0.95rem;
   font-weight: 500;
 }
 
 .info-value-white {
-  color: white;
+  color: var(--text-white);
   font-size: 1.1rem;
   font-weight: 700;
 }
 
 .info-value-yellow {
-  color: #f9ca24;
+  color: var(--color-accent-yellow);
   font-size: 1.1rem;
   font-weight: 700;
 }
@@ -453,19 +365,19 @@ export default {
   min-width: 180px;
   max-width: 300px;
   padding: 1rem 2rem;
-  background: #95a5a6;
-  color: white;
+  background: var(--btn-secondary-bg);
+  color: var(--text-white);
   border: none;
-  border-radius: 12px;
+  border-radius: var(--border-radius-button);
   cursor: pointer;
   font-size: 1.1rem;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: var(--transition-all);
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .btn-customize:hover {
-  background: #7f8c8d;
+  background: var(--btn-secondary-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0,0,0,0.3);
 }
@@ -475,14 +387,14 @@ export default {
   min-width: 180px;
   max-width: 300px;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--btn-primary-gradient);
+  color: var(--text-white);
   border: none;
-  border-radius: 12px;
+  border-radius: var(--border-radius-button);
   cursor: pointer;
   font-size: 1.1rem;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: var(--transition-all);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
@@ -492,7 +404,7 @@ export default {
 }
 
 .btn-level-up:disabled {
-  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+  background: linear-gradient(135deg, var(--btn-secondary-bg) 0%, var(--btn-secondary-hover) 100%);
   cursor: not-allowed;
   opacity: 0.6;
   box-shadow: none;
@@ -507,9 +419,9 @@ export default {
   padding: 1.25rem;
   background: rgba(255, 193, 7, 0.15);
   border: 2px solid rgba(255, 193, 7, 0.5);
-  border-radius: 12px;
+  border-radius: var(--border-radius-button);
   text-align: center;
-  color: #ffc107;
+  color: var(--color-accent-yellow);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -527,11 +439,8 @@ export default {
   line-height: 1.5;
 }
 
+/* === Media Queries Spécifiques === */
 @media (max-width: 768px) {
-  .avatar-icon-large {
-    font-size: 7rem;
-  }
-  
   .card-body-dark {
     padding: 2rem 1.5rem;
   }

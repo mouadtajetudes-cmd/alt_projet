@@ -284,39 +284,41 @@ export default {
 </script>
 
 <style scoped>
+@import '@/assets/styles/avatar-variables.css';
+@import '@/assets/styles/avatar-animations.css';
+@import '@/assets/styles/avatar-common.css';
+
+/* === Styles Spécifiques à UserAvatar.vue === */
+
 .user-avatar-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem 0;
+  background: var(--avatar-gradient);
+  padding: var(--avatar-spacing-lg) 0;
 }
 
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
+/* Header avec position relative pour le bouton back absolu */
 .header {
   text-align: center;
-  margin-bottom: 2rem;
-  color: white;
+  margin-bottom: var(--avatar-spacing-lg);
+  color: var(--avatar-text-white);
   position: relative;
 }
 
+/* Bouton back avec backdrop-filter (version spécifique) */
 .btn-back {
   position: absolute;
   left: 0;
   top: 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  gap: var(--avatar-spacing-xs);
+  padding: 0.75rem var(--avatar-spacing-md);
   background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border-radius: 12px;
+  color: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-md);
   text-decoration: none;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all var(--avatar-transition-normal);
   backdrop-filter: blur(10px);
 }
 
@@ -325,40 +327,29 @@ export default {
   transform: translateX(-5px);
 }
 
-.header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-}
-
-.subtitle {
-  font-size: 1.1rem;
-  opacity: 0.9;
-}
-
+/* Carte de lien rapide vers les niveaux */
 .quick-link-card {
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  background: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-lg);
+  padding: var(--avatar-spacing-md);
+  margin-bottom: var(--avatar-spacing-lg);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
+  gap: var(--avatar-spacing-md);
+  box-shadow: var(--avatar-shadow-md);
+  transition: all var(--avatar-transition-normal);
 }
 
 .quick-link-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .quick-link-content {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--avatar-spacing-sm);
   flex: 1;
 }
 
@@ -368,152 +359,83 @@ export default {
 
 .quick-link-text h3 {
   margin: 0 0 0.25rem 0;
-  color: #333;
+  color: var(--avatar-text-dark);
   font-size: 1.3rem;
 }
 
 .quick-link-text p {
   margin: 0;
-  color: #666;
+  color: var(--avatar-text-medium);
   font-size: 0.9rem;
 }
 
 .btn-view-levels {
   padding: 0.875rem 1.75rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 12px;
+  background: var(--avatar-gradient);
+  color: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-md);
   text-decoration: none;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all var(--avatar-transition-normal);
   white-space: nowrap;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .btn-view-levels:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--avatar-shadow-primary);
 }
 
-.loading {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: white;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.error-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 16px;
-  color: #dc3545;
-}
-
-.error-icon {
-  font-size: 4rem;
-  display: block;
-  margin-bottom: 1rem;
-}
-
-.btn-retry {
-  margin-top: 1.5rem;
-  padding: 0.875rem 2rem;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.btn-retry:hover {
-  background: #5568d3;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 16px;
-  color: #666;
-}
-
-.empty-icon {
-  font-size: 5rem;
-  display: block;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.empty-state h2 {
-  color: #333;
-  margin-bottom: 0.5rem;
-}
-
+/* Bouton de navigation vers la galerie */
 .btn-browse {
   display: inline-block;
-  margin-top: 1.5rem;
-  padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 12px;
+  margin-top: var(--avatar-spacing-md);
+  padding: 0.875rem var(--avatar-spacing-lg);
+  background: var(--avatar-gradient);
+  color: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-md);
   text-decoration: none;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all var(--avatar-transition-normal);
 }
 
 .btn-browse:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--avatar-shadow-primary);
 }
 
+/* Section contenant les avatars */
 .avatars-section {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  background: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-xl);
+  padding: var(--avatar-spacing-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
 }
 
 .section-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--avatar-spacing-lg);
 }
 
 .section-header h2 {
   font-size: 1.8rem;
-  color: #333;
+  color: var(--avatar-text-dark);
   font-weight: 700;
 }
 
+/* Grille des avatars utilisateur */
 .avatars-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  gap: var(--avatar-spacing-md);
 }
 
+/* Carte avatar avec gradient spécifique */
 .avatar-card {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 16px;
+  border-radius: var(--avatar-radius-lg);
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: var(--avatar-shadow-sm);
 }
 
 .avatar-card:hover {
@@ -521,34 +443,32 @@ export default {
   box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
 }
 
+/* Header de carte avec gradient et padding spécifiques */
 .card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem 1.5rem 1rem;
+  background: var(--avatar-gradient);
+  padding: var(--avatar-spacing-lg) var(--avatar-spacing-md) var(--avatar-spacing-sm);
   position: relative;
   text-align: center;
 }
 
+/* Icône avatar avec taille et animation spécifiques */
 .avatar-icon {
   font-size: 5rem;
-  margin-bottom: 0.5rem;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  margin-bottom: var(--avatar-spacing-xs);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
   animation: float 3s ease-in-out infinite;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
+/* Badge de niveau */
 .level-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--avatar-spacing-xs);
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
-  padding: 0.5rem 1rem;
+  padding: var(--avatar-spacing-xs) var(--avatar-spacing-sm);
   border-radius: 20px;
-  color: white;
+  color: var(--avatar-text-white);
   font-weight: 600;
 }
 
@@ -556,32 +476,35 @@ export default {
   font-size: 1.2rem;
 }
 
+/* Corps de carte avec padding spécifique */
 .card-body {
-  padding: 1.5rem;
-  background: white;
+  padding: var(--avatar-spacing-md);
+  background: var(--avatar-text-white);
 }
 
+/* Nom d'avatar avec styles spécifiques */
 .avatar-name {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #333;
-  margin-bottom: 1rem;
+  color: var(--avatar-text-dark);
+  margin-bottom: var(--avatar-spacing-sm);
   text-align: center;
 }
 
+/* Statistiques de l'avatar */
 .avatar-stats {
   display: flex;
   justify-content: space-around;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: rgba(102, 126, 234, 0.05);
-  border-radius: 12px;
+  margin-bottom: var(--avatar-spacing-md);
+  padding: var(--avatar-spacing-sm);
+  background: rgba(102, 126, 234, var(--avatar-opacity-overlay));
+  border-radius: var(--avatar-radius-md);
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--avatar-spacing-xs);
 }
 
 .stat-icon {
@@ -590,24 +513,25 @@ export default {
 
 .stat-value {
   font-weight: 600;
-  color: #667eea;
+  color: var(--avatar-primary);
 }
 
+/* Section de progression */
 .progress-section {
-  margin-bottom: 1rem;
+  margin-bottom: var(--avatar-spacing-sm);
 }
 
 .progress-info {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--avatar-spacing-xs);
   font-size: 0.9rem;
   font-weight: 600;
-  color: #666;
+  color: var(--avatar-text-medium);
 }
 
 .progress-percentage {
-  color: #667eea;
+  color: var(--avatar-primary);
 }
 
 .progress-bar {
@@ -615,13 +539,13 @@ export default {
   background: #e9ecef;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-  margin-bottom: 0.5rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: var(--avatar-spacing-xs);
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: var(--avatar-gradient);
   border-radius: 10px;
   transition: width 0.8s ease;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
@@ -634,6 +558,7 @@ export default {
   font-weight: 600;
 }
 
+/* Information de niveau */
 .level-info {
   text-align: center;
   padding: 0.75rem;
@@ -643,47 +568,27 @@ export default {
 
 .level-name {
   font-weight: 600;
-  color: #667eea;
+  color: var(--avatar-primary);
   font-size: 1rem;
 }
 
+/* Footer de carte avec padding spécifique */
 .card-footer {
-  padding: 0 1.5rem 1.5rem;
-  background: white;
+  padding: 0 var(--avatar-spacing-md) var(--avatar-spacing-md);
+  background: var(--avatar-text-white);
 }
 
-.btn-details {
-  display: block;
-  width: 100%;
-  padding: 0.875rem;
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-align: center;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.btn-details:hover {
-  background: #667eea;
-  color: white;
-  transform: translateY(-2px);
-}
-
+/* Media queries spécifiques à cette vue */
 @media (max-width: 768px) {
   .header h1 {
     font-size: 2rem;
-    margin-top: 3rem;
+    margin-top: var(--avatar-spacing-xxl);
   }
   
   .btn-back {
     position: static;
     display: inline-flex;
-    margin-bottom: 1rem;
+    margin-bottom: var(--avatar-spacing-sm);
   }
   
   .quick-link-card {

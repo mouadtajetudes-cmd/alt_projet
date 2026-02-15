@@ -1,16 +1,5 @@
 <template>
   <div class="edit-avatar-page">
-    <div v-if="!isOwner && !initialLoading" class="unauthorized-overlay">
-      <div class="unauthorized-card">
-        <div class="unauthorized-icon">⛔</div>
-        <h2>Accès refusé</h2>
-        <p>Vous ne pouvez modifier que vos propres avatars.</p>
-        <router-link to="/my-avatars" class="btn-back-home">
-          ← Retour à mes avatars
-        </router-link>
-      </div>
-    </div>
-    
     <div class="container">
       <div class="back-button-wrapper">
         <router-link :to="`/avatar/${avatarId}`" class="btn-back">
@@ -113,27 +102,20 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuth } from '../composables/useAuth'
 
 export default {
   name: 'EditAvatar',
   setup() {
     const router = useRouter()
     const route = useRoute()
-    const { getUserId, initAuth } = useAuth()
-    
-    initAuth()
     
     const avatarId = computed(() => route.params.id)
-    const currentUserId = getUserId()
     
     const initialLoading = ref(true)
     const saving = ref(false)
     const loadError = ref(null)
     const error = ref(null)
     const success = ref(null)
-    const avatarOwnerId = ref(null)
-    const isOwner = ref(false)
     
     const originalData = ref(null)
     const formData = ref({
@@ -159,15 +141,6 @@ export default {
         
         const data = await response.json()
         console.log('[EDIT_AVATAR] Avatar chargé:', data)
-        
-        avatarOwnerId.value = data.id_utilisateur
-        isOwner.value = currentUserId && avatarOwnerId.value && currentUserId == avatarOwnerId.value
-        
-        if (!isOwner.value) {
-          console.log('[EDIT_AVATAR] Accès refusé : utilisateur', currentUserId, 'vs propriétaire', avatarOwnerId.value)
-          loadError.value = 'Cet avatar ne vous appartient pas'
-          return
-        }
         
         originalData.value = {
           nom: data.nom || '',
@@ -201,11 +174,6 @@ export default {
     const handleSubmit = async () => {
       if (!isFormValid.value || !hasChanges.value) {
         error.value = 'Aucune modification à enregistrer'
-        return
-      }
-      
-      if (!isOwner.value) {
-        error.value = 'Vous ne pouvez modifier que vos propres avatars'
         return
       }
 
@@ -268,167 +236,42 @@ export default {
       formData,
       isFormValid,
       hasChanges,
-      handleSubmit,
-      isOwner
+      handleSubmit
     }
   }
 }
 </script>
 
 <style scoped>
+@import '@/assets/styles/avatar-variables.css';
+@import '@/assets/styles/avatar-animations.css';
+@import '@/assets/styles/avatar-common.css';
+
+/* === Styles Spécifiques à EditAvatar.vue === */
+
+/* Page avec fond gradient */
 .edit-avatar-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem 0;
-  position: relative;
+  background: var(--avatar-gradient);
+  padding: var(--avatar-spacing-lg) 0;
 }
 
-.unauthorized-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  z-index: 1000;
-}
-
-.unauthorized-card {
-  background: white;
-  border-radius: 20px;
-  padding: 3rem 2rem;
-  text-align: center;
-  max-width: 500px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  animation: fadeInScale 0.4s ease-out;
-}
-
-.unauthorized-icon {
-  font-size: 5rem;
-  margin-bottom: 1.5rem;
-}
-
-.unauthorized-card h2 {
-  color: #dc3545;
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  font-weight: 700;
-}
-
-.unauthorized-card p {
-  color: #666;
-  font-size: 1.1rem;
-  margin-bottom: 2rem;
-  line-height: 1.6;
-}
-
-.btn-back-home {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 12px;
-  text-decoration: none;
-  font-weight: 700;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
-}
-
-.btn-back-home:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 24px rgba(102, 126, 234, 0.4);
-}
-
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
+/* Container spécifique pour EditAvatar */
 .container {
   max-width: 800px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
 }
 
-.back-button-wrapper {
-  margin-bottom: 2rem;
-}
-
-.btn-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: white;
-  color: #667eea;
-  border-radius: 12px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.btn-back:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
-
-.loading {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: white;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.error-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 16px;
-  color: #dc3545;
-}
-
-.error-icon {
-  font-size: 4rem;
-  display: block;
-  margin-bottom: 1rem;
-}
-
+/* État d'erreur de chargement spécifique */
 .btn-back-gallery {
   display: inline-block;
-  margin-top: 1.5rem;
-  padding: 0.875rem 2rem;
-  background: #667eea;
-  color: white;
-  border-radius: 12px;
+  margin-top: var(--avatar-spacing-md);
+  padding: 0.875rem var(--avatar-spacing-lg);
+  background: var(--avatar-primary);
+  color: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-md);
   text-decoration: none;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all var(--avatar-transition-normal);
 }
 
 .btn-back-gallery:hover {
@@ -436,21 +279,7 @@ export default {
   transform: translateY(-2px);
 }
 
-.avatar-form-card {
-  background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-}
-
-.avatar-preview {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 3rem 2rem;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
+/* Wave SVG personnalisé pour l'aperçu */
 .avatar-preview::before {
   content: '';
   position: absolute;
@@ -463,45 +292,33 @@ export default {
   pointer-events: none;
 }
 
+/* Display de l'avatar en édition */
 .avatar-display {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--avatar-spacing-md);
   position: relative;
   z-index: 1;
 }
 
-.avatar-icon-3d {
-  font-size: 8rem;
-  filter: drop-shadow(0 10px 30px rgba(0,0,0,0.3));
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-20px) scale(1.05); }
-}
-
+/* Nom de l'avatar en aperçu */
 .preview-name {
   font-size: 1.8rem;
   font-weight: 700;
-  color: white;
-  text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+  color: var(--avatar-text-white);
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
   position: relative;
   z-index: 1;
 }
 
-.avatar-form {
-  padding: 2.5rem;
-}
-
+/* En-tête du formulaire */
 .form-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: var(--avatar-spacing-lg);
 }
 
 .form-header h2 {
-  color: white;
+  color: var(--avatar-text-white);
   font-size: 1.8rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--avatar-spacing-xs);
 }
 
 .form-subtitle {
@@ -510,126 +327,18 @@ export default {
   margin: 0;
 }
 
-.form-field {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  background: rgba(255,255,255,0.05);
-  padding: 1.25rem;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-
-.form-field:hover {
-  background: rgba(255,255,255,0.08);
-}
-
-.field-icon {
-  font-size: 1.5rem;
-  background: rgba(255,255,255,0.1);
-  border-radius: 8px;
-  padding: 0.5rem;
-  flex-shrink: 0;
-}
-
-.field-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.field-label {
-  color: white;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.field-select,
-.field-input,
-.field-textarea {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  background: white;
-  border: 2px solid rgba(255,255,255,0.2);
-  border-radius: 10px;
-  font-size: 1rem;
-  color: #2c3e50;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.field-select:focus,
-.field-input:focus,
-.field-textarea:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-}
-
-.field-textarea {
-  resize: vertical;
-  min-height: 80px;
-  font-family: inherit;
-}
-
-.field-hint {
-  color: rgba(255,255,255,0.6);
-  font-size: 0.85rem;
-}
-
-.error-message {
-  background: rgba(220, 53, 69, 0.15);
-  border: 2px solid #dc3545;
-  color: #ff6b6b;
-  padding: 1rem;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-  text-align: center;
-}
-
-.success-message {
-  background: rgba(40, 167, 69, 0.15);
-  border: 2px solid #28a745;
-  color: #51cf66;
-  padding: 1rem;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-  text-align: center;
-  animation: slideDown 0.4s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.form-actions {
-  margin-top: 2rem;
-  display: flex;
-  gap: 1rem;
-}
-
+/* Bouton d'annulation spécifique */
 .btn-cancel {
   flex: 1;
   padding: 1.25rem;
   background: rgba(255, 255, 255, 0.1);
-  color: white;
+  color: var(--avatar-text-white);
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  border-radius: var(--avatar-radius-md);
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--avatar-transition-normal);
   text-align: center;
   text-decoration: none;
   display: flex;
@@ -642,68 +351,10 @@ export default {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-.btn-save {
-  flex: 2;
-  padding: 1.25rem 3rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.btn-save:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
-}
-
-.btn-save:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.spinner-small {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
+/* Media queries spécifiques */
 @media (max-width: 768px) {
-  .avatar-form {
-    padding: 1.5rem;
-  }
-  
-  .form-field {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .field-icon {
-    font-size: 2rem;
-  }
-  
-  .avatar-icon-3d {
-    font-size: 6rem;
-  }
-  
   .preview-name {
     font-size: 1.5rem;
-  }
-  
-  .form-actions {
-    flex-direction: column;
   }
 }
 </style>

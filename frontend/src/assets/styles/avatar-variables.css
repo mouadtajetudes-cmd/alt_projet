@@ -1,0 +1,66 @@
+/* ========================================
+   VARIABLES CSS - AVATAR SYSTEM
+   Variables communes pour toutes les vues avatar
+   ======================================== */
+
+:root {
+  /* === Couleurs Principales === */
+  --avatar-primary: #667eea;
+  --avatar-secondary: #764ba2;
+  --avatar-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* === Couleurs de Fond === */
+  --avatar-bg-dark: #2c3e50;
+  --avatar-bg-dark-alt: #34495e;
+  --avatar-bg-gradient-dark: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+  
+  /* === Couleurs d'État === */
+  --avatar-error: #dc3545;
+  --avatar-error-light: #ff6b6b;
+  --avatar-error-bg: rgba(220, 53, 69, 0.15);
+  
+  --avatar-success: #28a745;
+  --avatar-success-light: #51cf66;
+  --avatar-success-bg: rgba(40, 167, 69, 0.15);
+  
+  --avatar-warning: #ffc107;
+  --avatar-info: #17a2b8;
+  
+  /* === Couleurs de Texte === */
+  --avatar-text-dark: #333;
+  --avatar-text-medium: #666;
+  --avatar-text-light: #999;
+  --avatar-text-white: white;
+  
+  /* === Espacements === */
+  --avatar-spacing-xs: 0.5rem;
+  --avatar-spacing-sm: 1rem;
+  --avatar-spacing-md: 1.5rem;
+  --avatar-spacing-lg: 2rem;
+  --avatar-spacing-xl: 2.5rem;
+  --avatar-spacing-xxl: 3rem;
+  --avatar-spacing-huge: 4rem;
+  
+  /* === Border Radius === */
+  --avatar-radius-sm: 8px;
+  --avatar-radius-md: 12px;
+  --avatar-radius-lg: 16px;
+  --avatar-radius-xl: 20px;
+  --avatar-radius-circle: 50%;
+  
+  /* === Ombres === */
+  --avatar-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --avatar-shadow-md: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --avatar-shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+  --avatar-shadow-primary: 0 6px 20px rgba(102, 126, 234, 0.4);
+  
+  /* === Transitions === */
+  --avatar-transition-fast: 0.2s ease;
+  --avatar-transition-normal: 0.3s ease;
+  --avatar-transition-slow: 0.4s ease;
+  
+  /* === Opacités === */
+  --avatar-opacity-overlay: 0.05;
+  --avatar-opacity-disabled: 0.5;
+  --avatar-opacity-subtle: 0.9;
+}
