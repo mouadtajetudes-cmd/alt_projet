@@ -1,7 +1,6 @@
 <template>
   <div class="create-avatar-page">
-    <!-- TODO: Réactiver quand authentification sera prête -->
-    <!-- <div v-if="!isAdmin && !loading" class="unauthorized-overlay">
+    <div v-if="!isAdmin && !loading" class="unauthorized-overlay">
       <div class="unauthorized-card">
         <div class="unauthorized-icon">⛔</div>
         <h2>Accès refusé</h2>
@@ -10,7 +9,7 @@
           ← Retour à la galerie
         </router-link>
       </div>
-    </div> -->
+    </div>
     
     <div class="container">
       <div class="back-button-wrapper">
@@ -197,11 +196,10 @@ export default {
         return
       }
 
-      // TODO: Réactiver quand authentification sera prête
-      // if (!isAdmin.value) {
-      //   error.value = 'Accès refusé : droits administrateur requis'
-      //   return
-      // }
+      if (!isAdmin.value) {
+        error.value = 'Accès refusé : droits administrateur requis'
+        return
+      }
 
       try {
         loading.value = true
@@ -257,9 +255,8 @@ export default {
       error,
       success,
       isFormValid,
-      handleSubmit
-      // TODO: Réactiver quand authentification sera prête
-      // isAdmin
+      handleSubmit,
+      isAdmin
     }
   }
 }

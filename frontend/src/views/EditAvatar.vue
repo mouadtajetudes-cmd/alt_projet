@@ -1,5 +1,16 @@
 <template>
   <div class="edit-avatar-page">
+    <div v-if="!isOwner && !initialLoading" class="unauthorized-overlay">
+      <div class="unauthorized-card">
+        <div class="unauthorized-icon">⛔</div>
+        <h2>Accès refusé</h2>
+        <p>Vous ne pouvez modifier que vos propres avatars.</p>
+        <router-link to="/my-avatars" class="btn-back-home">
+          ← Retour à mes avatars
+        </router-link>
+      </div>
+    </div>
+    
     <div class="container">
       <div class="back-button-wrapper">
         <router-link :to="`/avatar/${avatarId}`" class="btn-back">
@@ -102,20 +113,27 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 export default {
   name: 'EditAvatar',
   setup() {
     const router = useRouter()
     const route = useRoute()
+    const { getUserId, initAuth } = useAuth()
+    
+    initAuth()
     
     const avatarId = computed(() => route.params.id)
+    const currentUserId = getUserId()
     
     const initialLoading = ref(true)
     const saving = ref(false)
     const loadError = ref(null)
     const error = ref(null)
     const success = ref(null)
+    const avatarOwnerId = ref(null)
+    const isOwner = ref(false)
     
     const originalData = ref(null)
     const formData = ref({
@@ -141,6 +159,15 @@ export default {
         
         const data = await response.json()
         console.log('[EDIT_AVATAR] Avatar chargé:', data)
+        
+        avatarOwnerId.value = data.id_utilisateur
+        isOwner.value = currentUserId && avatarOwnerId.value && currentUserId == avatarOwnerId.value
+        
+        if (!isOwner.value) {
+          console.log('[EDIT_AVATAR] Accès refusé : utilisateur', currentUserId, 'vs propriétaire', avatarOwnerId.value)
+          loadError.value = 'Cet avatar ne vous appartient pas'
+          return
+        }
         
         originalData.value = {
           nom: data.nom || '',
@@ -174,6 +201,11 @@ export default {
     const handleSubmit = async () => {
       if (!isFormValid.value || !hasChanges.value) {
         error.value = 'Aucune modification à enregistrer'
+        return
+      }
+      
+      if (!isOwner.value) {
+        error.value = 'Vous ne pouvez modifier que vos propres avatars'
         return
       }
 
@@ -236,7 +268,8 @@ export default {
       formData,
       isFormValid,
       hasChanges,
-      handleSubmit
+      handleSubmit,
+      isOwner
     }
   }
 }
@@ -247,6 +280,80 @@ export default {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 2rem 0;
+  position: relative;
+}
+
+.unauthorized-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  z-index: 1000;
+}
+
+.unauthorized-card {
+  background: white;
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  text-align: center;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: fadeInScale 0.4s ease-out;
+}
+
+.unauthorized-icon {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+}
+
+.unauthorized-card h2 {
+  color: #dc3545;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.unauthorized-card p {
+  color: #666;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.btn-back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.btn-back-home:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(102, 126, 234, 0.4);
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .container {

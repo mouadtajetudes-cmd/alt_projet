@@ -30,6 +30,7 @@ export function useAuth() {
     if (!user.value) return false;
     return (
       user.value.administrateur === true ||
+      user.value.administrateur === "true" ||
       user.value.role === "admin" ||
       user.value.isAdmin === true ||
       user.value.is_admin === true

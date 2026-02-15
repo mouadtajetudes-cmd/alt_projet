@@ -6,7 +6,16 @@
         <p class="subtitle">Progressez et débloquez de nouvelles récompenses</p>
       </div>
 
-      <div class="current-progress-card">
+      <div v-if="!userAvatar" class="no-avatar-card">
+        <div class="no-avatar-icon">🎭</div>
+        <h2>Aucun avatar actif</h2>
+        <p>Vous devez choisir un avatar pour voir votre progression.</p>
+        <router-link to="/avatar" class="btn-choose-avatar">
+          Choisir un avatar →
+        </router-link>
+      </div>
+
+      <div v-else class="current-progress-card">
         <div class="progress-header">
           <div class="level-badge">
             <span class="badge-icon">⭐</span>
@@ -121,17 +130,45 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 export default {
   name: 'Levels',
   setup() {
+    const router = useRouter()
+    const { getUserId, initAuth, isAuthenticated } = useAuth()
+    
+    initAuth()
+    
     const levels = ref([])
     const loading = ref(true)
     const error = ref(null)
+    const userAvatar = ref(null)
     
-    // TODO: Récupérer les points actuels de l'utilisateur 
-    const currentPoints = ref(0) 
-    const currentLevel = ref(1)  
+    const userId = getUserId()
+    
+    if (!userId || !isAuthenticated.value) {
+      console.log('[LEVELS] Utilisateur non connecté, redirection vers login')
+      router.push('/login')
+      return { levels, loading, error }
+    }
+    
+    const currentPoints = computed(() => {
+      return userAvatar.value?.points || 0
+    })
+    
+    const currentLevel = computed(() => {
+      if (levels.value.length === 0) return 1
+      const points = currentPoints.value
+      
+      for (let i = levels.value.length - 1; i >= 0; i--) {
+        if (points >= levels.value[i].points) {
+          return levels.value[i].id_niveau
+        }
+      }
+      return 1
+    })  
 
     const loadLevels = async () => {
       try {
@@ -158,8 +195,6 @@ export default {
           console.error('[LEVELS] Format de réponse invalide:', data)
           levels.value = []
         }
-
-        updateCurrentLevel()
         
       } catch (err) {
         console.error('[LEVELS] Erreur chargement niveaux:', err)
@@ -168,15 +203,36 @@ export default {
         loading.value = false
       }
     }
-
-    const updateCurrentLevel = () => {
-      if (!Array.isArray(levels.value) || levels.value.length === 0) return
-      
-      for (let i = levels.value.length - 1; i >= 0; i--) {
-        if (currentPoints.value >= levels.value[i].points) {
-          currentLevel.value = levels.value[i].id_niveau
-          break
+    
+    const loadUserAvatar = async () => {
+      try {
+        console.log(`[LEVELS] Chargement des avatars de l'utilisateur ${userId}`)
+        
+        const response = await fetch(`http://localhost:6090/avatar/users/${userId}/avatars`)
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            console.log('[LEVELS] Aucun avatar trouvé pour cet utilisateur')
+            userAvatar.value = null
+            return
+          }
+          throw new Error(`Erreur HTTP: ${response.status}`)
         }
+        
+        const data = await response.json()
+        const avatars = Array.isArray(data) ? data : (data.avatars || [])
+        
+        if (avatars.length > 0) {
+          userAvatar.value = avatars[0]
+          console.log('[LEVELS] Avatar chargé:', userAvatar.value.nom, 'avec', userAvatar.value.points, 'points')
+        } else {
+          console.log('[LEVELS] L\'utilisateur n\'a pas d\'avatar')
+          userAvatar.value = null
+        }
+        
+      } catch (err) {
+        console.error('[LEVELS] Erreur chargement avatar:', err)
+        userAvatar.value = null
       }
     }
 
@@ -247,14 +303,16 @@ export default {
       return 'locked'
     }
 
-    onMounted(() => {
-      loadLevels()
+    onMounted(async () => {
+      await loadLevels()
+      await loadUserAvatar()
     })
 
     return {
       levels,
       loading,
       error,
+      userAvatar,
       currentPoints,
       currentLevel,
       nextLevel,
@@ -301,6 +359,49 @@ export default {
 .subtitle {
   font-size: 1.1rem;
   opacity: 0.9;
+}
+
+.no-avatar-card {
+  background: white;
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  text-align: center;
+}
+
+.no-avatar-icon {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+.no-avatar-card h2 {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.no-avatar-card p {
+  color: #666;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.btn-choose-avatar {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-choose-avatar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .current-progress-card {
@@ -676,6 +777,15 @@ export default {
   
   .levels-summary {
     grid-template-columns: 1fr;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }
 </style>

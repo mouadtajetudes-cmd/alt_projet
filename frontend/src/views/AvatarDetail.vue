@@ -2,8 +2,8 @@
   <div class="avatar-detail-page">
     <div class="container">
       <div class="back-button-wrapper">
-        <router-link to="/avatar" class="btn-back">
-          ← Retour à la galerie
+        <router-link :to="isOwner ? '/my-avatars' : '/avatar'" class="btn-back">
+          ← Retour {{ isOwner ? 'à mes avatars' : 'à la galerie' }}
         </router-link>
       </div>
 
@@ -20,7 +20,7 @@
       <div v-else-if="avatar" class="avatar-detail-card">
         <div class="companion-header">
           <div class="companion-image">
-            <div class="avatar-icon-large">🎭</div>
+            <div class="avatar-icon-large">{{ avatar.image || '🦊' }}</div>
           </div>
         </div>
 
@@ -30,7 +30,7 @@
               <span class="info-icon">👥</span>
             </div>
             <div class="info-text">
-              <span class="info-label-white">Votre compagnon :</span>
+              <span class="info-label-white">{{ isOwner ? 'Votre compagnon :' : 'Compagnon :' }}</span>
               <span class="info-value-yellow">{{ avatar.nom }}</span>
             </div>
           </div>
@@ -60,7 +60,7 @@
               <span class="info-icon">👤</span>
             </div>
             <div class="info-text">
-              <span class="info-label-white">Nom de votre compagnon:</span>
+              <span class="info-label-white">{{ isOwner ? 'Nom de votre compagnon:' : 'Surnom:' }}</span>
               <span class="info-value-yellow">{{ avatar.surnom || 'Non défini' }}</span>
             </div>
           </div>
@@ -85,13 +85,18 @@
             </div>
           </div>
 
-          <div class="action-button-wrapper">
+          <div v-if="isOwner" class="action-button-wrapper">
             <button @click="customizeAvatar" class="btn-customize">
               ✏️ Personnaliser
             </button>
             <button @click="openLevelUpModal" class="btn-level-up" :disabled="!canLevelUp">
               🚀 Level Up
             </button>
+          </div>
+          
+          <div v-else class="info-message">
+            <span class="info-icon-msg">🔒</span>
+            <p>Ceci n'est pas votre avatar. Seul le propriétaire peut le personnaliser.</p>
           </div>
         </div>
       </div>
@@ -116,6 +121,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 import LevelUpModal from '../components/LevelUpModal.vue'
 
 export default {
@@ -126,6 +132,11 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
+    const { getUserId, initAuth } = useAuth()
+    
+    initAuth()
+    
+    const currentUserId = getUserId()
     const avatar = ref(null)
     const loading = ref(true)
     const error = ref(null)
@@ -201,6 +212,11 @@ export default {
       return currentPoints.value >= requiredPointsForNextLevel.value && 
              currentLevel.value < 5 // Niveau max = 5
     })
+    
+    const isOwner = computed(() => {
+      if (!avatar.value || !currentUserId) return false
+      return avatar.value.id_utilisateur && currentUserId == avatar.value.id_utilisateur
+    })
 
     const calculatePointsToNextLevel = () => {
       return Math.max(0, requiredPointsForNextLevel.value - currentPoints.value)
@@ -237,6 +253,7 @@ export default {
       currentPoints,
       requiredPointsForNextLevel,
       canLevelUp,
+      isOwner,
       calculatePointsToNextLevel,
       customizeAvatar,
       openLevelUpModal,
@@ -484,6 +501,31 @@ export default {
 
 .btn-customize:active {
   transform: translateY(0);
+}
+
+.info-message {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(255, 193, 7, 0.15);
+  border: 2px solid rgba(255, 193, 7, 0.5);
+  border-radius: 12px;
+  text-align: center;
+  color: #ffc107;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.info-icon-msg {
+  font-size: 2.5rem;
+}
+
+.info-message p {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 @media (max-width: 768px) {

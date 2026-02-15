@@ -15,6 +15,7 @@ import EditAvatar from '../views/EditAvatar.vue'
 import Levels from '../views/Levels.vue'
 import UserAvatar from '../views/UserAvatar.vue'
 import { requireAuth } from '../middleware/auth'
+import { requireAdmin } from '../middleware/requireAdmin'
 
 const routes = [
   {
@@ -69,32 +70,38 @@ const routes = [
   {
     path: '/avatar',
     name: 'Avatar',
-    component: Avatar
+    component: Avatar,
+    beforeEnter: requireAuth
   },
   {
     path: '/avatar/create',
     name: 'CreateAvatar',
-    component: CreateAvatar
+    component: CreateAvatar,
+    beforeEnter: requireAdmin
   },
   {
     path: '/avatar/:id/edit',
     name: 'EditAvatar',
-    component: EditAvatar
+    component: EditAvatar,
+    beforeEnter: requireAuth
   },
   {
     path: '/avatar/:id',
     name: 'AvatarDetail',
-    component: AvatarDetail
+    component: AvatarDetail,
+    beforeEnter: requireAuth
   },
   {
     path: '/levels',
     name: 'Levels',
-    component: Levels
+    component: Levels,
+    beforeEnter: requireAuth
   },
   {
-    path: '/user/:id/avatars',
+    path: '/my-avatars',
     name: 'UserAvatar',
-    component: UserAvatar
+    component: UserAvatar,
+    beforeEnter: requireAuth
   }
 ]
 

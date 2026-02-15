@@ -109,21 +109,34 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 export default {
   name: 'UserAvatar',
   setup() {
-    const route = useRoute()
+    const router = useRouter()
+    const { getUserId, initAuth, isAuthenticated } = useAuth()
+    
+    initAuth()
+    
     const avatars = ref([])
     const levels = ref([])
     const loading = ref(true)
     const error = ref(null)
     
-    // TODO: Cet ID viendra de l'utilisateur connecté
-    const userId = computed(() => {
-      return route.params.id || '1' // ID par défaut (test)
-    })
+    const userId = getUserId()
+    
+    if (!userId || !isAuthenticated.value) {
+      console.log('[USER_AVATAR] Utilisateur non connecté, redirection vers login')
+      router.push('/login')
+      return {
+        avatars,
+        levels,
+        loading,
+        error
+      }
+    }
 
     const loadLevels = async () => {
       try {
@@ -151,9 +164,9 @@ export default {
       try {
         loading.value = true
         error.value = null
-        console.log(`[USER_AVATAR] Chargement des avatars de l'utilisateur ${userId.value}`)
+        console.log(`[USER_AVATAR] Chargement des avatars de l'utilisateur ${userId}`)
         
-        const response = await fetch(`http://localhost:6090/avatar/users/${userId.value}/avatars`)
+        const response = await fetch(`http://localhost:6090/avatar/users/${userId}/avatars`)
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -185,7 +198,6 @@ export default {
     }
 
     const getCurrentPoints = (avatar) => {
-      // TODO: Ces points viendront de l'avatar ou de sa version
       return avatar.points || 0
     }
 
