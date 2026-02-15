@@ -14,4 +14,6 @@ interface UserServiceInterface
     public function createUser(CreateUserDTO $dto): User;
     public function updateUser(int $id, UpdateUserDTO $dto): User;
     public function deleteUser(int $id): bool;
+    public function updateUserAvatar(int $id, string $avatarUrl): bool;
+    public function updateUserBanner(int $id, string $bannerUrl): bool;
 }

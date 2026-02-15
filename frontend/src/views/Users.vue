@@ -134,7 +134,6 @@
         <template #cell-actions="{ row }">
           <div class="flex items-center justify-end gap-2">
             <button 
-              v-if="!isAdmin"
               @click="viewProfile(row)"
               class="flex items-center gap-1.5 px-3 py-1.5 text-primary hover:bg-blue-50 rounded-lg transition-colors text-sm"
               title="Voir le profil"
@@ -376,14 +375,69 @@
               </div>
             </div>
             
-            <div class="mt-6 flex justify-center">
-              <button
-                @click="startConversation(profileUser)"
-                class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-light text-white rounded-xl hover:shadow-lg transition-all"
-              >
-                <font-awesome-icon icon="comments" />
-                <span>Envoyer un message</span>
-              </button>
+            <div class="mt-6 flex flex-col gap-3">
+              <div v-if="getFriendshipStatus(profileUser?.id_utilisateur)" class="text-center mb-2">
+                <span 
+                  v-if="getFriendshipStatus(profileUser?.id_utilisateur)?.statut === 'accepte'"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-xl text-sm font-medium"
+                >
+                  <font-awesome-icon icon="check-circle" />
+                  Ami
+                </span>
+                <span 
+                  v-else-if="getFriendshipStatus(profileUser?.id_utilisateur)?.statut === 'en_attente' && 
+                             getFriendshipStatus(profileUser?.id_utilisateur)?.utilisateur_id === currentUserId"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-700 rounded-xl text-sm font-medium"
+                >
+                  <font-awesome-icon icon="clock" />
+                  Demande envoyée
+                </span>
+                <div 
+                  v-else-if="getFriendshipStatus(profileUser?.id_utilisateur)?.statut === 'en_attente' && 
+                             getFriendshipStatus(profileUser?.id_utilisateur)?.ami_id === currentUserId"
+                  class="flex items-center justify-center gap-2"
+                >
+                  <button
+                    @click="acceptFriendRequest(getFriendshipStatus(profileUser?.id_utilisateur)?.id_amitie, profileUser?.id_utilisateur)"
+                    :disabled="loadingFriendship"
+                    class="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all disabled:opacity-50"
+                  >
+                    <font-awesome-icon icon="check" />
+                    <span>Accepter la demande</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex justify-center gap-2">
+                <button
+                  v-if="getFriendshipStatus(profileUser?.id_utilisateur)?.statut === 'accepte'"
+                  @click="startConversation(profileUser)"
+                  class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-light text-white rounded-xl hover:shadow-lg transition-all"
+                >
+                  <font-awesome-icon icon="comments" />
+                  <span>Envoyer un message</span>
+                </button>
+                
+                <button
+                  v-if="!getFriendshipStatus(profileUser?.id_utilisateur)"
+                  @click="sendFriendRequest(profileUser?.id_utilisateur)"
+                  :disabled="loadingFriendship"
+                  class="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50"
+                >
+                  <font-awesome-icon icon="user-plus" />
+                  <span>Ajouter ami</span>
+                </button>
+
+                <button
+                  v-if="getFriendshipStatus(profileUser?.id_utilisateur)?.statut === 'accepte'"
+                  @click="removeFriend(getFriendshipStatus(profileUser?.id_utilisateur)?.id_amitie, profileUser?.id_utilisateur)"
+                  :disabled="loadingFriendship"
+                  class="flex items-center gap-2 px-4 py-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-all disabled:opacity-50"
+                >
+                  <font-awesome-icon icon="user-minus" />
+                  <span>Retirer</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -424,6 +478,8 @@ const editId = ref(null)
 const showProfileModal = ref(false)
 const profileUser = ref(null)
 const currentUserId = ref(null)
+const friendships = ref(new Map())
+const loadingFriendship = ref(false)
 
 const tableColumns = computed(() => {
   const cols = [{ key: 'user', label: 'Utilisateur' }]
@@ -511,6 +567,89 @@ const filterUsers = () => {
   }
   
   filtered.value = result
+}
+
+const checkFriendship = async (userId) => {
+  if (!currentUserId.value || !userId) return
+  
+  try {
+    const response = await fetch(`http://localhost:3001/friends/check/${currentUserId.value}/${userId}`)
+    if (response.ok) {
+      const data = await response.json()
+      friendships.value.set(userId, data.friendship)
+      return data.friendship
+    }
+  } catch (error) {
+    console.error('Erreur vérification amitié:', error)
+  }
+  return null
+}
+
+const sendFriendRequest = async (userId) => {
+  loadingFriendship.value = true
+  try {
+    const response = await fetch('http://localhost:3001/friends/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        utilisateur_id: currentUserId.value,
+        ami_id: userId
+      })
+    })
+
+    if (response.ok) {
+      await checkFriendship(userId)
+    }
+  } catch (error) {
+    console.error('Erreur envoi demande ami:', error)
+  } finally {
+    loadingFriendship.value = false
+  }
+}
+
+const acceptFriendRequest = async (friendshipId, userId) => {
+  loadingFriendship.value = true
+  try {
+    const response = await fetch(`http://localhost:3001/friends/accept/${friendshipId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ami_id: currentUserId.value })
+    })
+
+    if (response.ok) {
+      await checkFriendship(userId)
+    }
+  } catch (error) {
+    console.error('Erreur acceptation demande:', error)
+  } finally {
+    loadingFriendship.value = false
+  }
+}
+
+const removeFriend = async (friendshipId, userId) => {
+  if (!confirm('Retirer cet ami ?')) return
+  
+  loadingFriendship.value = true
+  try {
+    const response = await fetch(`http://localhost:3001/friends/${friendshipId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUserId.value })
+    })
+
+    if (response.ok) {
+      friendships.value.delete(userId)
+      await checkFriendship(userId)
+    }
+  } catch (error) {
+    console.error('Erreur suppression ami:', error)
+  } finally {
+    loadingFriendship.value = false
+  }
+}
+
+const getFriendshipStatus = (userId) => {
+  return friendships.value.get(userId)
 }
 
 const openCreateModal = () => {
@@ -608,24 +747,16 @@ const deleteUser = async (id) => {
   }
 }
 
-const viewProfile = (user) => {
+const viewProfile = async (user) => {
   profileUser.value = user
   showProfileModal.value = true
+  await checkFriendship(user.id_utilisateur)
 }
 
 const startConversation = async (user) => {
   try {
-    const response = await fetch('http://localhost:3001/conversations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        participants: [currentUserId.value, String(user.id_utilisateur)]
-      })
-    })
-    if (response.ok) {
-      showProfileModal.value = false
-      router.push('/chat')
-    }
+    showProfileModal.value = false
+    router.push({ name: 'Chat', query: { userId: user.id_utilisateur } })
   } catch (err) {
     console.error(err)
   }

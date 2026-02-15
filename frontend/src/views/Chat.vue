@@ -458,10 +458,11 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import './views.css'
 
 const router = useRouter()
+const route = useRoute()
 
 const currentUser = ref(null)
 const loading = ref(true)
@@ -584,15 +585,18 @@ const loadConversations = async () => {
 
 const loadAllUsers = async () => {
   try {
-    const token = localStorage.getItem('token')
-    const response = await fetch('http://localhost:6090/auth/users', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    if (!response.ok) throw new Error('Failed to load users')
-    const users = await response.json()
-    allUsers.value = users.filter(u => String(u.id_utilisateur) !== currentUserId.value)
+    const response = await fetch(`http://localhost:3001/friends/${currentUserId.value}`)
+    if (!response.ok) throw new Error('Failed to load friends')
+    const friends = await response.json()
+    allUsers.value = friends.map(friend => ({
+      id_utilisateur: friend.id_utilisateur,
+      nom: friend.nom,
+      prenom: friend.prenom,
+      email: friend.email
+    }))
   } catch (error) {
-    console.error('Error loading users:', error)
+    console.error('Error loading friends:', error)
+    allUsers.value = []
   }
 }
 
@@ -1053,14 +1057,32 @@ const handleBlur = () => {
   isPageFocused.value = false
 }
 
-onMounted(() => {
-  loadCurrentUser()
+onMounted(async () => {
+  await loadCurrentUser()
   window.addEventListener('focus', handleFocus)
   window.addEventListener('blur', handleBlur)
   
   setTimeout(() => {
     if (currentUser.value) loadPinnedConversations()
   }, 500)
+
+  if (route.query.userId) {
+    const targetUserId = String(route.query.userId)
+    
+    await new Promise(resolve => setTimeout(resolve, 300))
+    
+    const existingConv = conversations.value.find(conv => 
+      conv.participants && conv.participants.some(p => String(p) === targetUserId)
+    )
+    
+    if (existingConv) {
+      await selectConversation(existingConv)
+    } else {
+      await createConversation(targetUserId)
+    }
+    
+    router.replace({ name: 'Chat' })
+  }
 })
 
 onUnmounted(() => {

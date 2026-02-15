@@ -484,6 +484,589 @@ app.get('/conversations/pinned/:userId', async (req, res) => {
   }
 });
 
+
+// ============== FRIENDS ROUTES ==============
+
+app.post('/friends/request', async (req, res) => {
+  try {
+    const { utilisateur_id, ami_id } = req.body;
+
+    if (!utilisateur_id || !ami_id) {
+      return res.status(400).json({ error: 'utilisateur_id et ami_id requis' });
+    }
+
+    if (utilisateur_id === ami_id) {
+      return res.status(400).json({ error: 'Vous ne pouvez pas vous ajouter vous-même' });
+    }
+
+    const existingCheck = await pgPool.query(`
+      SELECT * FROM amities 
+      WHERE (utilisateur_id = $1 AND ami_id = $2) 
+         OR (utilisateur_id = $2 AND ami_id = $1)
+    `, [utilisateur_id, ami_id]);
+
+    if (existingCheck.rows.length > 0) {
+      const existing = existingCheck.rows[0];
+      if (existing.statut === 'bloque') {
+        return res.status(403).json({ error: 'Cette utilisateur est bloqué' });
+      }
+      return res.status(400).json({ error: 'Une relation existe déjà entre ces utilisateurs' });
+    }
+
+    const result = await pgPool.query(`
+      INSERT INTO amities (utilisateur_id, ami_id, statut, date_demande)
+      VALUES ($1, $2, 'en_attente', NOW())
+      RETURNING *
+    `, [utilisateur_id, ami_id]);
+
+    const sender = await pgPool.query('SELECT nom, prenom FROM utilisateurs WHERE id_utilisateur = $1', [utilisateur_id]);
+    if (sender.rows[0]) {
+      await createNotification(
+        ami_id,
+        'friend_request',
+        'Nouvelle demande d\'ami',
+        `${sender.rows[0].prenom} ${sender.rows[0].nom} souhaite devenir votre ami`,
+        { from_user_id: utilisateur_id, friendship_id: result.rows[0].id_amitie }
+      );
+    }
+
+    res.json({ success: true, friendship: result.rows[0] });
+  } catch (error) {
+    console.error('Erreur envoi demande ami:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/friends/accept/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ami_id } = req.body;
+
+    const result = await pgPool.query(`
+      UPDATE amities 
+      SET statut = 'accepte', date_reponse = NOW()
+      WHERE id_amitie = $1 AND ami_id = $2 AND statut = 'en_attente'
+      RETURNING *
+    `, [id, ami_id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Demande non trouvée' });
+    }
+
+    const friendship = result.rows[0];
+    const accepter = await pgPool.query('SELECT nom, prenom FROM utilisateurs WHERE id_utilisateur = $1', [ami_id]);
+    if (accepter.rows[0]) {
+      await createNotification(
+        friendship.utilisateur_id,
+        'friend_accepted',
+        'Demande d\'ami acceptée',
+        `${accepter.rows[0].prenom} ${accepter.rows[0].nom} a accepté votre demande d'ami`,
+        { friend_user_id: ami_id }
+      );
+    }
+
+    res.json({ success: true, friendship: result.rows[0] });
+  } catch (error) {
+    console.error('Erreur acceptation demande ami:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/friends/refuse/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ami_id } = req.body;
+
+    const result = await pgPool.query(`
+      UPDATE amities 
+      SET statut = 'refuse', date_reponse = NOW()
+      WHERE id_amitie = $1 AND ami_id = $2 AND statut = 'en_attente'
+      RETURNING *
+    `, [id, ami_id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Demande non trouvée' });
+    }
+
+    res.json({ success: true, friendship: result.rows[0] });
+  } catch (error) {
+    console.error('Erreur refus demande ami:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/friends/:friendshipId', async (req, res) => {
+  try {
+    const { friendshipId } = req.params;
+    const { userId } = req.body;
+
+    const result = await pgPool.query(`
+      DELETE FROM amities 
+      WHERE id_amitie = $1 
+        AND (utilisateur_id = $2 OR ami_id = $2)
+      RETURNING *
+    `, [friendshipId, userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Amitié non trouvée' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur suppression ami:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/friends/block', async (req, res) => {
+  try {
+    const { utilisateur_id, ami_id } = req.body;
+
+    if (!utilisateur_id || !ami_id) {
+      return res.status(400).json({ error: 'utilisateur_id et ami_id requis' });
+    }
+
+    await pgPool.query(`
+      DELETE FROM amities 
+      WHERE (utilisateur_id = $1 AND ami_id = $2) 
+         OR (utilisateur_id = $2 AND ami_id = $1)
+    `, [utilisateur_id, ami_id]);
+
+    const result = await pgPool.query(`
+      INSERT INTO amities (utilisateur_id, ami_id, statut, date_demande)
+      VALUES ($1, $2, 'bloque', NOW())
+      RETURNING *
+    `, [utilisateur_id, ami_id]);
+
+    res.json({ success: true, friendship: result.rows[0] });
+  } catch (error) {
+    console.error('Erreur blocage utilisateur:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/friends/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pgPool.query(`
+      SELECT 
+        a.id_amitie,
+        a.statut,
+        a.date_demande,
+        a.date_reponse,
+        u.id_utilisateur,
+        u.nom,
+        u.prenom,
+        u.email
+      FROM amities a
+      JOIN utilisateurs u ON (
+        CASE 
+          WHEN a.utilisateur_id = $1 THEN u.id_utilisateur = a.ami_id
+          ELSE u.id_utilisateur = a.utilisateur_id
+        END
+      )
+      WHERE (a.utilisateur_id = $1 OR a.ami_id = $1)
+        AND a.statut = 'accepte'
+      ORDER BY a.date_reponse DESC
+    `, [userId]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erreur récupération amis:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/friends/requests/received/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pgPool.query(`
+      SELECT 
+        a.id_amitie,
+        a.statut,
+        a.date_demande,
+        u.id_utilisateur,
+        u.nom,
+        u.prenom,
+        u.email
+      FROM amities a
+      JOIN utilisateurs u ON u.id_utilisateur = a.utilisateur_id
+      WHERE a.ami_id = $1 AND a.statut = 'en_attente'
+      ORDER BY a.date_demande DESC
+    `, [userId]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erreur récupération demandes reçues:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/friends/requests/sent/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pgPool.query(`
+      SELECT 
+        a.id_amitie,
+        a.statut,
+        a.date_demande,
+        u.id_utilisateur,
+        u.nom,
+        u.prenom,
+        u.email
+      FROM amities a
+      JOIN utilisateurs u ON u.id_utilisateur = a.ami_id
+      WHERE a.utilisateur_id = $1 AND a.statut = 'en_attente'
+      ORDER BY a.date_demande DESC
+    `, [userId]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erreur récupération demandes envoyées:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/friends/check/:userId/:targetUserId', async (req, res) => {
+  try {
+    const { userId, targetUserId } = req.params;
+
+    const result = await pgPool.query(`
+      SELECT sont_amis($1, $2) as are_friends
+    `, [userId, targetUserId]);
+
+    const friendship = await pgPool.query(`
+      SELECT * FROM amities
+      WHERE ((utilisateur_id = $1 AND ami_id = $2) 
+          OR (utilisateur_id = $2 AND ami_id = $1))
+    `, [userId, targetUserId]);
+
+    res.json({ 
+      areFriends: result.rows[0].are_friends,
+      friendship: friendship.rows[0] || null
+    });
+  } catch (error) {
+    console.error('Erreur vérification amitié:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// ============== SALLE MESSAGES ROUTES ==============
+
+app.get('/salles/:salleId/messages', async (req, res) => {
+  try {
+    const { salleId } = req.params;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = parseInt(req.query.skip) || 0;
+
+    const messages = await mongoDB.collection('salle_messages')
+      .find({ salleId: parseInt(salleId) })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .skip(skip)
+      .toArray();
+
+    res.json({ messages: messages.reverse() });
+  } catch (error) {
+    console.error('Erreur récupération messages salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/salles/:salleId/messages', async (req, res) => {
+  try {
+    const { salleId } = req.params;
+    const { senderId, senderName, content, type = 'text' } = req.body;
+
+    if (!senderId || !content) {
+      return res.status(400).json({ error: 'senderId et content requis' });
+    }
+
+    const message = {
+      salleId: parseInt(salleId),
+      senderId: String(senderId),
+      senderName,
+      content,
+      type,
+      timestamp: new Date(),
+      isRead: false,
+      reactions: []
+    };
+
+    const result = await mongoDB.collection('salle_messages').insertOne(message);
+    message._id = result.insertedId;
+
+    await broadcastToSalle(parseInt(salleId), {
+      type: 'salle_message',
+      message
+    });
+
+    res.json(message);
+  } catch (error) {
+    console.error('Erreur envoi message salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/salles/messages/:messageId', async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { content, userId } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ error: 'content requis' });
+    }
+
+    const message = await mongoDB.collection('salle_messages').findOne({ 
+      _id: new ObjectId(messageId) 
+    });
+
+    if (!message || message.senderId !== String(userId)) {
+      return res.status(403).json({ error: 'Non autorisé' });
+    }
+
+    await mongoDB.collection('salle_messages').updateOne(
+      { _id: new ObjectId(messageId) },
+      { 
+        $set: { 
+          content, 
+          editedAt: new Date() 
+        } 
+      }
+    );
+
+    await broadcastToSalle(message.salleId, {
+      type: 'salle_message_edited',
+      messageId,
+      content,
+      editedAt: new Date()
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur modification message salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/salles/messages/:messageId', async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { userId } = req.body;
+
+    const message = await mongoDB.collection('salle_messages').findOne({ 
+      _id: new ObjectId(messageId) 
+    });
+
+    if (!message || message.senderId !== String(userId)) {
+      return res.status(403).json({ error: 'Non autorisé' });
+    }
+
+    await mongoDB.collection('salle_messages').deleteOne({ 
+      _id: new ObjectId(messageId) 
+    });
+
+    await broadcastToSalle(message.salleId, {
+      type: 'salle_message_deleted',
+      messageId
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur suppression message salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/salles/messages/:messageId/react', async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { userId, emoji } = req.body;
+
+    if (!userId || !emoji) {
+      return res.status(400).json({ error: 'userId et emoji requis' });
+    }
+
+    const message = await mongoDB.collection('salle_messages').findOne({ 
+      _id: new ObjectId(messageId) 
+    });
+
+    if (!message) {
+      return res.status(404).json({ error: 'Message non trouvé' });
+    }
+
+    const reactions = message.reactions || [];
+    const existingReactionIndex = reactions.findIndex(
+      r => r.userId === String(userId) && r.emoji === emoji
+    );
+
+    if (existingReactionIndex !== -1) {
+      reactions.splice(existingReactionIndex, 1);
+    } else {
+      reactions.push({ userId: String(userId), emoji });
+    }
+
+    await mongoDB.collection('salle_messages').updateOne(
+      { _id: new ObjectId(messageId) },
+      { $set: { reactions } }
+    );
+
+    await broadcastToSalle(message.salleId, {
+      type: 'salle_message_reaction',
+      messageId,
+      reactions
+    });
+
+    res.json({ success: true, reactions });
+  } catch (error) {
+    console.error('Erreur réaction message salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// ============== NOTIFICATIONS ROUTES ==============
+
+app.get('/notifications/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const limit = parseInt(req.query.limit) || 50;
+
+    const result = await pgPool.query(`
+      SELECT * FROM notifications
+      WHERE id_utilisateur = $1
+      ORDER BY created_at DESC
+      LIMIT $2
+    `, [userId, limit]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erreur récupération notifications:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/notifications/:userId/unread', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pgPool.query(`
+      SELECT COUNT(*) as count FROM notifications
+      WHERE id_utilisateur = $1 AND lue = FALSE
+    `, [userId]);
+
+    res.json({ count: parseInt(result.rows[0].count) });
+  } catch (error) {
+    console.error('Erreur comptage notifications:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/notifications', async (req, res) => {
+  try {
+    const { id_utilisateur, type, titre, contenu, data } = req.body;
+
+    if (!id_utilisateur || !type || !titre) {
+      return res.status(400).json({ error: 'id_utilisateur, type et titre requis' });
+    }
+
+    const result = await pgPool.query(`
+      INSERT INTO notifications (id_utilisateur, type, titre, contenu, data)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `, [id_utilisateur, type, titre, contenu, JSON.stringify(data || {})]);
+
+    const notification = result.rows[0];
+
+    sendToUser(String(id_utilisateur), {
+      type: 'notification',
+      notification
+    });
+
+    res.json(notification);
+  } catch (error) {
+    console.error('Erreur création notification:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/notifications/:id/read', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await pgPool.query(`
+      UPDATE notifications
+      SET lue = TRUE
+      WHERE id_notification = $1
+    `, [id]);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur marquage notification lue:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/notifications/:userId/read-all', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    await pgPool.query(`
+      UPDATE notifications
+      SET lue = TRUE
+      WHERE id_utilisateur = $1 AND lue = FALSE
+    `, [userId]);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur marquage toutes notifications lues:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/notifications/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await pgPool.query(`
+      DELETE FROM notifications
+      WHERE id_notification = $1
+    `, [id]);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur suppression notification:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+async function createNotification(userId, type, titre, contenu, data = {}) {
+  try {
+    const result = await pgPool.query(`
+      INSERT INTO notifications (id_utilisateur, type, titre, contenu, data)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `, [userId, type, titre, contenu, JSON.stringify(data)]);
+
+    const notification = result.rows[0];
+
+    sendToUser(String(userId), {
+      type: 'notification',
+      notification
+    });
+
+    return notification;
+  } catch (error) {
+    console.error('Erreur création notification:', error);
+    return null;
+  }
+}
+
+
 async function getConversationParticipants(conversationId) {
   try {
     const conv = await mongoDB.collection('conversations').findOne({
@@ -507,6 +1090,33 @@ async function broadcastToConversation(conversationId, payload, excludeUserId = 
   participants.forEach(participantId => {
     if (participantId !== excludeUserId) {
       sendToUser(participantId, payload);
+    }
+  });
+}
+
+async function getSalleMembers(salleId) {
+  try {
+    const salleResult = await pgPool.query('SELECT id_groupe FROM salles WHERE id_salle = $1', [salleId]);
+    if (salleResult.rows.length === 0) return [];
+    
+    const groupId = salleResult.rows[0].id_groupe;
+    const membersResult = await pgPool.query(
+      'SELECT id_utilisateur FROM membre_groupe WHERE id_groupe = $1',
+      [groupId]
+    );
+    
+    return membersResult.rows.map(row => String(row.id_utilisateur));
+  } catch (error) {
+    console.error('Erreur récupération membres salle:', error);
+    return [];
+  }
+}
+
+async function broadcastToSalle(salleId, payload, excludeUserId = null) {
+  const members = await getSalleMembers(salleId);
+  members.forEach(memberId => {
+    if (memberId !== excludeUserId) {
+      sendToUser(memberId, payload);
     }
   });
 }
@@ -716,6 +1326,150 @@ wss.on('connection', (ws) => {
             type: 'edited',
             messageId,
             newContent
+          });
+        } catch (error) {
+          ws.send(JSON.stringify({ type: 'error', message: error.message }));
+        }
+        return;
+      }
+
+      if (msg.type === 'salle_send') {
+        const { salleId, content, messageType } = msg;
+
+        if (!ws.userId || !salleId) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
+
+        const messageDoc = {
+          salleId: parseInt(salleId),
+          senderId: ws.userId,
+          senderName: ws.userName,
+          content: content || '',
+          type: messageType || 'text',
+          timestamp: new Date(),
+          isRead: false,
+          reactions: []
+        };
+
+        const result = await mongoDB.collection('salle_messages').insertOne(messageDoc);
+        messageDoc._id = result.insertedId;
+
+        await broadcastToSalle(parseInt(salleId), {
+          type: 'salle_message',
+          message: messageDoc
+        });
+
+        return;
+      }
+
+      if (msg.type === 'salle_typing') {
+        const { salleId, typing } = msg;
+        if (!salleId || !ws.userId) return;
+
+        await broadcastToSalle(parseInt(salleId), {
+          type: 'salle_typing',
+          userId: ws.userId,
+          userName: ws.userName,
+          typing
+        }, ws.userId);
+        return;
+      }
+
+      if (msg.type === 'salle_react') {
+        const { messageId, emoji, salleId } = msg;
+
+        if (!ws.userId || !messageId || !emoji) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
+
+        try {
+          const message = await mongoDB.collection('salle_messages').findOne({ _id: new ObjectId(messageId) });
+          if (!message) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Message non trouvé' }));
+            return;
+          }
+
+          const reactions = message.reactions || [];
+          const existingIndex = reactions.findIndex(
+            r => r.userId === ws.userId && r.emoji === emoji
+          );
+
+          if (existingIndex !== -1) {
+            reactions.splice(existingIndex, 1);
+          } else {
+            reactions.push({ userId: ws.userId, emoji });
+          }
+
+          await mongoDB.collection('salle_messages').updateOne(
+            { _id: new ObjectId(messageId) },
+            { $set: { reactions } }
+          );
+
+          await broadcastToSalle(message.salleId, {
+            type: 'salle_message_reaction',
+            messageId,
+            reactions
+          });
+        } catch (error) {
+          ws.send(JSON.stringify({ type: 'error', message: error.message }));
+        }
+        return;
+      }
+
+      if (msg.type === 'salle_edit') {
+        const { messageId, newContent } = msg;
+
+        if (!ws.userId || !messageId || !newContent) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
+
+        try {
+          const message = await mongoDB.collection('salle_messages').findOne({ _id: new ObjectId(messageId) });
+          if (!message || message.senderId !== ws.userId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Non autorisé' }));
+            return;
+          }
+
+          await mongoDB.collection('salle_messages').updateOne(
+            { _id: new ObjectId(messageId) },
+            { $set: { content: newContent, editedAt: new Date() } }
+          );
+
+          await broadcastToSalle(message.salleId, {
+            type: 'salle_message_edited',
+            messageId,
+            content: newContent,
+            editedAt: new Date()
+          });
+        } catch (error) {
+          ws.send(JSON.stringify({ type: 'error', message: error.message }));
+        }
+        return;
+      }
+
+      if (msg.type === 'salle_delete') {
+        const { messageId } = msg;
+
+        if (!ws.userId || !messageId) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
+
+        try {
+          const message = await mongoDB.collection('salle_messages').findOne({ _id: new ObjectId(messageId) });
+          if (!message || message.senderId !== ws.userId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Non autorisé' }));
+            return;
+          }
+
+          await mongoDB.collection('salle_messages').deleteOne({ _id: new ObjectId(messageId) });
+
+          await broadcastToSalle(message.salleId, {
+            type: 'salle_message_deleted',
+            messageId
           });
         } catch (error) {
           ws.send(JSON.stringify({ type: 'error', message: error.message }));

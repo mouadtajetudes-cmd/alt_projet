@@ -43,6 +43,8 @@
               <span>Inscription</span>
             </router-link>
             
+            <NotificationBell v-if="isAuthenticated" />
+            
             <router-link 
               v-if="isAuthenticated"
               to="/profile"
@@ -139,6 +141,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import NotificationBell from './NotificationBell.vue'
 import '../views/views.css'
 
 const router = useRouter()
@@ -157,6 +160,7 @@ const menuItems = computed(() => {
   if (isAuthenticated.value) {
     items.push(
       { path: '/chat', label: 'Chat', icon: 'comments' },
+      { path: '/friends', label: 'Amis', icon: 'user-friends' },
       { path: '/users', label: 'Utilisateurs', icon: 'users' },
       { path: '/groups', label: 'Groupes', icon: 'layer-group' },
       { path: '/marketplace', label: 'Marketplace', icon: 'gem' },

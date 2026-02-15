@@ -70,6 +70,12 @@ class UserService implements UserServiceInterface
         if ($dto->telephone !== null) {
             $updateData['telephone'] = $dto->telephone;
         }
+        if ($dto->bio !== null) {
+            $updateData['bio'] = $dto->bio;
+        }
+        if ($dto->statut_personnalise !== null) {
+            $updateData['statut_personnalise'] = $dto->statut_personnalise;
+        }
         if ($dto->administrateur !== null) {
             // Ensure administrateur is stored as string 'true' or 'false'
             $updateData['administrateur'] = ($dto->administrateur === true || $dto->administrateur === 'true' || $dto->administrateur === 1 || $dto->administrateur === '1') ? 'true' : 'false';
@@ -93,6 +99,11 @@ class UserService implements UserServiceInterface
     public function updateUserAvatar(int $id, string $avatarUrl): bool
     {
         return $this->userRepository->update($id, ['avatar_url' => $avatarUrl]) !== null;
+    }
+
+    public function updateUserBanner(int $id, string $bannerUrl): bool
+    {
+        return $this->userRepository->update($id, ['banner_url' => $bannerUrl]) !== null;
     }
 
     public function updateOnlineStatus(int $id, bool $isOnline): bool

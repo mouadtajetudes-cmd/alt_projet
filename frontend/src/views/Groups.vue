@@ -75,7 +75,7 @@
                   </p>
                   <div class="flex items-center gap-2 text-sm text-primary">
                     <font-awesome-icon icon="users" />
-                    <span>{{ group.memberCount || 0 }} membre(s)</span>
+                    <span>{{ group.membres_count || 0 }} membre(s)</span>
                   </div>
                 </div>
               </div>
@@ -196,6 +196,75 @@
                     class="mt-4 text-primary hover:underline"
                   >
                     Ajouter le premier membre
+                  </button>
+                </div>
+              </div>
+
+              <div class="mt-8">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-semibold text-dark flex items-center gap-2">
+                    <font-awesome-icon icon="comments" class="text-primary" />
+                    Salles de Discussion ({{ salles.length }})
+                  </h3>
+                  <button 
+                    @click="showCreateSalleModal = true"
+                    class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors text-sm"
+                  >
+                    <font-awesome-icon icon="plus" />
+                    Créer une salle
+                  </button>
+                </div>
+
+                <div v-if="loadingSalles" class="flex justify-center py-12">
+                  <div class="flex gap-2">
+                    <div class="w-3 h-3 bg-primary rounded-full animate-bounce"></div>
+                    <div class="w-3 h-3 bg-primary rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                    <div class="w-3 h-3 bg-primary rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                  </div>
+                </div>
+
+                <div v-else-if="salles.length > 0" class="space-y-3">
+                  <div 
+                    v-for="salle in salles" 
+                    :key="salle.id_salle"
+                    class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                  >
+                    <div class="flex items-center gap-4">
+                      <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl flex items-center justify-center text-white text-xl font-bold">
+                        <font-awesome-icon icon="comments" />
+                      </div>
+                      <div>
+                        <h4 class="font-semibold text-dark">{{ salle.nom }}</h4>
+                        <p class="text-sm text-dark-muted">{{ salle.description || 'Pas de description' }}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button
+                        @click="openSalleChat(salle.id_salle)"
+                        class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      >
+                        <font-awesome-icon icon="comment-dots" />
+                        Ouvrir le chat
+                      </button>
+                      <button 
+                        @click="deleteSalle(salle.id_salle)"
+                        class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Supprimer la salle"
+                      >
+                        <font-awesome-icon icon="trash" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="text-center py-12">
+                  <font-awesome-icon icon="comments" class="text-6xl text-gray-300 mb-4" />
+                  <p class="text-dark-muted">Aucune salle de discussion</p>
+                  <button 
+                    @click="showCreateSalleModal = true"
+                    class="mt-4 text-primary hover:underline"
+                  >
+                    Créer la première salle
                   </button>
                 </div>
               </div>
@@ -352,6 +421,68 @@
         </div>
       </div>
     </transition>
+
+    <transition name="modal">
+      <div 
+        v-if="showCreateSalleModal" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        @click.self="closeCreateSalleModal"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide-down">
+          <div class="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-dark flex items-center gap-2">
+              <font-awesome-icon icon="comments" class="text-green-600" />
+              Créer une Salle
+            </h2>
+            <button 
+              @click="closeCreateSalleModal"
+              class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <font-awesome-icon icon="times" class="text-gray-600" />
+            </button>
+          </div>
+
+          <form @submit.prevent="createSalle" class="p-6 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-dark mb-2">Nom de la salle</label>
+              <input
+                v-model="salleForm.nom"
+                type="text"
+                required
+                placeholder="Ex: Discussion Générale"
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-dark mb-2">Description</label>
+              <textarea
+                v-model="salleForm.description"
+                rows="3"
+                placeholder="Description de la salle (optionnel)"
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none"
+              ></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+              <button
+                type="button"
+                @click="closeCreateSalleModal"
+                class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                class="flex-1 px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
+              >
+                Créer
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -367,6 +498,7 @@ const groups = ref([])
 const filteredGroups = ref([])
 const selectedGroup = ref(null)
 const members = ref([])
+const salles = ref([])
 const allUsers = ref([])
 const availableUsers = ref([])
 const filteredAvailableUsers = ref([])
@@ -375,14 +507,21 @@ const searchQuery = ref('')
 const memberSearchQuery = ref('')
 const loading = ref(true)
 const loadingMembers = ref(false)
+const loadingSalles = ref(false)
 const loadingUsers = ref(false)
 const showModal = ref(false)
 const showAddMemberModal = ref(false)
+const showCreateSalleModal = ref(false)
 const editing = ref(false)
 const saving = ref(false)
 const error = ref('')
 
 const form = ref({
+  nom: '',
+  description: ''
+})
+
+const salleForm = ref({
   nom: '',
   description: ''
 })
@@ -477,6 +616,7 @@ const selectGroup = async (group) => {
       selectedGroup.value = groupDetails
       members.value = groupDetails.membres || []
     }
+    await loadSalles(group.id_groupe)
   } catch (err) {
     console.error('Error loading group details:', err)
   }
@@ -501,21 +641,79 @@ const loadMembers = async (groupId) => {
   }
 }
 
-const loadUsers = async () => {
-  loadingUsers.value = true
-  const token = localStorage.getItem('token')
+const loadSalles = async (groupId) => {
+  loadingSalles.value = true
   
   try {
-    const response = await fetch('http://localhost:6090/auth/users', {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const response = await fetch(`http://localhost:3001/groups/${groupId}/salles`)
+    
+    if (response.ok) {
+      salles.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Error loading salles:', err)
+  } finally {
+    loadingSalles.value = false
+  }
+}
+
+const createSalle = async () => {
+  if (!selectedGroup.value) return
+  
+  try {
+    const response = await fetch(`http://localhost:3001/groups/${selectedGroup.value.id_groupe}/salles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(salleForm.value)
     })
+    
+    if (response.ok) {
+      await loadSalles(selectedGroup.value.id_groupe)
+      closeCreateSalleModal()
+    }
+  } catch (err) {
+    console.error('Error creating salle:', err)
+  }
+}
+
+const deleteSalle = async (salleId) => {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette salle ?')) return
+  
+  try {
+    const response = await fetch(`http://localhost:3001/salles/${salleId}`, {
+      method: 'DELETE'
+    })
+    
+    if (response.ok && selectedGroup.value) {
+      await loadSalles(selectedGroup.value.id_groupe)
+    }
+  } catch (err) {
+    console.error('Error deleting salle:', err)
+  }
+}
+
+const openSalleChat = (salleId) => {
+  router.push({ name: 'GroupChat', params: { salleId } })
+}
+
+const closeCreateSalleModal = () => {
+  showCreateSalleModal.value = false
+  salleForm.value = { nom: '', description: '' }
+}
+
+const loadUsers = async () => {
+  loadingUsers.value = true
+  
+  try {
+    const userId = currentUser.value?.id_utilisateur || currentUser.value?.id
+    const response = await fetch(`http://localhost:3001/friends/${userId}`)
     
     if (response.ok) {
       allUsers.value = await response.json()
       updateAvailableUsers()
     }
   } catch (err) {
-    console.error('Error loading users:', err)
+    console.error('Error loading friends:', err)
   } finally {
     loadingUsers.value = false
   }
