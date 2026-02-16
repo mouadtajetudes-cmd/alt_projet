@@ -1,21 +1,19 @@
 <template>
   <div class="marketplace-page">
     <div class="container">
-      <!-- En-tête -->
       <div class="page-header">
         <h1>🛒 Marketplace</h1>
         <button class="btn-create" @click="goToCreate">
-          ➕ Ajouter un produit
+          ➕ Ajouter une annonce
         </button>
       </div>
 
-      <!-- Barre de recherche et filtres -->
       <div class="filters-section">
         <div class="search-bar">
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Rechercher un produit..."
+            placeholder="Rechercher une annonce..."
             @input="handleSearch"
             class="search-input"
           />
@@ -57,24 +55,20 @@
         </div>
       </div>
 
-      <!-- Informations résultats -->
       <div class="results-info" v-if="!loading">
-        <p>{{ totalProducts }} produit{{ totalProducts > 1 ? 's' : '' }} trouvé{{ totalProducts > 1 ? 's' : '' }}</p>
+        <p>{{ totalProducts }} annonce{{ totalProducts > 1 ? 's' : '' }} trouvée{{ totalProducts > 1 ? 's' : '' }}</p>
       </div>
 
-      <!-- Chargement -->
       <div v-if="loading" class="loading">
         <div class="spinner"></div>
-        <p>Chargement des produits...</p>
+        <p>Chargement des annonces...</p>
       </div>
 
-      <!-- Message d'erreur -->
       <div v-else-if="error" class="error-message">
-        <p>❌ {{ error }}</p>
+        <p> {{ error }}</p>
         <button class="btn-retry" @click="loadProducts">Réessayer</button>
       </div>
 
-      <!-- Grille de produits -->
       <div v-else-if="products.length > 0" class="products-grid">
         <ProductCard
           v-for="product in products"
@@ -83,15 +77,13 @@
         />
       </div>
 
-      <!-- Pas de produits -->
       <div v-else class="no-products">
-        <p>😔 Aucun produit trouvé</p>
+        <p> Aucun produit trouvé</p>
         <button class="btn-create" @click="goToCreate">
-          ➕ Créer le premier produit
+           Créer la première annonce
         </button>
       </div>
 
-      <!-- Pagination -->
       <div v-if="totalPages > 1" class="pagination">
         <button
           class="page-btn"
@@ -119,6 +111,7 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import ProductCard from '../components/ProductCard.vue'
 
@@ -128,18 +121,18 @@ export default {
     ProductCard
   },
   setup() {
+    const router = useRouter()
     const products = ref([])
     const categories = ref([])
     const loading = ref(true)
     const error = ref(null)
     
-    // Filtres
     const searchQuery = ref('')
     const selectedCategory = ref('')
     const priceMin = ref(null)
     const priceMax = ref(null)
     
-    // Pagination
+  
     const currentPage = ref(1)
     const itemsPerPage = 12
     const totalProducts = ref(0)
@@ -147,17 +140,16 @@ export default {
 
     const API_BASE = 'http://localhost:6090/marketplace'
 
-    // Charger les catégories
+
     const loadCategories = async () => {
       try {
         const response = await axios.get(`${API_BASE}/categories`)
-        categories.value = response.data.data || []
+        categories.value = response.data || []
       } catch (err) {
         console.error('Erreur chargement catégories:', err)
       }
     }
 
-    // Charger les produits
     const loadProducts = async () => {
       loading.value = true
       error.value = null
@@ -179,7 +171,7 @@ export default {
         }
 
         const response = await axios.get(url)
-        products.value = response.data.data || []
+        products.value = response.data || []
         totalProducts.value = response.data.count || products.value.length
         totalPages.value = Math.ceil(totalProducts.value / itemsPerPage)
       } catch (err) {
@@ -190,7 +182,6 @@ export default {
       }
     }
 
-    // Recherche avec délai
     let searchTimeout
     const handleSearch = () => {
       clearTimeout(searchTimeout)
@@ -200,14 +191,12 @@ export default {
       }, 500)
     }
 
-    // Changer de page
     const changePage = (page) => {
       currentPage.value = page
       loadProducts()
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
-    // Réinitialiser les filtres
     const resetFilters = () => {
       searchQuery.value = ''
       selectedCategory.value = ''
@@ -217,10 +206,12 @@ export default {
       loadProducts()
     }
 
-    // Navigation vers création
     const goToCreate = () => {
-      // À implémenter avec le router quand CreateProduct.vue sera créé
-      alert('Fonctionnalité de création à venir !')
+      router.push({ name: 'CreateProduct' })
+    }
+
+    const goToCategories = () => {
+      router.push({ name: 'Categories' })
     }
 
     onMounted(() => {
@@ -532,9 +523,7 @@ export default {
     flex-direction: column;
     gap: 1rem;
   }
-}
-</style>
-.product-card h3 {
+  .product-card h3 {
   margin-bottom: 0.5rem;
   color: #333;
 }
@@ -565,5 +554,8 @@ export default {
 
 .btn:hover {
   background: #0b5ed7;
+  }
 }
 </style>
+
+
