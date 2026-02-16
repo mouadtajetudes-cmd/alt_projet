@@ -11,7 +11,7 @@ export async function validateToken() {
   }
   
   try {
-    const response = await fetch('http://localhost:6090/auth/auth/tokens/validate', {
+    const response = await fetch('http://localhost:6090/auth/tokens/validate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
