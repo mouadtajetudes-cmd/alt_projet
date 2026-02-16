@@ -27,6 +27,6 @@ class AvatarVersionService implements AvatarVersionServiceInterface
 
     public function levelUp(LevelUpDTO $dto): bool
     {
-        return $this->avatarVersionRepository->levelUp($dto->id_avatar_version);
+        return $this->avatarVersionRepository->levelUp($dto->id_avatar_version, $dto->new_level);
     }
 }

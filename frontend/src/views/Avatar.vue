@@ -217,10 +217,6 @@ export default {
 </script>
 
 <style scoped>
-@import '@/assets/styles/avatar-variables.css';
-@import '@/assets/styles/avatar-animations.css';
-@import '@/assets/styles/avatar-common.css';
-
 /* === Styles Spécifiques à Avatar.vue === */
 
 .avatar-page {

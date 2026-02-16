@@ -63,4 +63,18 @@
   --avatar-opacity-overlay: 0.05;
   --avatar-opacity-disabled: 0.5;
   --avatar-opacity-subtle: 0.9;
+  
+  /* === Alias pour compatibilité === */
+  --bg-gradient-page: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --card-bg: #ffffff;
+  --border-radius-card: 16px;
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --border-radius-small: 8px;
+  --text-white: white;
+  --color-accent-yellow: #ffc107;
+  --btn-secondary-bg: #6c757d;
+  --btn-secondary-hover: #5a6268;
+  --border-radius-button: 12px;
+  --btn-primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --transition-all: 0.3s ease;
 }
