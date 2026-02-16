@@ -75,8 +75,8 @@ return function(\Slim\App $app): \Slim\App {
         ->add(SelfOrAdminMiddleware::class)
         ->add(AuthMiddleware::class);
     
-    $app->post('/users/upload-avatar', UploadAvatarAction::class)
-        ->add(AuthMiddleware::class);
+    // $app->post('/users/upload-avatar', UploadAvatarAction::class)
+    //     ->add(AuthMiddleware::class);
     
     $app->post('/users/upload-banner', UploadBannerAction::class)
         ->add(AuthMiddleware::class);
@@ -86,10 +86,10 @@ return function(\Slim\App $app): \Slim\App {
         ->add(AdminMiddleware::class)
         ->add(AuthMiddleware::class);
     
-    $app->post('/groups', CreateGroupAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
-    $app->put('/groups/{id}', UpdateGroupAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
-    $app->post('/groups/{id}/members', AddMemberToGroupAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
-    $app->delete('/groups/{id}/members/{userId}', RemoveMemberAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
+    $app->post('/groups', CreateGroupAction::class)->add(AuthMiddleware::class);
+    $app->put('/groups/{id}', UpdateGroupAction::class)->add(AuthMiddleware::class);
+    $app->post('/groups/{id}/members', AddMemberToGroupAction::class)->add(AuthMiddleware::class);
+    $app->delete('/groups/{id}/members/{userId}', RemoveMemberAction::class)->add(AuthMiddleware::class);
     
     $app->post('/ads', CreateAdAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);
     $app->put('/ads/{id}', UpdateAdAction::class)->add(AdminMiddleware::class)->add(AuthMiddleware::class);

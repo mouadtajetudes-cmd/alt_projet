@@ -15,7 +15,15 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import Navbar from './components/Navbar.vue'
+import { useAuth } from './composables/useAuth'
+
+const { initAuth } = useAuth()
+
+onMounted(() => {
+  initAuth()
+})
 </script>
 
 <style>

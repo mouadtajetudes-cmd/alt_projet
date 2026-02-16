@@ -139,8 +139,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
+const { login } = useAuth()
 
 const email = ref('')
 const password = ref('')
@@ -166,12 +168,8 @@ const handleLogin = async () => {
     const data = await response.json()
     
     if (response.ok) {
-      localStorage.setItem('token', data.token)
-
-      if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user))
-      }
-
+      // Utiliser le composable useAuth pour la connexion réactive
+      login(data.user, data.token)
       router.push('/chat')
     } else {
       error.value = data.message || data.error || 'Email ou mot de passe incorrect'

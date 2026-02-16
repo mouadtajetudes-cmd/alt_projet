@@ -1,48 +1,29 @@
--- table:posts
-CREATE TABLE posts ( 
-id_post SERIAL PRIMARY KEY, 
-titre VARCHAR(255) NOT NULL, 
-description TEXT, 
-date_publication TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-id_utilisateur INTEGER NOT NULL, 
-FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
-);
--- table:medias
-CREATE TABLE medias ( 
-id_media SERIAL PRIMARY KEY, 
-titre VARCHAR(255)
-);
--- table:post_medias
-CREATE TABLE post_medias ( 
-id_media INTEGER, 
-id_post INTEGER, 
-PRIMARY KEY (id_media, id_post), 
-FOREIGN KEY (id_media) REFERENCES medias(id_media), 
-FOREIGN KEY (id_post) REFERENCES posts(id_post) 
-); 
---table:commentaires
-CREATE TABLE commentaires ( 
-id_commentaire SERIAL PRIMARY KEY, 
-details TEXT NOT NULL, 
-id_utilisateur INTEGER NOT NULL, 
-id_post INTEGER NOT NULL, 
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-FOREIGN KEY (id_post) REFERENCES posts(id_post) ,
-FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
+-- ============================================
+-- Migration: Add missing social tables and user profile fields
+-- Run this on alt.db database
+-- ============================================
 
-
-);
--- table:reactions
-CREATE TABLE reactions ( 
-id_reaction SERIAL PRIMARY KEY, 
-type VARCHAR(50) NOT NULL, 
-id_utilisateur INTEGER NOT NULL, 
-id_post INTEGER NOT NULL, 
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-FOREIGN KEY (id_post) REFERENCES posts(id_post), 
-FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur), 
-UNIQUE(id_utilisateur, id_post) 
-);
+-- Add missing columns to utilisateurs table (if they don't exist)
+DO $$ 
+BEGIN
+    -- Add bio column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='utilisateurs' AND column_name='bio') THEN
+        ALTER TABLE utilisateurs ADD COLUMN bio TEXT;
+    END IF;
+    
+    -- Add banner_url column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='utilisateurs' AND column_name='banner_url') THEN
+        ALTER TABLE utilisateurs ADD COLUMN banner_url TEXT;
+    END IF;
+    
+    -- Add statut_personnalise column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='utilisateurs' AND column_name='statut_personnalise') THEN
+        ALTER TABLE utilisateurs ADD COLUMN statut_personnalise VARCHAR(255);
+    END IF;
+END $$;
 
 -- table:amities (friendships/relationships)
 CREATE TABLE IF NOT EXISTS amities (
@@ -90,7 +71,7 @@ CREATE TABLE IF NOT EXISTS visites_profil (
     FOREIGN KEY (id_profil_visite) REFERENCES utilisateurs(id_utilisateur) ON DELETE CASCADE
 );
 
--- table:blocages (user blocks - duplicate with amities.statut='bloque', but can be separate)
+-- table:blocages (user blocks)
 CREATE TABLE IF NOT EXISTS blocages (
     id_blocage SERIAL PRIMARY KEY,
     id_bloqueur INTEGER NOT NULL,
@@ -122,3 +103,8 @@ CREATE INDEX IF NOT EXISTS idx_salles_groupe ON salles(id_groupe);
 CREATE INDEX IF NOT EXISTS idx_visites_profil_visiteur ON visites_profil(id_visiteur);
 CREATE INDEX IF NOT EXISTS idx_visites_profil_visite ON visites_profil(id_profil_visite);
 
+-- Display success message
+DO $$ 
+BEGIN 
+    RAISE NOTICE 'Migration completed successfully!';
+END $$;

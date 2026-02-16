@@ -158,11 +158,11 @@
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-dark-muted">Messages envoyés</span>
-                <span class="font-semibold text-dark">0</span>
+                <span class="font-semibold text-dark">{{ stats.messagesCount }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-dark-muted">Connexions</span>
-                <span class="font-semibold text-dark">0</span>
+                <span class="font-semibold text-dark">{{ stats.connectionsCount }}</span>
               </div>
             </div>
           </div>
@@ -391,6 +391,10 @@ const editing = ref(false)
 const saving = ref(false)
 const error = ref('')
 const success = ref('')
+const stats = ref({
+  messagesCount: 0,
+  connectionsCount: 0
+})
 const form = ref({
   nom: '',
   prenom: '',
@@ -421,22 +425,6 @@ const loadProfile = async () => {
   }
   
   try {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      user.value = JSON.parse(storedUser)
-      form.value = {
-        nom: user.value.nom,
-        prenom: user.value.prenom,
-        email: user.value.email,
-        telephone: user.value.telephone || '',
-        bio: user.value.bio || '',
-        statut_personnalise: user.value.statut_personnalise || '',
-        password: ''
-      }
-      loading.value = false
-      return
-    }
-    
     const payload = JSON.parse(atob(token.split('.')[1]))
     const userId = payload.sub || payload.user?.id
     
@@ -444,12 +432,17 @@ const loadProfile = async () => {
       throw new Error('User ID not found in token')
     }
     
+    console.log('Fetching user profile from API:', userId)
     const response = await fetch(`http://localhost:6090/auth/users/${userId}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     
+    console.log('API Response status:', response.status)
+    
     if (response.ok) {
       user.value = await response.json()
+      console.log('User data loaded:', user.value)
+      console.log('created_at:', user.value.created_at)
       localStorage.setItem('user', JSON.stringify(user.value))
       form.value = {
         nom: user.value.nom,
@@ -460,9 +453,14 @@ const loadProfile = async () => {
         statut_personnalise: user.value.statut_personnalise || '',
         password: ''
       }
+    } else {
+      const errorData = await response.text()
+      console.error('API Error:', response.status, errorData)
+      error.value = `Erreur ${response.status}: ${errorData}`
     }
   } catch (err) {
-    error.value = 'Erreur de chargement'
+    console.error('Profile loading error:', err)
+    error.value = 'Erreur de chargement: ' + err.message
   } finally {
     loading.value = false
   }
@@ -640,7 +638,24 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('fr-FR')
 }
 
+const loadStats = async () => {
+  try {
+    const payload = JSON.parse(atob(localStorage.getItem('token').split('.')[1]))
+    const userId = payload.sub || payload.user?.id
+    
+    const response = await fetch(`http://localhost:3001/users/${userId}/stats`)
+    if (response.ok) {
+      const data = await response.json()
+      stats.value = data
+      console.log('Stats loaded:', data)
+    }
+  } catch (err) {
+    console.error('Error loading stats:', err)
+  }
+}
+
 onMounted(() => {
   loadProfile()
+  loadStats()
 })
 </script>

@@ -126,4 +126,17 @@ class PdoGroupRepository implements GroupRepositoryInterface
         
         return $stmt->execute([$groupId, $userId]);
     }
+
+    public function getMemberRole(int $groupId, int $userId): ?string
+    {
+        $stmt = $this->pdo->prepare('
+            SELECT role FROM membre_groupe
+            WHERE id_groupe = ? AND id_utilisateur = ?
+        ');
+        
+        $stmt->execute([$groupId, $userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $result ? $result['role'] : null;
+    }
 }

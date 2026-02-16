@@ -17,4 +17,5 @@ interface GroupServiceInterface
     public function getUserGroups(int $userId): array;
     public function getGroupMembers(int $groupId): array;
     public function removeMember(int $groupId, int $userId): bool;
+    public function getMemberRole(int $groupId, int $userId): ?string;
 }

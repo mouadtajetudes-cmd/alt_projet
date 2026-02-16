@@ -67,4 +67,9 @@ class GroupService implements GroupServiceInterface
     {
         return $this->groupRepository->removeMember($groupId, $userId);
     }
+
+    public function getMemberRole(int $groupId, int $userId): ?string
+    {
+        return $this->groupRepository->getMemberRole($groupId, $userId);
+    }
 }

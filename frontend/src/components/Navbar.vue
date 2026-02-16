@@ -141,16 +141,14 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 import NotificationBell from './NotificationBell.vue'
 import '../views/views.css'
 
 const router = useRouter()
+const { isAuthenticated, logout: authLogout } = useAuth()
 const scrolled = ref(false)
 const mobileMenuOpen = ref(false)
-
-const isAuthenticated = computed(() => {
-  return !!localStorage.getItem('token')
-})
 
 const menuItems = computed(() => {
   const items = [
@@ -160,7 +158,7 @@ const menuItems = computed(() => {
   if (isAuthenticated.value) {
     items.push(
       { path: '/chat', label: 'Chat', icon: 'comments' },
-      { path: '/friends', label: 'Amis', icon: 'user-friends' },
+      { path: '/friends', label: 'Amis', icon: 'user-circle' },
       { path: '/users', label: 'Utilisateurs', icon: 'users' },
       { path: '/groups', label: 'Groupes', icon: 'layer-group' },
       { path: '/marketplace', label: 'Marketplace', icon: 'gem' },
@@ -177,10 +175,8 @@ const handleScroll = () => {
 }
 
 const handleLogout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
+  authLogout()
   mobileMenuOpen.value = false
-  router.push('/login')
 }
 
 onMounted(() => {

@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
     auth_provider VARCHAR(50) DEFAULT 'local',
     points INTEGER DEFAULT 0,
     id_avatar INTEGER,
+    bio TEXT,
+    banner_url TEXT,
+    statut_personnalise VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

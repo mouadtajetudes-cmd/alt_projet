@@ -18,7 +18,20 @@ class RemoveMemberAction
         $groupId = (int)$args['id'];
         $userId = (int)$args['userId'];
         
-        // Get all members to check if user is owner
+        $currentUser = $request->getAttribute('user');
+        $currentUserId = $currentUser['id_utilisateur'] ?? $currentUser['id'] ?? 0;
+        $isAdmin = ($currentUser['administrateur'] ?? false) === 'true';
+        $memberRole = $this->groupService->getMemberRole($groupId, $currentUserId);
+        $isGroupAdmin = in_array($memberRole, ['admin', 'owner']);
+        
+        if (!$isAdmin && !$isGroupAdmin) {
+            $response->getBody()->write(json_encode([
+                'error' => 'Forbidden',
+                'message' => 'Vous devez être administrateur du groupe ou de la plateforme'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+        }
+        
         $members = $this->groupService->getGroupMembers($groupId);
         $memberToRemove = array_filter($members, fn($m) => $m['id_utilisateur'] == $userId);
         

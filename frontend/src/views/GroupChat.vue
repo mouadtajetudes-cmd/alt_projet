@@ -252,8 +252,10 @@ function connectWebSocket() {
     const data = JSON.parse(event.data)
 
     if (data.type === 'salle_message') {
-      messages.value.push(data.message)
-      nextTick(() => scrollToBottom())
+      if (data.message.salleId === parseInt(salleId.value)) {
+        messages.value.push(data.message)
+        nextTick(() => scrollToBottom())
+      }
     } else if (data.type === 'salle_typing') {
       handleRemoteTyping(data.userId, data.userName, data.typing)
     } else if (data.type === 'salle_message_reaction') {

@@ -168,7 +168,6 @@ app.post('/conversations', async (req, res) => {
 
     const stringParticipants = participants.map(p => String(p));
 
-    // Block self-conversation
     const uniqueParticipants = [...new Set(stringParticipants)];
     if (uniqueParticipants.length < 2) {
       return res.status(400).json({ error: 'Impossible de créer une conversation avec soi-même' });
@@ -227,19 +226,17 @@ app.put('/conversations/:convId/read', async (req, res) => {
 
 // ==================== GROUPS ROUTES ====================
 
-// Get all groups for a user
 app.get('/groups/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const result = await pgPool.query(`
-      SELECT g.*, mg.role, u.nom || ' ' || u.prenom as createur_nom,
+      SELECT g.*, mg.role,
         (SELECT COUNT(*) FROM membre_groupe WHERE id_groupe = g.id_groupe) as membres_count,
         (SELECT COUNT(*) FROM salles WHERE id_groupe = g.id_groupe) as salles_count
       FROM groupes g
       JOIN membre_groupe mg ON g.id_groupe = mg.id_groupe
-      LEFT JOIN utilisateurs u ON g.createur_id = u.id_utilisateur
       WHERE mg.id_utilisateur = $1
-      ORDER BY g.date_modification DESC
+      ORDER BY g.created_at DESC
     `, [userId]);
     res.json(result.rows);
   } catch (error) {
@@ -252,9 +249,8 @@ app.get('/groups/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const groupResult = await pgPool.query(`
-      SELECT g.*, u.nom || ' ' || u.prenom as createur_nom
+      SELECT g.*
       FROM groupes g
-      LEFT JOIN utilisateurs u ON g.createur_id = u.id_utilisateur
       WHERE g.id_groupe = $1
     `, [id]);
 
@@ -288,27 +284,25 @@ app.get('/groups/:id', async (req, res) => {
 
 app.post('/groups', async (req, res) => {
   try {
-    const { nom, description, avatar_url, niveau, createur_id } = req.body;
+    const { nom, description, niveau, createur_id } = req.body;
 
     if (!nom || !createur_id) {
       return res.status(400).json({ error: 'Nom et créateur requis' });
     }
 
     const result = await pgPool.query(`
-      INSERT INTO groupes (nom, description, avatar_url, niveau, createur_id)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO groupes (nom, description, niveau)
+      VALUES ($1, $2, $3)
       RETURNING *
-    `, [nom, description, avatar_url, niveau || 1, createur_id]);
+    `, [nom, description, niveau || 'debutant']);
 
     const groupe = result.rows[0];
 
-    // Add creator as admin member
     await pgPool.query(`
       INSERT INTO membre_groupe (id_groupe, id_utilisateur, role)
       VALUES ($1, $2, 'admin')
     `, [groupe.id_groupe, createur_id]);
 
-    // Create default "Général" salle
     await pgPool.query(`
       INSERT INTO salles (nom, id_groupe, description)
       VALUES ('Général', $1, 'Salle de discussion générale')
@@ -324,18 +318,16 @@ app.post('/groups', async (req, res) => {
 app.put('/groups/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { nom, description, avatar_url, niveau } = req.body;
+    const { nom, description, niveau } = req.body;
 
     const result = await pgPool.query(`
       UPDATE groupes
       SET nom = COALESCE($1, nom),
           description = COALESCE($2, description),
-          avatar_url = COALESCE($3, avatar_url),
-          niveau = COALESCE($4, niveau),
-          date_modification = CURRENT_TIMESTAMP
-      WHERE id_groupe = $5
+          niveau = COALESCE($3, niveau)
+      WHERE id_groupe = $4
       RETURNING *
-    `, [nom, description, avatar_url, niveau, id]);
+    `, [nom, description, niveau, id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Groupe non trouvé' });
@@ -1066,6 +1058,65 @@ async function createNotification(userId, type, titre, contenu, data = {}) {
   }
 }
 
+// ============== USER STATS ROUTE ==============
+
+app.get('/users/:userId/stats', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('[STATS] Fetching stats for user:', userId);
+
+    let messagesCount = 0;
+    try {
+      const userIdStr = String(userId);
+      const userIdInt = parseInt(userId);
+      
+      const directMessages = await mongoDB.collection('messages').countDocuments({
+        $or: [
+          { senderId: userIdStr },
+          { senderId: userIdInt }
+        ]
+      });
+      console.log('[STATS] Direct messages count:', directMessages);
+      
+      const salleMessages = await mongoDB.collection('salle_messages').countDocuments({
+        $or: [
+          { senderId: userIdStr },
+          { senderId: userIdInt }
+        ]
+      });
+      console.log('[STATS] Salle messages count:', salleMessages);
+      
+      messagesCount = directMessages + salleMessages;
+      console.log('[STATS] Total messages count:', messagesCount);
+    } catch (mongoError) {
+      console.error('[STATS] Error counting messages:', mongoError);
+    }
+
+    let connectionsCount = 0;
+    try {
+      const result = await pgPool.query(`
+        SELECT COUNT(*) as count FROM amities
+        WHERE (utilisateur_id = $1 OR ami_id = $1)
+          AND statut = 'accepte'
+      `, [userId]);
+      connectionsCount = parseInt(result.rows[0].count);
+      console.log('[STATS] Connections count:', connectionsCount, 'for user', userId);
+    } catch (pgError) {
+      console.error('[STATS] Error counting connections:', pgError);
+    }
+
+    const response = {
+      messagesCount,
+      connectionsCount
+    };
+    console.log('[STATS] Sending response:', response);
+    res.json(response);
+  } catch (error) {
+    console.error('[STATS] Erreur récupération stats utilisateur:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 async function getConversationParticipants(conversationId) {
   try {
@@ -1237,10 +1288,8 @@ wss.on('connection', (ws) => {
           const existingIndex = reactions.findIndex(r => r.userId === ws.userId && r.emoji === emoji);
           
           if (existingIndex >= 0) {
-            // Remove reaction
             reactions.splice(existingIndex, 1);
           } else {
-            // Add reaction
             reactions.push({ userId: ws.userId, userName: ws.userName, emoji });
           }
 
@@ -1275,7 +1324,6 @@ wss.on('connection', (ws) => {
             return;
           }
 
-          // Only allow deleting own messages
           if (message.senderId !== ws.userId) {
             ws.send(JSON.stringify({ type: 'error', message: 'Non autorisé' }));
             return;
@@ -1311,7 +1359,6 @@ wss.on('connection', (ws) => {
             return;
           }
 
-          // Only allow editing own messages
           if (message.senderId !== ws.userId) {
             ws.send(JSON.stringify({ type: 'error', message: 'Non autorisé' }));
             return;
