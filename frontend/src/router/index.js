@@ -2,15 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Chat from '../views/Chat.vue'
 import Login from '../views/Login.vue'
-<<<<<<< HEAD
-import Marketplace from '../views/Marketplace.vue'
-import ProductDetail from '../views/ProductDetail.vue'
-import CreateProduct from '../views/CreateProduct.vue'
-import EditProduct from '../views/EditProduct.vue'
-import Categories from '../views/Categories.vue'
-import Social from '../views/Social.vue'
-import Avatar from '../views/Avatar.vue'
-=======
 import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
 import Users from '../views/Users.vue'
@@ -27,7 +18,7 @@ import EditAvatar from '../views/EditAvatar.vue'
 import Levels from '../views/Levels.vue'
 import UserAvatar from '../views/UserAvatar.vue'
 import { requireAuth } from '../middleware/auth'
->>>>>>> origin/groupe/develop
+
 
 const routes = [
   {
@@ -36,50 +27,13 @@ const routes = [
     component: Home
   },
   {
-<<<<<<< HEAD
-    path: '/chat',
-    name: 'Chat',
-    component: Chat
-  },
-  {
-=======
->>>>>>> origin/groupe/develop
+
     path: '/login',
     name: 'Login',
     component: Login
   },
   {
-<<<<<<< HEAD
-    path: '/marketplace',
-    name: 'Marketplace',
-    component: Marketplace
-  },
-  {
-    path: '/products/create',
-    name: 'CreateProduct',
-    component: CreateProduct
-  },
-  {
-    path: '/products/:id/edit',
-    name: 'EditProduct',
-    component: EditProduct
-  },
-  {
-    path: '/products/:id',
-    name: 'ProductDetail',
-    component: ProductDetail
-  },
-  {
-    path: '/categories',
-    name: 'Categories',
-    component: Categories
-  },
-  {
-    path: '/cart',
-    name: 'Cart',  
-    component: () => import('../views/Cart.vue')
-=======
-    path: '/register',
+path: '/register',
     name: 'Register',
     component: Register
   },
@@ -130,25 +84,20 @@ const routes = [
     name: 'ProductDetail',
     component: ProductDetail,
     beforeEnter: requireAuth
->>>>>>> origin/groupe/develop
+
   },
   {
     path: '/social',
     name: 'Social',
-<<<<<<< HEAD
-    component: Social
-=======
-    component: Social,
+component: Social,
     beforeEnter: requireAuth
->>>>>>> origin/groupe/develop
+
   },
   {
     path: '/avatar',
     name: 'Avatar',
     component: Avatar
-<<<<<<< HEAD
-=======
-  },
+},
   {
     path: '/avatar/create',
     name: 'CreateAvatar',
@@ -173,7 +122,7 @@ const routes = [
     path: '/user/:id/avatars',
     name: 'UserAvatar',
     component: UserAvatar
->>>>>>> origin/groupe/develop
+
   }
 ]
 

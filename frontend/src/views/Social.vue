@@ -2,11 +2,7 @@
   <div class="social-page">
     <div class="container">
       <div class="header">
-<<<<<<< HEAD
-        <h1>Feed Social</h1>
-        <button class="btn-create">Nouveau Post</button>
-=======
-        <div class="search-bar">
+<div class="search-bar">
           <input v-model="search" type="text" placeholder="Rechercher un post..." />
          </div>
          <div class="create-btn"> 
@@ -15,19 +11,12 @@
         <button class="btn-video">Vidéo</button>
          </div>
        
->>>>>>> origin/groupe/develop
+
       </div>
       
       <div v-if="loading" class="loading">Chargement des posts...</div>
       
-<<<<<<< HEAD
-      <div v-else class="posts-list">
-        <div v-for="post in posts" :key="post.id_post" class="post-card">
-          <h3>{{ post.title }}</h3>
-          <p>{{ post.content }}</p>
-          <div class="post-actions">
-=======
-      <div v-else-if="error" class="error">{{ error }}</div>
+<div v-else-if="error" class="error">{{ error }}</div>
       
       <div v-else class="posts-list">
         <div v-for="post in filteredPosts" :key="post.id_post" class="post-card">
@@ -55,7 +44,7 @@
     </div>
   </div>         
    <div class="post-actions">
->>>>>>> origin/groupe/develop
+
             <button>👍 Réactions</button>
             <button>💬 Commentaires</button>
           </div>
@@ -65,39 +54,6 @@
   </div>
 </template>
 
-<<<<<<< HEAD
-<script>
-import { ref, onMounted } from 'vue'
-
-export default {
-  name: 'Social',
-  setup() {
-    const posts = ref([])
-    const loading = ref(true)
-    
-    const loadPosts = async () => {
-      try {
-        const response = await fetch('http://localhost:6087/posts')
-        const data = await response.json()
-        posts.value = data
-      } catch (error) {
-        console.error('Erreur chargement posts:', error)
-      } finally {
-        loading.value = false
-      }
-    }
-    
-    onMounted(() => {
-      loadPosts()
-    })
-    
-    return {
-      posts,
-      loading
-    }
-  }
-}
-=======
 <script setup>
 import { ref, onMounted ,computed} from 'vue'
 import axios from "axios"
@@ -138,7 +94,7 @@ const filteredPosts = computed(() => {
     post.description?.toLowerCase().includes(search.value.toLowerCase())
   )
 })
->>>>>>> origin/groupe/develop
+
 </script>
 
 <style scoped>
@@ -148,22 +104,13 @@ const filteredPosts = computed(() => {
 
 .container {
   max-width: 800px;
-<<<<<<< HEAD
-=======
-  max-height: 40%;
->>>>>>> origin/groupe/develop
+max-height: 40%;
+
   margin: 0 auto;
   padding: 0 1rem;
 }
 
 .header {
-<<<<<<< HEAD
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-=======
 width: auto;
 height: 100px;
 margin-bottom: 4em;
@@ -185,23 +132,13 @@ background-color: #EAEAEA;
   box-shadow: 0 0 0 3px rgba(13,110,253,0.15);
 }
 
->>>>>>> origin/groupe/develop
+
 
 h1 {
   color: #333;
   margin: 0;
 }
 
-<<<<<<< HEAD
-.btn-create {
-  background: #0d6efd;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-=======
 .create-btn {
   display: flex;
   gap: 2rem;
@@ -230,7 +167,7 @@ h1 {
   padding: 0.5rem 1.5rem;
   border-radius: 4px;
   cursor: pointer;}
->>>>>>> origin/groupe/develop
+
 
 .loading {
   text-align: center;
@@ -239,32 +176,7 @@ h1 {
 }
 
 .posts-list {
-<<<<<<< HEAD
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.post-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.post-card h3 {
-  margin-bottom: 0.75rem;
-  color: #333;
-}
-
-.post-card p {
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 1rem;
-}
-
-=======
-  display: grid;
+display: grid;
   grid-template-rows: repeat(auto-fit, minmax(100px, auto));
   gap: 1.5rem;
 
@@ -343,7 +255,7 @@ video.post-media {
 }
 
 
->>>>>>> origin/groupe/develop
+
 .post-actions {
   display: flex;
   gap: 1rem;

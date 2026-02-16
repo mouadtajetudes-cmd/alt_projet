@@ -1,20 +1,7 @@
 <template>
   <div class="avatar-page">
     <div class="container">
-<<<<<<< HEAD
-      <h1>Galerie des Avatars</h1>
-      
-      <div v-if="loading" class="loading">Chargement des avatars...</div>
-      
-      <div v-else class="avatars-grid">
-        <div v-for="avatar in avatars" :key="avatar.id_avatar" class="avatar-card">
-          <div class="avatar-icon">🎭</div>
-          <h3>{{ avatar.nom }}</h3>
-          <p>Niveau {{ avatar.niveau }}</p>
-          <p class="points">Points: {{ avatar.points }}</p>
-          <button class="btn">Sélectionner</button>
-=======
-      <div class="header">
+<div class="header">
         <h1>🎭 Galerie des Avatars</h1>
         <p class="subtitle">Découvrez tous les avatars disponibles</p>
         
@@ -95,7 +82,7 @@
               Voir les détails →
             </router-link>
           </div>
->>>>>>> origin/groupe/develop
+
         </div>
       </div>
     </div>
@@ -103,31 +90,16 @@
 </template>
 
 <script>
-<<<<<<< HEAD
-import { ref, onMounted } from 'vue'
-=======
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 // TODO: Réactiver quand authentification sera prête
 // import { useAuth } from '../composables/useAuth'
->>>>>>> origin/groupe/develop
+
 
 export default {
   name: 'Avatar',
   setup() {
-<<<<<<< HEAD
-    const avatars = ref([])
-    const loading = ref(true)
-    
-    const loadAvatars = async () => {
-      try {
-        const response = await fetch('http://localhost:6085/avatars')
-        const data = await response.json()
-        avatars.value = data
-      } catch (error) {
-        console.error('Erreur chargement avatars:', error)
-=======
-    const router = useRouter()
+const router = useRouter()
     const route = useRoute()
     // TODO: Réactiver quand authentification sera prête
     // const { isAdmin, isAuthenticated, getUserId, initAuth } = useAuth()
@@ -173,15 +145,13 @@ export default {
       } catch (err) {
         console.error('[AVATAR] Erreur chargement avatars:', err)
         error.value = 'Impossible de charger les avatars. Vérifiez que le service est démarré.'
->>>>>>> origin/groupe/develop
+
       } finally {
         loading.value = false
       }
     }
     
-<<<<<<< HEAD
-=======
-    const filteredAvatars = computed(() => {
+const filteredAvatars = computed(() => {
       let filtered = avatars.value
       
       if (searchQuery.value) {
@@ -238,17 +208,14 @@ export default {
       }
     }
     
->>>>>>> origin/groupe/develop
+
     onMounted(() => {
       loadAvatars()
     })
     
     return {
       avatars,
-<<<<<<< HEAD
-      loading
-=======
-      loading,
+loading,
       error,
       searchQuery,
       filteredAvatars,
@@ -257,7 +224,7 @@ export default {
       // TODO: Réactiver quand authentification sera prête
       // isAdmin,
       // errorMessage
->>>>>>> origin/groupe/develop
+
     }
   }
 }
@@ -265,89 +232,14 @@ export default {
 
 <style scoped>
 .avatar-page {
-<<<<<<< HEAD
-=======
-  min-height: 100vh;
+min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
->>>>>>> origin/groupe/develop
+
   padding: 2rem 0;
 }
 
 .container {
-<<<<<<< HEAD
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-h1 {
-  margin-bottom: 2rem;
-  color: #333;
-}
-
-.loading {
-  text-align: center;
-  padding: 3rem;
-  color: #666;
-}
-
-.avatars-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 2rem;
-}
-
-.avatar-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  text-align: center;
-  transition: transform 0.2s;
-}
-
-.avatar-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.avatar-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-}
-
-.avatar-card h3 {
-  margin-bottom: 0.5rem;
-  color: #333;
-}
-
-.avatar-card p {
-  color: #666;
-  margin-bottom: 0.5rem;
-}
-
-.points {
-  font-size: 0.9rem;
-  color: #0d6efd;
-  font-weight: 500;
-}
-
-.btn {
-  width: 100%;
-  padding: 0.75rem;
-  background: #0d6efd;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: background 0.2s;
-}
-
-.btn:hover {
-  background: #0b5ed7;
-=======
-  max-width: 1400px;
+max-width: 1400px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
@@ -694,6 +586,6 @@ h1 {
   .avatars-grid {
     grid-template-columns: 1fr;
   }
->>>>>>> origin/groupe/develop
+
 }
 </style>

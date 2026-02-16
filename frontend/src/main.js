@@ -3,8 +3,6 @@ import { createPinia } from 'pinia'
 import router from './router'
 import App from './App.vue'
 import './assets/css/style.css'
-<<<<<<< HEAD
-=======
 import './style.css'
 
 // FontAwesome
@@ -27,15 +25,13 @@ library.add(
   faLayerGroup, faUserMinus, faCalendar, faCamera, faImage, faCircle,
   faInbox, faHeart, faThumbsUp, faReply, faFileAlt, faDownload, faEye
 )
->>>>>>> origin/groupe/develop
+
 
 const app = createApp(App)
 const pinia = createPinia()
 
-<<<<<<< HEAD
-=======
 app.component('font-awesome-icon', FontAwesomeIcon)
->>>>>>> origin/groupe/develop
+
 app.use(pinia)
 app.use(router)
 app.mount('#app')
