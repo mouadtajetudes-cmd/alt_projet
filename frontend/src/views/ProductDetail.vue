@@ -1,7 +1,10 @@
 <template>
   <div class="product-detail-page">
     <div class="container">
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/groupe/develop
       <nav class="breadcrumb">
         <router-link to="/marketplace">← Retour à la marketplace</router-link>
       </nav>
@@ -11,19 +14,33 @@
         <p>Chargement...</p>
       </div>
 
+<<<<<<< HEAD
       <div v-else-if="error" class="alert alert-error">
         <p>{{ error }}</p>
         <button class="btn btn-secondary" @click="$router.push('/marketplace')">
           Retour
         </button>
+=======
+      <div v-else-if="error" class="error-message">
+        <p>❌ {{ error }}</p>
+        <router-link to="/marketplace" class="btn-back">Retour</router-link>
+>>>>>>> origin/groupe/develop
       </div>
 
       <div v-else-if="product" class="product-detail">
         <div class="product-main">
+<<<<<<< HEAD
           <div class="product-image">
             <img
               v-if="product.image_url"
               :src="product.image_url"
+=======
+          <div class="product-gallery">
+            <div class="main-image">
+              <img
+                v-if="currentImage"
+                :src="currentImage"
+>>>>>>> origin/groupe/develop
                 :alt="product.nom"
               />
               <div v-else class="placeholder-image">🛍️</div>
@@ -129,7 +146,10 @@ export default {
 
     const API_BASE = 'http://localhost:6090/marketplace'
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/groupe/develop
     const loadProduct = async () => {
       loading.value = true
       error.value = null
@@ -163,7 +183,11 @@ export default {
           `${API_BASE}/products?categorie=${categoryId}&limit=4`
         )
         
+<<<<<<< HEAD
         similarProducts.value = (response.data || [])
+=======
+        similarProducts.value = (response.data.data || [])
+>>>>>>> origin/groupe/develop
           .filter(p => p.id_produit !== excludeProductId)
           .slice(0, 4)
       } catch (err) {
@@ -189,7 +213,10 @@ export default {
     }
 
     const addToCart = () => {
+<<<<<<< HEAD
       cartStore.addToCart(product.value)
+=======
+>>>>>>> origin/groupe/develop
       alert(`"${product.value.nom}" ajouté au panier !`)
       router.push('/cart')
     }

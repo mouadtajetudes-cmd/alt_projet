@@ -132,7 +132,10 @@ export default {
     const priceMin = ref(null)
     const priceMax = ref(null)
     
+<<<<<<< HEAD
   
+=======
+>>>>>>> origin/groupe/develop
     const currentPage = ref(1)
     const itemsPerPage = 12
     const totalProducts = ref(0)
@@ -140,7 +143,10 @@ export default {
 
     const API_BASE = 'http://localhost:6090/marketplace'
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/groupe/develop
     const loadCategories = async () => {
       try {
         const response = await axios.get(`${API_BASE}/categories`)
@@ -207,11 +213,15 @@ export default {
     }
 
     const goToCreate = () => {
+<<<<<<< HEAD
       router.push({ name: 'CreateProduct' })
     }
 
     const goToCategories = () => {
       router.push({ name: 'Categories' })
+=======
+      alert('Fonctionnalité de création à venir !')
+>>>>>>> origin/groupe/develop
     }
 
     onMounted(() => {
@@ -523,7 +533,12 @@ export default {
     flex-direction: column;
     gap: 1rem;
   }
+<<<<<<< HEAD
   .product-card h3 {
+=======
+}
+.product-card h3 {
+>>>>>>> origin/groupe/develop
   margin-bottom: 0.5rem;
   color: #333;
 }

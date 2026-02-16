@@ -1,4 +1,5 @@
 <template>
+<<<<<<< HEAD
   <div id="app">
     <nav class="navbar">
       <div class="container">
@@ -13,6 +14,10 @@
         </div>
       </div>
     </nav>
+=======
+  <div id="app" class="min-h-screen bg-gray-50">
+    <Navbar />
+>>>>>>> origin/groupe/develop
     
     <main>
       <router-view />
@@ -26,6 +31,7 @@
   </div>
 </template>
 
+<<<<<<< HEAD
 <script>
 export default {
   name: 'App'
@@ -70,6 +76,33 @@ export default {
 .navbar-menu a.router-link-active {
   opacity: 0.8;
   border-bottom: 2px solid white;
+=======
+<script setup>
+import { onMounted } from 'vue'
+import Navbar from './components/Navbar.vue'
+import { useAuth } from './composables/useAuth'
+
+const { initAuth } = useAuth()
+
+onMounted(() => {
+  initAuth()
+})
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+#app {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+>>>>>>> origin/groupe/develop
 }
 
 main {
@@ -84,6 +117,15 @@ footer {
   border-top: 1px solid #dee2e6;
 }
 
+<<<<<<< HEAD
+=======
+footer .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+>>>>>>> origin/groupe/develop
 footer p {
   margin: 0;
   color: #6c757d;

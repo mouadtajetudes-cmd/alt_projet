@@ -46,8 +46,4 @@ return [
             $c->get(CategoryServiceInterface::class)
         );
     },
-
-    AuthMiddleware::class => function ($c) {
-        return new AuthMiddleware();
-    },
 ];

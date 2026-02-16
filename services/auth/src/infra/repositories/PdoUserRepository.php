@@ -1,0 +1,107 @@
+<?php
+declare(strict_types=1);
+
+namespace alt\infra\repositories;
+
+use alt\core\application\ports\spi\repositoryInterfaces\UserRepositoryInterface;
+use alt\core\domain\entities\User;
+use PDO;
+
+class PdoUserRepository implements UserRepositoryInterface
+{
+    private PDO $pdo;
+
+    public function __construct(PDO $pdo)
+    {
+        $this->pdo = $pdo;
+    }
+
+    public function findAll(): array
+    {
+        $stmt = $this->pdo->query('
+            SELECT id_utilisateur, nom, prenom, email, telephone, password, 
+                   administrateur, premium, auth_provider, points, id_avatar, 
+                   bio, banner_url, statut_personnalise, created_at, updated_at
+            FROM utilisateurs ORDER BY created_at DESC
+        ');
+        return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
+    }
+
+    public function findById(int $id): User
+    {
+        $stmt = $this->pdo->prepare('
+            SELECT id_utilisateur, nom, prenom, email, telephone, password, 
+                   administrateur, premium, auth_provider, points, id_avatar, 
+                   bio, banner_url, statut_personnalise, created_at, updated_at
+            FROM utilisateurs WHERE id_utilisateur = ?
+        ');
+        $stmt->execute([$id]);
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
+        return $stmt->fetch();
+    }
+
+    public function findByEmail(string $email): ?User
+    {
+        $stmt = $this->pdo->prepare('
+            SELECT id_utilisateur, nom, prenom, email, telephone, password, 
+                   administrateur, premium, auth_provider, points, id_avatar, 
+                   bio, banner_url, statut_personnalise, created_at, updated_at
+            FROM utilisateurs WHERE email = ?
+        ');
+        $stmt->execute([$email]);
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
+        $result = $stmt->fetch();
+        return $result ?: null;
+    }
+
+    public function create(User $user): User
+    {
+        $stmt = $this->pdo->prepare('
+            INSERT INTO utilisateurs (nom, prenom, email, telephone, password, administrateur, premium, auth_provider, points, id_avatar)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            RETURNING id_utilisateur, nom, prenom, email, telephone, password, administrateur, premium, auth_provider, points, id_avatar, bio, banner_url, statut_personnalise, created_at, updated_at
+        ');
+        
+        $stmt->execute([
+            $user->nom,
+            $user->prenom,
+            $user->email,
+            $user->telephone,
+            $user->password,
+            $user->administrateur,
+            $user->premium,
+            $user->auth_provider,
+            $user->points,
+            $user->id_avatar
+        ]);
+        
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
+        return $stmt->fetch();
+    }
+
+    public function update(int $id, array $data): User
+    {
+        $fields = [];
+        $values = [];
+        
+        foreach ($data as $key => $value) {
+            $fields[] = "$key = ?";
+            $values[] = $value;
+        }
+        
+        $values[] = $id;
+        
+        $sql = 'UPDATE utilisateurs SET ' . implode(', ', $fields) . ' WHERE id_utilisateur = ? RETURNING id_utilisateur, nom, prenom, email, telephone, password, administrateur, premium, auth_provider, points, id_avatar, bio, banner_url, statut_personnalise, created_at, updated_at';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($values);
+        
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
+        return $stmt->fetch();
+    }
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM utilisateurs WHERE id_utilisateur = ?');
+        return $stmt->execute([$id]);
+    }
+}

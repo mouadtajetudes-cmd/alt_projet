@@ -23,7 +23,8 @@
     "psr-4" : {
       "alt\\api\\" : "./src/api",
       "alt\\core\\" : "./src/core",
-      "alt\\infra\\" : "./src/infra"
+      "alt\\infra\\" : "./src/infra",
+      "alt\\domain\\" : "./src/domain"
     }
   }
 }

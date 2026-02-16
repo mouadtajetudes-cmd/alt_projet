@@ -1,0 +1,215 @@
+networks:
+  alt.net:
+    driver: bridge
+
+services:
+  # service alt.gateway : API Gateway
+  #
+  alt.gateway:
+    build:
+      context: build
+      dockerfile: 8.4-cli.Dockerfile
+    ports:
+      - '6090:80'
+    volumes:
+      - ./gateway:/var/php
+    working_dir: /var/php
+    networks:
+      - alt.net
+    depends_on:
+      - api.auth
+      - api.social
+      - api.marketplace
+      - api.avatar
+      - api.chat
+    command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+
+  # service api.auth : microservice pour l'authentification
+  #
+  api.auth:
+    build:
+      context: build
+      dockerfile: 8.4-cli.Dockerfile
+    ports:
+      - '6081:80'
+    volumes:
+      - ./services/auth:/var/php
+    working_dir: /var/php
+    networks:
+      - alt.net
+    depends_on:
+      - alt_db
+    command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+
+  # service api.social : microservice pour le réseau social
+  #
+  api.social:
+    build:
+      context: ./build
+      dockerfile: 8.4-cli.Dockerfile
+    ports:
+      - '6085:80'
+    volumes:
+      - ./services/social:/var/php
+    working_dir: /var/php
+    networks:
+      - alt.net
+    depends_on:
+      - alt_db
+    command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+
+  # service api.marketplace : microservice pour la marketplace
+  #
+  api.marketplace:
+    build:
+      context: build
+      dockerfile: 8.4-cli.Dockerfile
+    ports:
+      - '6082:80'
+    volumes:
+      - ./services/marketplace:/var/php
+    working_dir: /var/php
+    networks:
+      - alt.net
+    depends_on:
+      - alt_db
+    command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+
+  # service api.avatar : microservice pour les avatars
+  #
+  api.avatar:
+    build:
+      context: build
+      dockerfile: 8.4-cli.Dockerfile
+    ports:
+      - '6083:80'
+    volumes:
+      - ./services/avatar:/var/php
+    working_dir: /var/php
+    networks:
+      - alt.net
+    depends_on:
+      - alt_db
+    command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+  
+  # service api.chat : microservice pour le chat avec MongoDB
+  #
+  api.chat:
+    build:
+      context: build
+      dockerfile: 8.4-cli-mongo.Dockerfile
+    ports:
+      - '6084:80'
+    volumes:
+      - ./services/chat:/var/php
+    working_dir: /var/php
+    networks:
+      - alt.net
+    depends_on:
+      - alt.mongo
+    environment:
+      - MONGODB_URI=mongodb://alt.mongo:27017
+      - MONGODB_DATABASE=chat_db
+    command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+
+  # service alt.db : base de données PostgreSQL
+  #
+  alt_db:
+    image: 'postgres:16-alpine'
+    env_file: ./alt-db.env
+    ports:
+      - '5439:5432'
+    networks:
+      - alt.net
+    volumes:
+      - alt_postgres_data:/var/lib/postgresql/data
+      - ./sql/auth_schema.sql:/docker-entrypoint-initdb.d/1-auth_schema.sql
+      - ./sql/auth_data.sql:/docker-entrypoint-initdb.d/2-auth_data.sql
+
+  # service alt.mongo : base de données MongoDB pour le chat
+  #
+  alt.mongo:
+    image: 'mongo:7'
+    ports:
+      - '27017:27017'
+    networks:
+      - alt.net
+    environment:
+      - MONGO_INITDB_DATABASE=chat_db
+    volumes:
+      - alt_mongo_data:/data/db
+
+  #
+  # service frontend : interface utilisateur Vue.js + Vite
+  #
+  frontend:
+    image: node:20-alpine
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    working_dir: /app
+    networks:
+      - alt.net
+    depends_on:
+      - alt.gateway
+      - ws
+    environment:
+      - NODE_ENV=development
+      - VITE_API_GATEWAY=http://localhost:6090
+      - VITE_WS_URL=ws://localhost:3001
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+
+  #
+  # service ws : serveur WebSocket temps réel
+  #
+  ws:
+    image: node:20-alpine
+    ports:
+      - '3001:3001'
+    volumes:
+      - ./ws:/app
+    working_dir: /app
+    networks:
+      - alt.net
+    depends_on:
+      - alt_db
+      - alt.mongo
+    environment:
+      - WS_PORT=3001
+      - WS_HOST=0.0.0.0
+      - MONGO_URI=mongodb://alt.mongo:27017/chat_db
+      - DB_HOST=alt_db
+      - DB_PORT=5432
+    command: sh -c "npm install && npm start"
+
+  #
+  # service administration des bases sql
+  #
+  adminer:
+    image: adminer
+    ports:
+      - '8080:8080'
+    networks:
+      - alt.net
+
+  #
+  # service administration MongoDB
+  #
+  mongo-express:
+    image: mongo-express
+    ports:
+      - '8081:8081'
+    networks:
+      - alt.net
+    depends_on:
+      - alt.mongo
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://alt.mongo:27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=pass
+
+volumes:
+  alt_postgres_data:
+  alt_mongo_data:

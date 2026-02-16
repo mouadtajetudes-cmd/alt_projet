@@ -25,10 +25,10 @@ class GetAllProductsAction
             isset($params['prix_min']) ? (float) $params['prix_min'] : null,
             isset($params['prix_max']) ? (float) $params['prix_max'] : null,
             $params['statut'] ?? null,
-            $params['search'] ?? null,
-            isset($params['user_id']) ? (int) $params['user_id'] : null,
+            isset($params['page']) ? (int) $params['page'] : 1,
             isset($params['limit']) ? (int) $params['limit'] : 20,
-            isset($params['page']) ? (int) $params['page'] : 1
+            $params['search'] ?? null,
+            isset($params['user_id']) ? (int) $params['user_id'] : null
         );
 
         $products = $this->productService->getAllProducts($filters);
