@@ -3,14 +3,12 @@
     <div class="container">
       <div class="header">
         <h1>🎭 Galerie des Avatars</h1>
-        <p class="subtitle">Découvrez tous les avatars disponibles</p>
-        
-        <router-link 
-          v-if="isAdmin" 
-          to="/avatar/create" 
-          class="btn-admin-create"
-        >
-          ➕ Créer un avatar
+        <p class="subtitle">Choisissez votre compagnon parmi les 5 avatars disponibles</p>
+      </div>
+
+      <div v-if="isAdmin" class="admin-actions">
+        <router-link to="/avatar/create" class="btn-admin-create">
+          Créer un nouvel avatar
         </router-link>
       </div>
       
@@ -64,7 +62,7 @@
           class="avatar-card"
         >
           <div class="card-header">
-            <div class="avatar-icon">🎭</div>
+            <img :src="`/avatars/${avatar.image}`" :alt="avatar.nom" class="avatar-image" />
           </div>
           
           <div class="card-body">
@@ -76,9 +74,6 @@
             <button @click="chooseAvatar(avatar)" class="btn-choose">
               ✓ Choisir cet avatar
             </button>
-            <router-link :to="`/avatar/${avatar.id_avatar}`" class="btn-details">
-              Voir les détails →
-            </router-link>
           </div>
         </div>
       </div>
@@ -158,7 +153,6 @@ export default {
       console.log('[AVATAR] Avatar choisi:', avatar.nom)
       
       try {
-        // Récupérer l'ID utilisateur depuis l'auth
         const userId = getUserId()
         
         if (!userId) {
@@ -173,22 +167,23 @@ export default {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            nom: avatar.nom,
-            image: avatar.image,
+            id_avatar: avatar.id_avatar,
             id_utilisateur: userId
           })
         })
         
         if (!response.ok) {
-          throw new Error(`Erreur HTTP: ${response.status}`)
+          const errorData = await response.json().catch(() => ({}))
+          if (response.status === 400 && errorData.message?.includes('already has')) {
+            router.push('/my-avatars')
+            return
+          }
+          throw new Error(errorData.message || `Erreur HTTP: ${response.status}`)
         }
         
         const result = await response.json()
-        console.log('[AVATAR] Avatar assigné:', result)
+        console.log('[AVATAR] Avatar sélectionné:', result)
         
-        alert(`Vous avez choisi "${avatar.nom}" ! Votre compagnon commence son aventure à 0 points.`)
-        
-        // Rediriger vers mes avatars
         router.push('/my-avatars')
         
       } catch (err) {
@@ -217,7 +212,6 @@ export default {
 </script>
 
 <style scoped>
-/* === Styles Spécifiques à Avatar.vue === */
 
 .avatar-page {
   min-height: 100vh;
@@ -374,18 +368,23 @@ export default {
   box-shadow: var(--avatar-shadow-primary);
 }
 
+.admin-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--avatar-spacing-lg);
+}
+
 .btn-admin-create {
   display: inline-flex;
   align-items: center;
-  gap: var(--avatar-spacing-xs);
-  padding: 0.875rem 1.75rem;
+  gap: var(--avatar-spacing-sm);
+  padding: 1rem 2rem;
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: var(--avatar-text-white);
   border-radius: var(--avatar-radius-md);
   text-decoration: none;
   font-weight: 700;
   font-size: 1rem;
-  margin-top: var(--avatar-spacing-md);
   transition: all var(--avatar-transition-normal);
   box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);
 }

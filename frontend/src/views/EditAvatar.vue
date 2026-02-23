@@ -23,7 +23,8 @@
       <div v-else class="avatar-form-card">
         <div class="avatar-preview">
           <div class="avatar-display">
-            <div class="avatar-icon-3d">{{ formData.image || '🦊' }}</div>
+            <img v-if="formData.image" :src="`/avatars/${formData.image}`" :alt="formData.nom" class="avatar-icon-3d-img" />
+            <div v-else class="avatar-icon-3d">🦊</div>
           </div>
           <div class="preview-name">{{ formData.nom || 'Compagnon' }}</div>
         </div>
@@ -53,22 +54,11 @@
           <div class="form-field">
             <div class="field-icon">🎨</div>
             <div class="field-content">
-              <label class="field-label">Icône :</label>
-              <select v-model="formData.image" class="field-select" required>
-                <option value="">Sélectionner...</option>
-                <option value="🦊">🦊 Renard</option>
-                <option value="🐱">🐱 Chat</option>
-                <option value="🐶">🐶 Chien</option>
-                <option value="🐺">🐺 Loup</option>
-                <option value="🐻">🐻 Ours</option>
-                <option value="🐰">🐰 Lapin</option>
-                <option value="🐼">🐼 Panda</option>
-                <option value="🦁">🦁 Lion</option>
-                <option value="🦅">🦅 Aigle</option>
-                <option value="🐉">🐉 Dragon</option>
-                <option value="🦄">🦄 Licorne</option>
-                <option value="🐢">🐢 Tortue</option>
-              </select>
+              <label class="field-label">Avatar :</label>
+              <div class="readonly-field">
+                {{ formData.nom }}
+              </div>
+              <span class="field-hint">Les avatars prédéfinis ne peuvent pas être modifiés</span>
             </div>
           </div>
 
@@ -144,12 +134,12 @@ export default {
         
         originalData.value = {
           nom: data.nom || '',
-          image: data.image || '🦊'
+          image: data.image || ''
         }
         
         formData.value = {
           nom: data.nom || '',
-          image: data.image || '🦊'
+          image: data.image || ''
         }
         
       } catch (err) {
@@ -161,14 +151,13 @@ export default {
     }
 
     const isFormValid = computed(() => {
-      return formData.value.nom.trim().length >= 1 && formData.value.image
+      return formData.value.nom.trim().length >= 1
     })
 
     const hasChanges = computed(() => {
       if (!originalData.value) return false
       
-      return formData.value.nom !== originalData.value.nom ||
-             formData.value.image !== originalData.value.image
+      return formData.value.nom !== originalData.value.nom
     })
 
     const handleSubmit = async () => {
@@ -243,21 +232,17 @@ export default {
 </script>
 
 <style scoped>
-/* === Styles Spécifiques à EditAvatar.vue === */
 
-/* Page avec fond gradient */
 .edit-avatar-page {
   min-height: 100vh;
   background: var(--avatar-gradient);
   padding: var(--avatar-spacing-lg) 0;
 }
 
-/* Container spécifique pour EditAvatar */
 .container {
   max-width: 800px;
 }
 
-/* État d'erreur de chargement spécifique */
 .btn-back-gallery {
   display: inline-block;
   margin-top: var(--avatar-spacing-md);
@@ -275,7 +260,6 @@ export default {
   transform: translateY(-2px);
 }
 
-/* Wave SVG personnalisé pour l'aperçu */
 .avatar-preview::before {
   content: '';
   position: absolute;
@@ -288,14 +272,12 @@ export default {
   pointer-events: none;
 }
 
-/* Display de l'avatar en édition */
 .avatar-display {
   margin-bottom: var(--avatar-spacing-md);
   position: relative;
   z-index: 1;
 }
 
-/* Nom de l'avatar en aperçu */
 .preview-name {
   font-size: 1.8rem;
   font-weight: 700;
@@ -305,7 +287,6 @@ export default {
   z-index: 1;
 }
 
-/* En-tête du formulaire */
 .form-header {
   text-align: center;
   margin-bottom: var(--avatar-spacing-lg);
@@ -323,7 +304,6 @@ export default {
   margin: 0;
 }
 
-/* Bouton d'annulation spécifique */
 .btn-cancel {
   flex: 1;
   padding: 1.25rem;
@@ -347,10 +327,29 @@ export default {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Media queries spécifiques */
 @media (max-width: 768px) {
   .preview-name {
     font-size: 1.5rem;
   }
+}
+*
+.avatar-icon-3d-img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+  animation: float 3s ease-in-out infinite;
+  margin: 0 auto;
+  display: block;
+}
+
+.readonly-field {
+  padding: 1rem;
+  background: rgba(102, 126, 234, 0.1);
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-radius: var(--avatar-radius-md);
+  color: var(--avatar-text-dark);
+  font-weight: 600;
+  font-size: 1rem;
 }
 </style>

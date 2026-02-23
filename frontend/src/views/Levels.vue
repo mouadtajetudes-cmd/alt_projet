@@ -155,7 +155,7 @@ export default {
     }
     
     const currentPoints = computed(() => {
-      return userAvatar.value?.points || 0
+      return userAvatar.value?.current_points || 0
     })
     
     const currentLevel = computed(() => {
@@ -206,9 +206,9 @@ export default {
     
     const loadUserAvatar = async () => {
       try {
-        console.log(`[LEVELS] Chargement des avatars de l'utilisateur ${userId}`)
+        console.log(`[LEVELS] Chargement de l'avatar de l'utilisateur ${userId}`)
         
-        const response = await fetch(`http://localhost:6090/avatar/users/${userId}/avatars`)
+        const response = await fetch(`http://localhost:6090/avatar/users/${userId}/avatar`)
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -220,11 +220,11 @@ export default {
         }
         
         const data = await response.json()
-        const avatars = Array.isArray(data) ? data : (data.avatars || [])
+        console.log('[LEVELS] Data reçue:', data)
         
-        if (avatars.length > 0) {
-          userAvatar.value = avatars[0]
-          console.log('[LEVELS] Avatar chargé:', userAvatar.value.nom, 'avec', userAvatar.value.points, 'points')
+        if (data.avatar) {
+          userAvatar.value = data.avatar
+          console.log('[LEVELS] Avatar chargé:', userAvatar.value.nom, 'avec', userAvatar.value.current_points, 'points')
         } else {
           console.log('[LEVELS] L\'utilisateur n\'a pas d\'avatar')
           userAvatar.value = null

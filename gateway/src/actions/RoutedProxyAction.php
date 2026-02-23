@@ -39,10 +39,45 @@ class RoutedProxyAction
             'headers' => [],
         ];
         
-        $body = (string) $request->getBody();
-        if ($body) {
-            $options['body'] = $body;
-            $options['headers']['Content-Type'] = $request->getHeaderLine('Content-Type') ?: 'application/json';
+        $contentType = $request->getHeaderLine('Content-Type');
+        $uploadedFiles = $request->getUploadedFiles();
+        
+        if (strpos($contentType, 'multipart/form-data') !== false && !empty($uploadedFiles)) {
+            $multipart = [];
+            
+            $parsedBody = $request->getParsedBody();
+            if (is_array($parsedBody)) {
+                foreach ($parsedBody as $name => $value) {
+                    $multipart[] = [
+                        'name' => $name,
+                        'contents' => $value
+                    ];
+                }
+            } else {
+                foreach ($_POST as $name => $value) {
+                    $multipart[] = [
+                        'name' => $name,
+                        'contents' => $value
+                    ];
+                }
+            }
+            foreach ($uploadedFiles as $fieldName => $uploadedFile) {
+                if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
+                    $multipart[] = [
+                        'name' => $fieldName,
+                        'contents' => $uploadedFile->getStream(),
+                        'filename' => $uploadedFile->getClientFilename()
+                    ];
+                }
+            }
+            
+            $options['multipart'] = $multipart;
+        } else {
+            $body = (string) $request->getBody();
+            if ($body) {
+                $options['body'] = $body;
+                $options['headers']['Content-Type'] = $contentType ?: 'application/json';
+            }
         }
         
         if ($auth = $request->getHeaderLine('Authorization')) {

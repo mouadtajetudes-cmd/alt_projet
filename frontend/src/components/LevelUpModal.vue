@@ -22,7 +22,10 @@
                 </div>
               </div>
               
-              <div class="avatar-icon-big">{{ avatarImage }}</div>
+              <div class="avatar-preview-image">
+                <img v-if="avatarImage" :src="`/avatars/${avatarImage}`" :alt="avatarName" class="avatar-icon-modal" />
+                <div v-else class="avatar-icon-big">🦊</div>
+              </div>
               <div class="avatar-name">{{ avatarName }}</div>
             </div>
 
@@ -86,13 +89,9 @@ export default {
       type: Boolean,
       default: false
     },
-    avatarId: {
+    userId: {
       type: [String, Number],
       required: true
-    },
-    versionId: {
-      type: [String, Number],
-      default: null
     },
     avatarName: {
       type: String,
@@ -100,7 +99,7 @@ export default {
     },
     avatarImage: {
       type: String,
-      default: '🦊'
+      default: ''
     },
     currentLevel: {
       type: Number,
@@ -147,10 +146,8 @@ export default {
         return
       }
 
-      const targetId = props.versionId || props.avatarId
-      
-      if (!targetId) {
-        error.value = 'ID d\'avatar manquant'
+      if (!props.userId) {
+        error.value = 'ID utilisateur manquant'
         return
       }
 
@@ -159,16 +156,13 @@ export default {
         error.value = null
         success.value = null
 
-        console.log('[LEVEL_UP] Montée niveau pour versionId:', targetId, 'vers niveau:', nextLevel.value)
+        console.log('[LEVEL_UP] Montée niveau pour userId:', props.userId, 'vers niveau:', nextLevel.value)
 
-        const response = await fetch(`http://localhost:6090/avatar/avatar-versions/${targetId}/level-up`, {
+        const response = await fetch(`http://localhost:6090/avatar/users/${props.userId}/avatar/level-up`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            new_level: nextLevel.value
-          })
+          }
         })
 
         if (!response.ok) {
@@ -348,6 +342,27 @@ export default {
 .arrow-icon {
   font-size: 2rem;
   color: #667eea;
+}
+
+.avatar-preview-image {
+  margin: 1rem 0;
+}
+
+.avatar-icon-modal {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .avatar-icon-big {

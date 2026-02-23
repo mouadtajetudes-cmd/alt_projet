@@ -242,6 +242,27 @@
   animation: float 3s ease-in-out infinite;
 }
 
+/* === Images Avatar === */
+.avatar-image {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  animation: float 3s ease-in-out infinite;
+  margin: 0 auto;
+  display: block;
+}
+
+.avatar-image-large {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
+  animation: float 3s ease-in-out infinite;
+  margin: 0 auto;
+  display: block;
+}
+
 /* === Cartes Avatar === */
 .card-header {
   background: var(--avatar-gradient);

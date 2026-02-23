@@ -18,6 +18,8 @@ $container = $builder->build();
 AppFactory::setContainer($container);
 $app = AppFactory::create();
 
+$app->add(new CorsMiddleware());
+
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 
@@ -29,13 +31,13 @@ $errorMw = $app->addErrorMiddleware(
 );
 $errorMw->getDefaultErrorHandler()->forceContentType('application/json');
 
-$app = (require __DIR__ . '/../src/api/routes.php')($app);
-
-$app->add(new CorsMiddleware());
-
-// pre-flight
 $app->options('/{routes:.+}', function ($request, $response) {
-    return $response;
+    return $response
+        ->withHeader('Access-Control-Allow-Origin', '*')
+        ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
 });
+
+$app = (require __DIR__ . '/../src/api/routes.php')($app);
 
 return $app;

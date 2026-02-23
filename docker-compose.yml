@@ -85,6 +85,7 @@ services:
       - '6083:80'
     volumes:
       - ./services/avatar:/var/php
+      - ./frontend/public/avatars:/frontend/public/avatars
     working_dir: /var/php
     networks:
       - alt.net

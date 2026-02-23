@@ -35,71 +35,79 @@
 
       <div v-else-if="avatars.length === 0" class="empty-state">
         <span class="empty-icon">🎭</span>
-        <h2>Aucun avatar trouvé</h2>
-        <p>Vous n'avez pas encore de compagnon.</p>
+        <h2>Aucun avatar sélectionné</h2>
+        <p>Vous n'avez pas encore choisi votre compagnon.</p>
         <router-link to="/avatar" class="btn-browse">
-          Parcourir la galerie
+          Choisir mon avatar
         </router-link>
       </div>
 
-      <div v-else class="avatars-section">
+      <div v-else class="avatar-section-single">
         <div class="section-header">
-          <h2>Vos Compagnons ({{ avatars.length }})</h2>
+          <h2>Mon Compagnon</h2>
         </div>
         
-        <div class="avatars-grid">
-          <div
-            v-for="avatar in avatars" 
-            :key="avatar.id_avatar"
-            class="avatar-card"
-          >
-            <div class="card-header">
-              <div class="avatar-icon">{{ avatar.image || '🦊' }}</div>
-              <div class="level-badge">
-                <span class="level-icon">⭐</span>
-                <span class="level-text">Niveau {{ getCurrentLevel(avatar) }}</span>
-              </div>
+        <div class="avatar-card-large">
+          <div class="card-header-large">
+            <img :src="`/avatars/${avatars[0].image}`" :alt="avatars[0].nom" class="avatar-image-large" />
+            <div class="level-badge-large">
+              <span class="level-icon">⭐</span>
+              <span class="level-text">Niveau {{ avatars[0].niveau_actuel }}</span>
             </div>
+          </div>
+          
+          <div class="card-body-large">
+            <h2 class="avatar-name-large">{{ avatars[0].nom }}</h2>
+            <div class="avatar-description">{{ avatars[0].description || 'Votre fidèle compagnon' }}</div>
             
-            <div class="card-body">
-              <h3 class="avatar-name">{{ avatar.nom }}</h3>
-              <div class="avatar-stats">
-                <div class="stat-item">
-                  <span class="stat-icon">💎</span>
-                  <span class="stat-value">{{ getCurrentPoints(avatar) }} pts</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-icon">📅</span>
-                  <span class="stat-value">{{ formatDate(avatar.created_at) }}</span>
+            <div class="avatar-stats-large">
+              <div class="stat-item-large">
+                <span class="stat-icon">💎</span>
+                <div class="stat-content">
+                  <span class="stat-label">Points actuels</span>
+                  <span class="stat-value">{{ avatars[0].current_points }} pts</span>
                 </div>
               </div>
-
-              <div class="progress-section">
-                <div class="progress-info">
-                  <span class="progress-label">Progression vers niveau {{ getNextLevel(avatar) }}</span>
-                  <span class="progress-percentage">{{ getProgressPercentage(avatar) }}%</span>
-                </div>
-                <div class="progress-bar">
-                  <div 
-                    class="progress-fill" 
-                    :style="{ width: getProgressPercentage(avatar) + '%' }"
-                  ></div>
-                </div>
-                <div class="progress-details">
-                  <span>{{ getPointsRemaining(avatar) }} points restants</span>
+              <div class="stat-item-large">
+                <span class="stat-icon">🏆</span>
+                <div class="stat-content">
+                  <span class="stat-label">Niveau</span>
+                  <span class="stat-value">{{ avatars[0].nom_niveau }}</span>
                 </div>
               </div>
-
-              <div class="level-info">
-                <span class="level-name">{{ getCurrentLevelName(avatar) }}</span>
+              <div class="stat-item-large">
+                <span class="stat-icon">📅</span>
+                <div class="stat-content">
+                  <span class="stat-label">Depuis le</span>
+                  <span class="stat-value">{{ formatDate(avatars[0].created_at) }}</span>
+                </div>
               </div>
             </div>
-            
-            <div class="card-footer">
-              <router-link :to="`/avatar/${avatar.id_avatar}`" class="btn-details">
-                Voir les détails →
-              </router-link>
+
+            <div class="progress-section-large">
+              <div class="progress-info">
+                <span class="progress-label">Progression vers niveau {{ parseInt(avatars[0].niveau_actuel) + 1 }}</span>
+                <span class="progress-percentage">{{ getProgressPercentage(avatars[0]) }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  :style="{ width: getProgressPercentage(avatars[0]) + '%' }"
+                ></div>
+              </div>
+              <div class="progress-details">
+                <span>{{ getPointsRemaining(avatars[0]) }} points restants</span>
+              </div>
             </div>
+          </div>
+          
+          <div class="card-footer-large">
+            <router-link :to="`/users/${userId}/avatar/detail`" class="btn-details-large">
+              Voir tous les détails →
+            </router-link>
+            <router-link to="/avatar" class="btn-change">
+              Changer d'avatar
+            </router-link>
           </div>
         </div>
       </div>
@@ -164,9 +172,9 @@ export default {
       try {
         loading.value = true
         error.value = null
-        console.log(`[USER_AVATAR] Chargement des avatars de l'utilisateur ${userId}`)
+        console.log(`[USER_AVATAR] Chargement de l'avatar de l'utilisateur ${userId}`)
         
-        const response = await fetch(`http://localhost:6090/avatar/users/${userId}/avatars`)
+        const response = await fetch(`http://localhost:6090/avatar/users/${userId}/avatar`)
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -179,54 +187,44 @@ export default {
         const data = await response.json()
         console.log('[USER_AVATAR] Réponse API:', data)
         
-        if (Array.isArray(data)) {
-          avatars.value = data
-        } else if (data.avatars && Array.isArray(data.avatars)) {
-          avatars.value = data.avatars
+        // La nouvelle API retourne { type: 'resource', avatar: {...} } ou { avatar: null }
+        if (data.avatar) {
+          avatars.value = [data.avatar]
         } else {
           avatars.value = []
         }
         
-        console.log('[USER_AVATAR] Avatars chargés:', avatars.value.length)
+        console.log('[USER_AVATAR] Avatar chargé:', avatars.value.length > 0 ? 'oui' : 'non')
         
       } catch (err) {
-        console.error('[USER_AVATAR] Erreur chargement avatars:', err)
-        error.value = 'Impossible de charger vos avatars. Vérifiez que le service est démarré.'
+        console.error('[USER_AVATAR] Erreur chargement avatar:', err)
+        error.value = 'Impossible de charger votre avatar. Vérifiez que le service est démarré.'
       } finally {
         loading.value = false
       }
     }
 
     const getCurrentPoints = (avatar) => {
-      return avatar.points || 0
+      return avatar.current_points || 0
     }
 
     const getCurrentLevel = (avatar) => {
-      const points = getCurrentPoints(avatar)
-      if (levels.value.length === 0) return 1
-      
-      for (let i = levels.value.length - 1; i >= 0; i--) {
-        if (points >= levels.value[i].points) {
-          return levels.value[i].id_niveau
-        }
-      }
-      return 1
+      return parseInt(avatar.niveau_actuel) || 1
     }
 
     const getCurrentLevelName = (avatar) => {
-      const levelId = getCurrentLevel(avatar)
-      const level = levels.value.find(l => l.id_niveau === levelId)
-      return level ? level.nom : 'Débutant'
+      return avatar.nom_niveau || 'Débutant'
     }
 
     const getNextLevel = (avatar) => {
-      return getCurrentLevel(avatar) + 1
+      const currentLevel = getCurrentLevel(avatar)
+      return currentLevel >= 5 ? 5 : currentLevel + 1
     }
 
     const getNextLevelPoints = (avatar) => {
       const nextLevelId = getNextLevel(avatar)
       const nextLevel = levels.value.find(l => l.id_niveau === nextLevelId)
-      return nextLevel ? nextLevel.points : getCurrentPoints(avatar)
+      return nextLevel ? nextLevel.points : avatar.points_niveau_suivant || getCurrentPoints(avatar)
     }
 
     const getPointsRemaining = (avatar) => {
@@ -244,6 +242,9 @@ export default {
       
       const points = getCurrentPoints(avatar)
       const nextPoints = getNextLevelPoints(avatar)
+      
+      // Si niveau max atteint
+      if (currentLevelId >= 5 && points >= nextPoints) return 100
       
       const pointsInCurrentLevel = points - currentLevelPoints
       const pointsNeededForNext = nextPoints - currentLevelPoints
@@ -572,6 +573,168 @@ export default {
 .card-footer {
   padding: 0 var(--avatar-spacing-md) var(--avatar-spacing-md);
   background: var(--avatar-text-white);
+}
+
+/* === Styles pour l'avatar unique (large) === */
+.avatar-section-single {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.avatar-card-large {
+  background: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-xl);
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.avatar-card-large:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 70px rgba(102, 126, 234, 0.3);
+}
+
+.card-header-large {
+  background: var(--avatar-gradient);
+  padding: var(--avatar-spacing-xxl) var(--avatar-spacing-lg);
+  position: relative;
+  text-align: center;
+}
+
+.avatar-icon-large {
+  font-size: 8rem;
+  margin-bottom: var(--avatar-spacing-md);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
+  animation: float 3s ease-in-out infinite;
+}
+
+.level-badge-large {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--avatar-spacing-sm);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(15px);
+  padding: var(--avatar-spacing-sm) var(--avatar-spacing-md);
+  border-radius: 30px;
+  color: var(--avatar-text-white);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.card-body-large {
+  padding: var(--avatar-spacing-xxl) var(--avatar-spacing-lg);
+}
+
+.avatar-name-large {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--avatar-text-dark);
+  margin-bottom: var(--avatar-spacing-xs);
+  text-align: center;
+}
+
+.avatar-description {
+  text-align: center;
+  color: var(--avatar-text-medium);
+  margin-bottom: var(--avatar-spacing-lg);
+  font-size: 1.1rem;
+}
+
+.avatar-stats-large {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--avatar-spacing-md);
+  margin-bottom: var(--avatar-spacing-xl);
+}
+
+.stat-item-large {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--avatar-spacing-sm);
+  padding: var(--avatar-spacing-md);
+  background: rgba(102, 126, 234, 0.08);
+  border-radius: var(--avatar-radius-md);
+  transition: all var(--avatar-transition-normal);
+}
+
+.stat-item-large:hover {
+  background: rgba(102, 126, 234, 0.12);
+  transform: translateY(-3px);
+}
+
+.stat-item-large .stat-icon {
+  font-size: 2rem;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--avatar-text-medium);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-item-large .stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--avatar-primary);
+}
+
+.progress-section-large {
+  margin-bottom: var(--avatar-spacing-md);
+}
+
+.card-footer-large {
+  padding: var(--avatar-spacing-lg);
+  background: #f8f9fa;
+  display: flex;
+  gap: var(--avatar-spacing-md);
+}
+
+.btn-details-large {
+  flex: 1;
+  display: inline-block;
+  padding: 1rem var(--avatar-spacing-lg);
+  background: var(--avatar-gradient);
+  color: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-md);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all var(--avatar-transition-normal);
+  text-align: center;
+}
+
+.btn-details-large:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--avatar-shadow-primary);
+}
+
+.btn-change {
+  flex: 1;
+  display: inline-block;
+  padding: 1rem var(--avatar-spacing-lg);
+  background: var(--avatar-text-white);
+  color: var(--avatar-primary);
+  border: 2px solid var(--avatar-primary);
+  border-radius: var(--avatar-radius-md);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all var(--avatar-transition-normal);
+  text-align: center;
+}
+
+.btn-change:hover {
+  background: var(--avatar-primary);
+  color: var(--avatar-text-white);
+  transform: translateY(-2px);
 }
 
 /* Media queries spécifiques à cette vue */
