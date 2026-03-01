@@ -16,8 +16,8 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import Navbar from './components/Navbar.vue'
-import { useAuth } from './composables/useAuth'
+import Navbar from './shared/components/Navbar.vue'
+import { useAuth } from './modules/auth/composables/useAuth'
 
 const { initAuth } = useAuth()
 

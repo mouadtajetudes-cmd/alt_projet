@@ -134,7 +134,7 @@
 <script>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '../composables/useAuth'
+import { useAuth } from '../modules/auth/composables/useAuth'
 
 export default {
   name: 'CreateAvatar',
@@ -183,12 +183,6 @@ export default {
         error.value = 'Veuillez remplir tous les champs obligatoires'
         return
       }
-
-      // TODO: Réactiver quand authentification sera prête
-      // if (!isAdmin.value) {
-      //   error.value = 'Accès refusé : droits administrateur requis'
-      //   return
-      // }
 
       try {
         loading.value = true
@@ -245,8 +239,6 @@ export default {
       success,
       isFormValid,
       handleSubmit
-      // TODO: Réactiver quand authentification sera prête
-      // isAdmin
     }
   }
 }

@@ -151,7 +151,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import '../views/views.css'
+import '../../../views/views.css'
 
 const router = useRouter()
 const route = useRoute()

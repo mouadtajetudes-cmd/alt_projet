@@ -24,6 +24,8 @@ use alt\api\actions\RefreshTokenAction;
 use alt\api\actions\GetUserGroupsAction;
 use alt\api\actions\GetGroupMembersAction;
 use alt\api\actions\RemoveMemberAction;
+use alt\api\actions\GoogleOAuthAction;
+use alt\api\actions\AppleOAuthAction;
 use alt\api\middlewares\AuthMiddleware;
 use alt\api\middlewares\AdminMiddleware;
 use alt\api\middlewares\SelfOrAdminMiddleware;
@@ -44,6 +46,10 @@ return function(\Slim\App $app): \Slim\App {
     $app->post('/auth/register', RegisterAction::class);
     $app->post('/auth/tokens/validate', ValidateTokenAction::class);
     $app->post('/auth/refresh', RefreshTokenAction::class);
+    
+    // OAuth routes
+    $app->get('/auth/google', GoogleOAuthAction::class);
+    $app->post('/auth/apple', AppleOAuthAction::class);
 
     // Protected routes - User management
     $app->get('/users', GetAllUsersAction::class)

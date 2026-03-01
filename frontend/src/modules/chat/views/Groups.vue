@@ -489,7 +489,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import './views.css'
+import '../../../views/views.css'
 
 const router = useRouter()
 const currentUser = ref(null)

@@ -141,9 +141,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '../composables/useAuth'
-import NotificationBell from './NotificationBell.vue'
-import '../views/views.css'
+import { useAuth } from '../../modules/auth/composables/useAuth'
+import NotificationBell from '../../modules/chat/components/NotificationBell.vue'
+import '../../views/views.css'
 
 const router = useRouter()
 const { isAuthenticated, logout: authLogout } = useAuth()

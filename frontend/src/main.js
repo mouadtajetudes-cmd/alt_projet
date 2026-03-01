@@ -5,7 +5,6 @@ import App from './App.vue'
 import './assets/css/style.css'
 import './style.css'
 
-// FontAwesome
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { 

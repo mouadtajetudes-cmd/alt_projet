@@ -188,7 +188,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import BaseCard from '@/components/BaseCard.vue'
+import BaseCard from '@/shared/components/BaseCard.vue'
 
 const isAuthenticated = computed(() => {
   return !!localStorage.getItem('token')

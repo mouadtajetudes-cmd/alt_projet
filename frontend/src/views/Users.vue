@@ -449,7 +449,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import BaseTable from '@/components/BaseTable.vue'
+import BaseTable from '@/shared/components/BaseTable.vue'
 import './views.css'
 
 const router = useRouter()

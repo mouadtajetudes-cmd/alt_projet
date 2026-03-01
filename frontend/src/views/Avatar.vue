@@ -91,39 +91,17 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-// TODO: Réactiver quand authentification sera prête
-// import { useAuth } from '../composables/useAuth'
 
 export default {
   name: 'Avatar',
   setup() {
     const router = useRouter()
     const route = useRoute()
-    // TODO: Réactiver quand authentification sera prête
-    // const { isAdmin, isAuthenticated, getUserId, initAuth } = useAuth()
     
     const avatars = ref([])
     const loading = ref(true)
     const error = ref(null)
     const searchQuery = ref('')
-    // TODO: Réactiver quand authentification sera prête
-    // const errorMessage = ref(null)
-    
-    // TODO: Réactiver quand authentification sera prête
-    // initAuth()
-    
-    // TODO: Réactiver quand authentification sera prête
-    // onMounted(() => {
-    //   if (route.query.error === 'admin-required') {
-    //     errorMessage.value = '⛔ Accès refusé : seuls les administrateurs peuvent créer des avatars.'
-    //     setTimeout(() => errorMessage.value = null, 5000)
-    //   } else if (route.query.error === 'login-required') {
-    //     errorMessage.value = '🔒 Veuillez vous connecter pour accéder à cette page.'
-    //     setTimeout(() => errorMessage.value = null, 5000)
-    //   }
-    //   
-    //   loadAvatars()
-    // })
     
     const loadAvatars = async () => {
       try {
@@ -165,15 +143,6 @@ export default {
       console.log('[AVATAR] Avatar choisi:', avatar.nom)
       
       try {
-        // TODO: Réactiver quand authentification sera prête
-        // Récupérer l'ID utilisateur depuis l'auth
-        // const userId = getUserId()
-        
-        // if (!userId) {
-        //   alert('Veuillez vous connecter pour choisir un avatar.')
-        //   return
-        // }
-        
         const response = await fetch('http://localhost:6090/avatar/avatars', {
           method: 'POST',
           headers: {
@@ -182,8 +151,6 @@ export default {
           body: JSON.stringify({
             nom: avatar.nom,
             image: avatar.image
-            // TODO: Réactiver quand authentification sera prête
-            // id_utilisateur: userId
           })
         })
         
@@ -195,9 +162,6 @@ export default {
         console.log('[AVATAR] Avatar assigné:', result)
         
         alert(`Vous avez choisi "${avatar.nom}" ! Votre compagnon commence son aventure à 0 points.`)
-        
-        // TODO: Rediriger vers le profil utilisateur ou la page de personnalisation
-        // router.push('/my-avatar')
         
       } catch (err) {
         console.error('[AVATAR] Erreur lors du choix:', err)
@@ -217,9 +181,6 @@ export default {
       filteredAvatars,
       loadAvatars,
       chooseAvatar
-      // TODO: Réactiver quand authentification sera prête
-      // isAdmin,
-      // errorMessage
     }
   }
 }

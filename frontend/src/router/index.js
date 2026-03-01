@@ -1,13 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import authRoutes from './routes/auth'
+import chatRoutes from './routes/chat'
+import { requireAuth } from '../modules/auth/middleware/auth'
+
 import Home from '../views/Home.vue'
-import Chat from '../views/Chat.vue'
-import Login from '../views/Login.vue'
-import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
 import Users from '../views/Users.vue'
-import Friends from '../views/Friends.vue'
-import Groups from '../views/Groups.vue'
-import GroupChat from '../views/GroupChat.vue'
 import Marketplace from '../views/Marketplace.vue'
 import ProductDetail from '../views/ProductDetail.vue'
 import Social from '../views/Social.vue'
@@ -17,23 +15,12 @@ import CreateAvatar from '../views/CreateAvatar.vue'
 import EditAvatar from '../views/EditAvatar.vue'
 import Levels from '../views/Levels.vue'
 import UserAvatar from '../views/UserAvatar.vue'
-import { requireAuth } from '../middleware/auth'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: Home
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: Login
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: Register
   },
   {
     path: '/profile',
@@ -45,30 +32,6 @@ const routes = [
     path: '/users',
     name: 'Users',
     component: Users,
-    beforeEnter: requireAuth
-  },
-  {
-    path: '/chat',
-    name: 'Chat',
-    component: Chat,
-    beforeEnter: requireAuth
-  },
-  {
-    path: '/friends',
-    name: 'Friends',
-    component: Friends,
-    beforeEnter: requireAuth
-  },
-  {
-    path: '/groups',
-    name: 'Groups',
-    component: Groups,
-    beforeEnter: requireAuth
-  },
-  {
-    path: '/groups/:salleId/chat',
-    name: 'GroupChat',
-    component: GroupChat,
     beforeEnter: requireAuth
   },
   {
@@ -118,7 +81,9 @@ const routes = [
     path: '/user/:id/avatars',
     name: 'UserAvatar',
     component: UserAvatar
-  }
+  },
+  ...authRoutes,
+  ...chatRoutes
 ]
 
 const router = createRouter({
