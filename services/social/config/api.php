@@ -6,7 +6,6 @@ use alt\api\actions\GetReactionsByPostAction;
 use alt\core\application\ports\api\CommentServiceInterface;
 use alt\core\application\ports\api\PostServiceInterface;
 use alt\api\middlewares\AuthMiddleware;
-use alt\core\application\action\GetByIdAction;
 use alt\core\application\ports\api\ReactionServiceInterface;
 
 

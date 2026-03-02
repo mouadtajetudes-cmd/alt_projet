@@ -7,7 +7,7 @@ services:
   #
   alt.gateway:
     build:
-      context: build
+      context: ./build
       dockerfile: 8.4-cli.Dockerfile
     ports:
       - '6090:80'

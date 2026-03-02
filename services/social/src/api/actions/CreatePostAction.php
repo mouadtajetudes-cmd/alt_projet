@@ -16,23 +16,54 @@ class CreatePostAction extends JsonError
         $this->postService = $postService;
     }
 
-    public function __invoke(ServerRequestInterface $request,ResponseInterface $response): ResponseInterface {
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
         try {
-           
-            $body = $request->getParsedBody();
 
-            if (!isset($body['titre']) || !isset($body['description']) || !isset($body['idUtilisateur'])) {
+            $parsedBody = $request->getParsedBody() ;
+             if (empty($parsedBody)) {
+    $parsedBody = $_POST  ;
+}
+if (empty($parsedBody)) {
+    $parsedBody = $_REQUEST;
+}
+           
+            $files = $request->getUploadedFiles();
+            $type = $parsedBody['type'] ?? null;
+            $idUtilisateur = $parsedBody['id_utilisateur'] ?? null;
+           
+
+            if (!$type || !$idUtilisateur) {
                 throw new \InvalidArgumentException('Paramètres manquants');
             }
 
-            $dto = new CreatePostDTO(
-                $body['titre'],
-                $body['description'],
-                $body['idUtilisateur']
-            );
+            $description = $parsedBody['description'] ?? '';
 
-            
+            if ($type === 'image' || $type === 'video') {
+                if (!isset($files['file'])) {
+                    throw new \InvalidArgumentException('Fichier manquant');
+                }
+
+                $uploadedFile = $files['file'];
+
+                if ($uploadedFile->getError() !== UPLOAD_ERR_OK) {
+                    throw new \RuntimeException('Erreur upload fichier');
+                }
+
+                $folder = $type === 'image' ? 'images' : 'videos';
+                $uploadPath = __DIR__ . "/../uploads/$folder/";
+
+                if (!is_dir($uploadPath)) mkdir($uploadPath, 0777, true);
+
+                $filename = uniqid() . "_" . $uploadedFile->getClientFilename();
+                $uploadedFile->moveTo($uploadPath . $filename);
+
+                $description = $filename;
+            }
+
+            $dto = new CreatePostDTO($type, $description, $idUtilisateur);
             $post = $this->postService->createPost($dto);
+           
 
             $response->getBody()->write(json_encode([
                 'status' => 'success',
@@ -47,10 +78,10 @@ class CreatePostAction extends JsonError
             return $this->jsonError($response, $e->getMessage(), 400);
 
         } catch (\RuntimeException $e) {
-            return $this->jsonError($response, 'Impossible de créer le post', 500);
+            return $this->jsonError($response, $e->getMessage(), 500);
 
         } catch (\Exception $e) {
-            return $this->jsonError($response, 'Erreur interne du serveur', 500);
+            return $this->jsonError($response, 'Erreur interne serveur', 500);
         }
     }
 }

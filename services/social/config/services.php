@@ -2,16 +2,20 @@
 
 use alt\core\application\ports\api\CommentServiceInterface;
 use alt\core\application\ports\api\ReactionServiceInterface;
-use alt\core\application\ports\spi\CommentRepositoryInterface;
-use alt\core\application\ports\spi\ReactionRepositoryInterface;
-use alt\core\application\useCases\CommentService;
-use alt\core\application\useCases\ReactionService;
+use alt\core\repositories\CommentRepositoryInterface;
+use alt\core\repositories\LikeRepositoryInterface;
+use alt\infra\repositories\PdoLikeRepository;
 use alt\core\repositories\PostRepositoryInterface;
-use alt\core\application\useCases\PostService;
 use alt\core\application\ports\api\PostServiceInterface;
+use alt\core\repositories\ReactionRepositoryInterface;
+use alt\core\services\CommentService;
+use alt\core\services\LikeService;
+use alt\core\services\PostService;
+use alt\core\services\ReactionService;
 use alt\infra\repositories\PdoCommentRepository;
 use alt\infra\repositories\PdoPostRepository;
 use alt\infra\repositories\PdoReactionRepository;
+use alt\core\application\ports\api\LikeServiceInterface;
 
 
 return [
@@ -32,6 +36,7 @@ return [
 
         return $pdo;
     },
+
     //reposository
 
     
@@ -43,6 +48,9 @@ return [
     },
     CommentRepositoryInterface::class =>function ($c){
         return new PdoCommentRepository($c->get('pdo'));
+    },
+    LikeRepositoryInterface::class => function ($c){
+        return new PdoLikeRepository($c->get('pdo'));
     },
 
     //service
@@ -58,5 +66,8 @@ return [
     },
     CommentServiceInterface::class =>function($c){
         return new CommentService($c->get(CommentRepositoryInterface::class));
+    },
+    LikeServiceInterface::class => function ($c){
+        return new LikeService($c->get(LikeRepositoryInterface::class));
     }
 ];

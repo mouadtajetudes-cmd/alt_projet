@@ -2,7 +2,7 @@
 namespace alt\api\actions;
 
 use alt\core\application\ports\api\CommentServiceInterface;
-use alt\core\application\dto\CreateCommentDTO;
+use alt\core\application\ports\api\CreateCommentDTO;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Throwable;

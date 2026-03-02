@@ -43,4 +43,14 @@ FOREIGN KEY (id_post) REFERENCES posts(id_post),
 FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur), 
 UNIQUE(id_utilisateur, id_post) 
 );
+---table:like
+CREATE TABLE likes (
+    id_like SERIAL PRIMARY KEY,
+    id_post INT NOT NULL,
+    id_utilisateur INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_like UNIQUE (id_post, id_utilisateur),
+    CONSTRAINT fk_post FOREIGN KEY (id_post) REFERENCES posts(id_post) ON DELETE CASCADE,
+    CONSTRAINT fk_utilisateur FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur) ON DELETE CASCADE
+);
 

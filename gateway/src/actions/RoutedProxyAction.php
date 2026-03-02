@@ -3,14 +3,12 @@ declare(strict_types=1);
 
 namespace alt\gateway\actions;
 
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
-use Slim\Exception\HttpInternalServerErrorException;
 
 class RoutedProxyAction
 {
@@ -39,12 +37,37 @@ class RoutedProxyAction
             'headers' => [],
         ];
         
-        $body = (string) $request->getBody();
-        if ($body) {
-            $options['body'] = $body;
-            $options['headers']['Content-Type'] = $request->getHeaderLine('Content-Type') ?: 'application/json';
-        }
-        
+        $contentType = $request->getHeaderLine('Content-Type') ?? '';
+
+        if (str_contains($contentType, 'multipart/form-data')) {
+            $multipart = [];
+
+            foreach ($request->getParsedBody() as $key => $value) {
+                $multipart[] = [
+                    'name' => $key,
+                    'contents' => $value
+                ];
+            }
+
+            $uploadedFiles = $request->getUploadedFiles();
+            foreach ($uploadedFiles as $key => $file) {
+                if ($file->getError() === UPLOAD_ERR_OK) {
+                    $multipart[] = [
+                        'name' => $key,
+                        'contents' => fopen($file->getFilePath(), 'r'),
+                        'filename' => $file->getClientFilename()
+                    ];
+                }
+            }
+
+            $options['multipart'] = $multipart;
+
+        } else {
+            $data = $request->getParsedBody();
+            if (is_array($data) && !empty($data)) {
+                $options['json'] = $data;
+            }
+        }        
         if ($auth = $request->getHeaderLine('Authorization')) {
             $options['headers']['Authorization'] = $auth;
         }

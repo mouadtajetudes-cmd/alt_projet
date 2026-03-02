@@ -2,6 +2,9 @@
 
 namespace alt\core\services;
 
+use alt\core\application\ports\api\CreatePostDTO;
+use alt\core\application\ports\api\PostServiceInterface;
+use alt\core\domain\entities\Post;
 use alt\core\repositories\PostRepositoryInterface;
 
 class PostService implements PostServiceInterface
@@ -13,14 +16,23 @@ class PostService implements PostServiceInterface
         $this->postRepository = $postRepository;
     }
 
-    public function getPostById(string $postId): array
+    public function getAllPosts(int $page, int $limit): array
     {
-        $post = $this->postRepository->findById($postId);
-        
-        if (!$post) {
-            throw new \Exception("Post not found", 404);
-        }
+        return $this->postRepository->findAll($page, $limit);
+    }
 
-        return $post;
+    public function getById(int $idPost): Post
+    {
+        return $this->postRepository->findById($idPost);
+    }
+
+    public function getByIdwithStatus(int $idPost): array
+    {
+        return $this->postRepository->findByIdWithStats($idPost);
+    }
+
+    public function createPost(CreatePostDTO $dto): CreatePostDTO
+    {
+        return $this->postRepository->create($dto);
     }
 }

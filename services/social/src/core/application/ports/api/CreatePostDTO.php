@@ -4,21 +4,21 @@ namespace alt\core\application\ports\api;
 class CreatePostDTO
 {
    
-    public string $titre;
+    public string $type;
     public ?string $description;
     public int $idUtilisateur;
 
-    public function __construct( string $titre, ?string $description, int $idUtilisateur)
+    public function __construct( string $type, ?string $description, int $idUtilisateur)
     {
        
-        $this->titre = $titre;
+        $this->type = $type;
         $this->description = $description;
         $this->idUtilisateur = $idUtilisateur;
     }
 
-    public function getTitre(): string
+    public function getType(): string
     {
-        return $this->titre;
+        return $this->type;
     }
 
     public function getDescription(): ?string
