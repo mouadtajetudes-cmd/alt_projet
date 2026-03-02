@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace alt\api\actions;
 
 use alt\core\application\ports\api\UserServiceInterface;
+use alt\core\application\ports\api\UserResponseDTO;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -17,7 +18,12 @@ class GetAllUsersAction
     {
         $users = $this->userService->getAllUsers();
         
-        $response->getBody()->write(json_encode($users));
+        $usersArray = [];
+        foreach ($users as $user) {
+            $usersArray[] = UserResponseDTO::toArrayPublic($user);
+        }
+        
+        $response->getBody()->write(json_encode($usersArray));
         return $response->withHeader('Content-Type', 'application/json');
     }
 }

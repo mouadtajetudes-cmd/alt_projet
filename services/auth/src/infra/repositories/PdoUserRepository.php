@@ -18,23 +18,38 @@ class PdoUserRepository implements UserRepositoryInterface
 
     public function findAll(): array
     {
-        $stmt = $this->pdo->query('SELECT * FROM utilisateurs ORDER BY created_at DESC');
-        return $stmt->fetchAll(PDO::FETCH_CLASS, User::class);
+        $stmt = $this->pdo->query('
+            SELECT id_utilisateur, nom, prenom, email, telephone, password, 
+                   administrateur, premium, auth_provider, points, id_avatar, 
+                   bio, banner_url, statut_personnalise, created_at, updated_at
+            FROM utilisateurs ORDER BY created_at DESC
+        ');
+        return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
     }
 
     public function findById(int $id): User
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM utilisateurs WHERE id_utilisateur = ?');
+        $stmt = $this->pdo->prepare('
+            SELECT id_utilisateur, nom, prenom, email, telephone, password, 
+                   administrateur, premium, auth_provider, points, id_avatar, 
+                   bio, banner_url, statut_personnalise, created_at, updated_at
+            FROM utilisateurs WHERE id_utilisateur = ?
+        ');
         $stmt->execute([$id]);
-        $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
         return $stmt->fetch();
     }
 
     public function findByEmail(string $email): ?User
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM utilisateurs WHERE email = ?');
+        $stmt = $this->pdo->prepare('
+            SELECT id_utilisateur, nom, prenom, email, telephone, password, 
+                   administrateur, premium, auth_provider, points, id_avatar, 
+                   bio, banner_url, statut_personnalise, created_at, updated_at
+            FROM utilisateurs WHERE email = ?
+        ');
         $stmt->execute([$email]);
-        $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
         $result = $stmt->fetch();
         return $result ?: null;
     }
@@ -44,24 +59,23 @@ class PdoUserRepository implements UserRepositoryInterface
         $stmt = $this->pdo->prepare('
             INSERT INTO utilisateurs (nom, prenom, email, telephone, password, administrateur, premium, auth_provider, points, id_avatar)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            RETURNING *
+            RETURNING id_utilisateur, nom, prenom, email, telephone, password, administrateur, premium, auth_provider, points, id_avatar, bio, banner_url, statut_personnalise, created_at, updated_at
         ');
         
-        //conversion des bool en true/false pour PostgreSQL
         $stmt->execute([
             $user->nom,
             $user->prenom,
             $user->email,
             $user->telephone,
             $user->password,
-            $user->administrateur ? 'true' : 'false',
-            $user->premium ? 'true' : 'false',
+            $user->administrateur,
+            $user->premium,
             $user->auth_provider,
             $user->points,
             $user->id_avatar
         ]);
         
-        $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
         return $stmt->fetch();
     }
 
@@ -77,11 +91,11 @@ class PdoUserRepository implements UserRepositoryInterface
         
         $values[] = $id;
         
-        $sql = 'UPDATE utilisateurs SET ' . implode(', ', $fields) . ' WHERE id_utilisateur = ? RETURNING *';
+        $sql = 'UPDATE utilisateurs SET ' . implode(', ', $fields) . ' WHERE id_utilisateur = ? RETURNING id_utilisateur, nom, prenom, email, telephone, password, administrateur, premium, auth_provider, points, id_avatar, bio, banner_url, statut_personnalise, created_at, updated_at';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($values);
         
-        $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+        $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, User::class);
         return $stmt->fetch();
     }
 

@@ -4,7 +4,7 @@ namespace alt\api\actions;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use alt\core\services\AvatarServiceInterface;
+use alt\core\application\ports\api\AvatarServiceInterface;
 
 class GetAvatarAction
 {
@@ -24,11 +24,11 @@ class GetAvatarAction
         $userId = $args['userId'] ?? null;
 
         try {
-            $avatar = $this->avatarService->getAvatarByUserId($userId);
+            $avatars = $this->avatarService->getAvatarsByUserId($userId);
             
             $response->getBody()->write(json_encode([
-                'type' => 'resource',
-                'avatar' => $avatar
+                'type' => 'collection',
+                'avatars' => $avatars
             ]));
             
             return $response

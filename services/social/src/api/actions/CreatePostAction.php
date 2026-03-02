@@ -16,6 +16,7 @@ class CreatePostAction extends JsonError
         $this->postService = $postService;
     }
 
+<<<<<<< HEAD
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         try {
@@ -64,6 +65,25 @@ if (empty($parsedBody)) {
             $dto = new CreatePostDTO($type, $description, $idUtilisateur);
             $post = $this->postService->createPost($dto);
            
+=======
+    public function __invoke(ServerRequestInterface $request,ResponseInterface $response): ResponseInterface {
+        try {
+           
+            $body = $request->getParsedBody();
+
+            if (!isset($body['titre']) || !isset($body['description']) || !isset($body['idUtilisateur'])) {
+                throw new \InvalidArgumentException('Paramètres manquants');
+            }
+
+            $dto = new CreatePostDTO(
+                $body['titre'],
+                $body['description'],
+                $body['idUtilisateur']
+            );
+
+            
+            $post = $this->postService->createPost($dto);
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 
             $response->getBody()->write(json_encode([
                 'status' => 'success',
@@ -78,10 +98,17 @@ if (empty($parsedBody)) {
             return $this->jsonError($response, $e->getMessage(), 400);
 
         } catch (\RuntimeException $e) {
+<<<<<<< HEAD
             return $this->jsonError($response, $e->getMessage(), 500);
 
         } catch (\Exception $e) {
             return $this->jsonError($response, 'Erreur interne serveur', 500);
+=======
+            return $this->jsonError($response, 'Impossible de créer le post', 500);
+
+        } catch (\Exception $e) {
+            return $this->jsonError($response, 'Erreur interne du serveur', 500);
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
         }
     }
 }

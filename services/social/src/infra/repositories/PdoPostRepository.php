@@ -2,9 +2,15 @@
 
 namespace alt\infra\repositories;
 
+<<<<<<< HEAD
 use alt\core\application\ports\api\CreatePostDTO;
 use alt\core\domain\entities\Post;
 use alt\core\repositories\PostRepositoryInterface;
+=======
+use alt\core\application\dto\CreatePostDTO;
+use alt\core\application\ports\spi\PostRepositoryInterface;
+use alt\core\domain\entities\Post;
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 use PDO;
 
 class PdoPostRepository implements PostRepositoryInterface
@@ -16,6 +22,7 @@ class PdoPostRepository implements PostRepositoryInterface
         $this->pdo = $pdo;
     }
 
+<<<<<<< HEAD
 public function findAll(int $page, int $limit): array
 {
     $offset = ($page - 1) * $limit;
@@ -55,6 +62,28 @@ public function findAll(int $page, int $limit): array
     return $posts;
 }
 
+=======
+    public function findAll(int $page, int $limit): array
+    {
+        $offset = ($page - 1) * $limit;
+
+        $stmt = $this->pdo->prepare(
+            'SELECT id_post, titre, description, date_publication, id_utilisateur
+             FROM posts
+             ORDER BY date_publication DESC
+             LIMIT :limit OFFSET :offset'
+        );
+
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $posts = $stmt->fetchAll(PDO::FETCH_ASSOC) ;
+
+        return $posts;
+    }
+
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
     public function findById(int $idPost): Post
     {
         $stmt = $this->pdo->prepare(
@@ -107,6 +136,7 @@ public function findAll(int $page, int $limit): array
     public function create(CreatePostDTO $post):CreatePostDTO
     {
         $stmt = $this->pdo->prepare(
+<<<<<<< HEAD
             'INSERT INTO posts (type, description, id_utilisateur)
              VALUES (:type, :description, :id_utilisateur)'
         );
@@ -121,6 +151,23 @@ public function findAll(int $page, int $limit): array
             $post->getType(),
             $post->getDescription(),
             $post->getIdUtilisateur()
+=======
+            'INSERT INTO posts (titre, description,  id_utilisateur)
+             VALUES (:titre, :description, :user)'
+        );
+
+        $stmt->execute([
+            'titre' => $post->getTitre(),
+            'description' => $post->getDescription(),
+            'user' => $post->getIdUtilisateur(),
+        ]);
+
+        return new CreatePostDTO(
+            $post->getTitre(),
+            $post->getDescription(),
+            $post->getIdUtilisateur()
+
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
         );
     }
 

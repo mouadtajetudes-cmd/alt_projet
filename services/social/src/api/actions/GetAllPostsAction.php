@@ -20,7 +20,11 @@ public function __invoke(ServerRequestInterface $request,ResponseInterface $resp
             $queryParams = $request->getQueryParams();
 
             $page  = isset($queryParams['page']) ? (int) $queryParams['page'] : 1;
+<<<<<<< HEAD
             $limit = isset($queryParams['limit']) ? (int) $queryParams['limit'] : 40;
+=======
+            $limit = isset($queryParams['limit']) ? (int) $queryParams['limit'] : 5;
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 
             if ($page <= 0 || $limit <= 0) {
                 throw new \InvalidArgumentException('Page ou limite invalide');

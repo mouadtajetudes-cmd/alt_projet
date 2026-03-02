@@ -8,10 +8,11 @@ return [
         
         'database' => [
             'driver' => $_ENV['DB_DRIVER'] ?? 'pgsql',
-            'host' => $_ENV['DB_HOST'] ?? 'alt.db',
-            'database' => $_ENV['DB_NAME'] ?? 'alt_marketplace',
-            'username' => $_ENV['DB_USER'] ?? 'alt',
-            'password' => $_ENV['DB_PASSWORD'] ?? 'alt',
+            'host' => $_ENV['DB_HOST'] ?? 'alt-db',
+            'port' => $_ENV['DB_PORT'] ?? '5432',
+            'database' => $_ENV['DB_NAME'] ?? 'marketplace_db',
+            'username' => $_ENV['DB_USER'] ?? 'marketplace_user',
+            'password' => $_ENV['DB_PASSWORD'] ?? 'marketplace_password',
             'charset' => 'utf8',
         ],
     ],

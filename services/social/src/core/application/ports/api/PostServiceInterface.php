@@ -1,7 +1,11 @@
 <?php
 namespace alt\core\application\ports\api;
 
+<<<<<<< HEAD
 use alt\core\application\ports\api\CreatePostDTO;
+=======
+use alt\core\application\dto\CreatePostDTO;
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 use alt\core\domain\entities\Post;
 
 interface PostServiceInterface{

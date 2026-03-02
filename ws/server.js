@@ -1,462 +1,1611 @@
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
+const WebSocket = require('ws');
 const cors = require('cors');
-const helmet = require('helmet');
-const jwt = require('jsonwebtoken');
-const { MongoClient } = require('mongodb');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const { MongoClient, ObjectId } = require('mongodb');
 const { Pool } = require('pg');
-const winston = require('winston');
 
-// ============================================
-// Configuration
-// ============================================
 const PORT = process.env.WS_PORT || 3001;
-const HOST = process.env.WS_HOST || '0.0.0.0';
-const JWT_SECRET = process.env.JWT_SECRET;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://alt.mongo:27017';
 
-// ============================================
-// Logger Configuration
-// ============================================
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    })
-  ]
+// PostgreSQL connection
+const pgPool = new Pool({
+  host: process.env.POSTGRES_HOST || 'alt.db',
+  port: process.env.POSTGRES_PORT || 5432,
+  database: process.env.POSTGRES_DB || 'alt',
+  user: process.env.POSTGRES_USER || 'alt',
+  password: process.env.POSTGRES_PASSWORD || 'alt'
 });
 
-// ============================================
-// Express App Setup
-// ============================================
 const app = express();
-app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'ALT WebSocket Service',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString()
-  });
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+app.use('/uploads', express.static(uploadsDir));
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|zip|rar/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (mimetype && extname) return cb(null, true);
+    cb(new Error('Type de fichier non autorisé!'));
+  }
 });
 
 const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
-// ============================================
-// Socket.IO Setup
-// ============================================
-const io = new Server(server, {
-  cors: {
-    origin: process.env.CORS_ORIGIN || '*',
-    methods: ['GET', 'POST'],
-    credentials: true
-  },
-  pingTimeout: 60000,
-  pingInterval: 25000
-});
-
-// ============================================
-// Database Connections
-// ============================================
-let mongoClient;
 let mongoDB;
-let pgPool;
 
-// MongoDB Connection
 async function connectMongoDB() {
-  try {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://alt.mongo:27017/chat_db';
-    mongoClient = new MongoClient(mongoUri);
-    await mongoClient.connect();
-    mongoDB = mongoClient.db();
-    logger.info('✅ MongoDB connected successfully');
-  } catch (error) {
-    logger.error('❌ MongoDB connection error:', error);
-    process.exit(1);
-  }
+  const client = new MongoClient(MONGO_URI);
+  await client.connect();
+  mongoDB = client.db('chat_db');
+  console.log('✅ MongoDB connecté');
 }
 
-// PostgreSQL Connection
-function connectPostgreSQL() {
-  pgPool = new Pool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS
+const onlineUsers = new Map();
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    onlineUsers: Array.from(onlineUsers.keys())
   });
+});
 
-  pgPool.on('error', (err) => {
-    logger.error('PostgreSQL pool error:', err);
-  });
-
-  logger.info('✅ PostgreSQL pool created');
-}
-
-// ============================================
-// JWT Middleware
-// ============================================
-io.use((socket, next) => {
-  const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
-  
-  if (!token) {
-    if (process.env.NODE_ENV === 'development') {
-      socket.userId = 'guest_' + Date.now();
-      socket.username = 'Guest User';
-      logger.info(`Guest connection allowed from ${socket.handshake.address}`);
-      return next();
-    }
-    logger.warn(`Connection rejected: No token provided from ${socket.handshake.address}`);
-    return next(new Error('Authentication required'));
-  }
-
+app.post('/upload', upload.single('file'), async (req, res) => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    socket.userId = decoded.userId || decoded.id;
-    socket.username = decoded.username;
-    logger.info(`User authenticated: ${socket.username} (${socket.userId})`);
-    next();
+    if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    res.json({
+      success: true,
+      file: {
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        url: fileUrl
+      }
+    });
   } catch (error) {
-    logger.warn(`Invalid token from ${socket.handshake.address}: ${error.message}`);
-    return next(new Error('Invalid token'));
+    console.error('Erreur upload:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// ============================================
-// In-Memory User Tracking
-// ============================================
-const onlineUsers = new Map(); // userId -> Set of socket IDs
-const typingUsers = new Map(); // roomId -> Set of userIds
+app.get('/conversations/:userId', async (req, res) => {
+  try {
+    const userId = String(req.params.userId);
 
-// ============================================
-// Socket.IO Event Handlers
-// ============================================
-io.on('connection', (socket) => {
-  logger.info(`🔌 User connected: ${socket.username} (${socket.id})`);
+    const conversations = await mongoDB.collection('conversations')
+      .find({ participants: userId })
+      .sort({ updatedAt: -1 })
+      .toArray();
 
-  // Track online user
-  if (!onlineUsers.has(socket.userId)) {
-    onlineUsers.set(socket.userId, new Set());
+    const conversationsWithDetails = await Promise.all(
+      conversations.map(async (conv) => {
+        const convId = conv._id.toString();
+
+        const lastMessage = await mongoDB.collection('messages')
+          .findOne(
+            { conversationId: convId },
+            { sort: { createdAt: -1 } }
+          );
+
+        const unreadCount = await mongoDB.collection('messages')
+          .countDocuments({
+            conversationId: convId,
+            senderId: { $ne: userId },
+            isRead: false
+          });
+
+        return {
+          ...conv,
+          _id: convId,
+          lastMessage: lastMessage ? formatMessage(lastMessage) : null,
+          unreadCount
+        };
+      })
+    );
+
+    res.json(conversationsWithDetails);
+  } catch (error) {
+    console.error('Erreur récupération conversations:', error);
+    res.status(500).json({ error: error.message });
   }
-  onlineUsers.get(socket.userId).add(socket.id);
+});
 
-  // Notify user is online
-  socket.broadcast.emit('user:online', {
-    userId: socket.userId,
-    username: socket.username,
-    timestamp: new Date()
-  });
+app.get('/conversations/:convId/messages', async (req, res) => {
+  try {
+    const { convId } = req.params;
+    const limit = parseInt(req.query.limit) || 50;
+    const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * limit;
 
-  // ===========================================
-  // JOIN ROOM/CONVERSATION
-  // ===========================================
-  socket.on('room:join', async (data) => {
-    const { roomId, conversationId } = data;
-    const room = roomId || conversationId;
+    const messages = await mongoDB.collection('messages')
+      .find({ conversationId: convId })
+      .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
 
-    try {
-      // Verify user has access to this room (check PostgreSQL)
-      const result = await pgPool.query(
-        `SELECT 1 FROM conversation_members 
-         WHERE conversation_id = $1 AND user_id = $2`,
-        [room, socket.userId]
+    res.json({ messages: messages.map(formatMessage) });
+  } catch (error) {
+    console.error('Erreur récupération messages:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/conversations', async (req, res) => {
+  try {
+    const { participants, name } = req.body;
+
+    if (!participants || participants.length < 2) {
+      return res.status(400).json({ error: 'Au moins 2 participants requis' });
+    }
+
+    const stringParticipants = participants.map(p => String(p));
+
+    const uniqueParticipants = [...new Set(stringParticipants)];
+    if (uniqueParticipants.length < 2) {
+      return res.status(400).json({ error: 'Impossible de créer une conversation avec soi-même' });
+    }
+
+    if (stringParticipants.length === 2) {
+      const existing = await mongoDB.collection('conversations')
+        .findOne({
+          participants: { $all: stringParticipants, $size: 2 }
+        });
+
+      if (existing) {
+        return res.json({ ...existing, _id: existing._id.toString() });
+      }
+    }
+
+    const conversation = {
+      participants: stringParticipants,
+      name: name || null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const result = await mongoDB.collection('conversations').insertOne(conversation);
+    conversation._id = result.insertedId.toString();
+
+    res.json(conversation);
+  } catch (error) {
+    console.error('Erreur création conversation:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/conversations/:convId/read', async (req, res) => {
+  try {
+    const { convId } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) return res.status(400).json({ error: 'userId requis' });
+
+    await mongoDB.collection('messages').updateMany(
+      {
+        conversationId: convId,
+        senderId: { $ne: String(userId) },
+        isRead: false
+      },
+      { $set: { isRead: true } }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur marquage lecture:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== GROUPS ROUTES ====================
+
+app.get('/groups/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await pgPool.query(`
+      SELECT g.*, mg.role,
+        (SELECT COUNT(*) FROM membre_groupe WHERE id_groupe = g.id_groupe) as membres_count,
+        (SELECT COUNT(*) FROM salles WHERE id_groupe = g.id_groupe) as salles_count
+      FROM groupes g
+      JOIN membre_groupe mg ON g.id_groupe = mg.id_groupe
+      WHERE mg.id_utilisateur = $1
+      ORDER BY g.created_at DESC
+    `, [userId]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erreur récupération groupes:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/groups/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const groupResult = await pgPool.query(`
+      SELECT g.*
+      FROM groupes g
+      WHERE g.id_groupe = $1
+    `, [id]);
+
+    if (groupResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Groupe non trouvé' });
+    }
+
+    const membresResult = await pgPool.query(`
+      SELECT mg.id_utilisateur, mg.role, mg.joined_at,
+        u.nom, u.prenom, u.email, u.administrateur, u.premium
+      FROM membre_groupe mg
+      JOIN utilisateurs u ON mg.id_utilisateur = u.id_utilisateur
+      WHERE mg.id_groupe = $1
+      ORDER BY mg.role, u.nom
+    `, [id]);
+
+    const sallesResult = await pgPool.query(`
+      SELECT * FROM salles WHERE id_groupe = $1 ORDER BY date_creation
+    `, [id]);
+
+    res.json({
+      ...groupResult.rows[0],
+      membres: membresResult.rows,
+      salles: sallesResult.rows
+    });
+  } catch (error) {
+    console.error('Erreur récupération détails groupe:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/groups', async (req, res) => {
+  try {
+    const { nom, description, niveau, createur_id } = req.body;
+
+    if (!nom || !createur_id) {
+      return res.status(400).json({ error: 'Nom et créateur requis' });
+    }
+
+    const result = await pgPool.query(`
+      INSERT INTO groupes (nom, description, niveau)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `, [nom, description, niveau || 'debutant']);
+
+    const groupe = result.rows[0];
+
+    await pgPool.query(`
+      INSERT INTO membre_groupe (id_groupe, id_utilisateur, role)
+      VALUES ($1, $2, 'admin')
+    `, [groupe.id_groupe, createur_id]);
+
+    await pgPool.query(`
+      INSERT INTO salles (nom, id_groupe, description)
+      VALUES ('Général', $1, 'Salle de discussion générale')
+    `, [groupe.id_groupe]);
+
+    res.json(groupe);
+  } catch (error) {
+    console.error('Erreur création groupe:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/groups/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nom, description, niveau } = req.body;
+
+    const result = await pgPool.query(`
+      UPDATE groupes
+      SET nom = COALESCE($1, nom),
+          description = COALESCE($2, description),
+          niveau = COALESCE($3, niveau)
+      WHERE id_groupe = $4
+      RETURNING *
+    `, [nom, description, niveau, id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Groupe non trouvé' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erreur mise à jour groupe:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/groups/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pgPool.query('DELETE FROM groupes WHERE id_groupe = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur suppression groupe:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/groups/:id/members', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, role } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId requis' });
+    }
+
+    await pgPool.query(`
+      INSERT INTO membre_groupe (id_groupe, id_utilisateur, role)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (id_groupe, id_utilisateur) DO UPDATE SET role = $3
+    `, [id, userId, role || 'membre']);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur ajout membre:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/groups/:id/members/:userId', async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    await pgPool.query(`
+      DELETE FROM membre_groupe WHERE id_groupe = $1 AND id_utilisateur = $2
+    `, [id, userId]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur suppression membre:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/groups/:id/salles', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pgPool.query(`
+      SELECT * FROM salles WHERE id_groupe = $1 ORDER BY date_creation
+    `, [id]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erreur récupération salles:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/groups/:id/salles', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nom, description } = req.body;
+
+    if (!nom) {
+      return res.status(400).json({ error: 'Nom de salle requis' });
+    }
+
+    const result = await pgPool.query(`
+      INSERT INTO salles (nom, id_groupe, description)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `, [nom, id, description]);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erreur création salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/salles/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pgPool.query('DELETE FROM salles WHERE id_salle = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur suppression salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/conversations/:convId/pin', async (req, res) => {
+  try {
+    const { convId } = req.params;
+    const { userId, pinned } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId requis' });
+    }
+
+    if (pinned) {
+      await pgPool.query(`
+        INSERT INTO conversations_epinglees (id_utilisateur, conversation_id)
+        VALUES ($1, $2)
+        ON CONFLICT DO NOTHING
+      `, [userId, convId]);
+    } else {
+      await pgPool.query(`
+        DELETE FROM conversations_epinglees
+        WHERE id_utilisateur = $1 AND conversation_id = $2
+      `, [userId, convId]);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur épinglage conversation:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/conversations/pinned/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await pgPool.query(`
+      SELECT conversation_id FROM conversations_epinglees
+      WHERE id_utilisateur = $1
+      ORDER BY date_epingle DESC
+    `, [userId]);
+    res.json(result.rows.map(r => r.conversation_id));
+  } catch (error) {
+    console.error('Erreur récupération conversations épinglées:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// ============== FRIENDS ROUTES ==============
+
+app.post('/friends/request', async (req, res) => {
+  try {
+    const { utilisateur_id, ami_id } = req.body;
+
+    if (!utilisateur_id || !ami_id) {
+      return res.status(400).json({ error: 'utilisateur_id et ami_id requis' });
+    }
+
+    if (utilisateur_id === ami_id) {
+      return res.status(400).json({ error: 'Vous ne pouvez pas vous ajouter vous-même' });
+    }
+
+    const existingCheck = await pgPool.query(`
+      SELECT * FROM amities 
+      WHERE (utilisateur_id = $1 AND ami_id = $2) 
+         OR (utilisateur_id = $2 AND ami_id = $1)
+    `, [utilisateur_id, ami_id]);
+
+    if (existingCheck.rows.length > 0) {
+      const existing = existingCheck.rows[0];
+      if (existing.statut === 'bloque') {
+        return res.status(403).json({ error: 'Cette utilisateur est bloqué' });
+      }
+      return res.status(400).json({ error: 'Une relation existe déjà entre ces utilisateurs' });
+    }
+
+    const result = await pgPool.query(`
+      INSERT INTO amities (utilisateur_id, ami_id, statut, date_demande)
+      VALUES ($1, $2, 'en_attente', NOW())
+      RETURNING *
+    `, [utilisateur_id, ami_id]);
+
+    const sender = await pgPool.query('SELECT nom, prenom FROM utilisateurs WHERE id_utilisateur = $1', [utilisateur_id]);
+    if (sender.rows[0]) {
+      await createNotification(
+        ami_id,
+        'friend_request',
+        'Nouvelle demande d\'ami',
+        `${sender.rows[0].prenom} ${sender.rows[0].nom} souhaite devenir votre ami`,
+        { from_user_id: utilisateur_id, friendship_id: result.rows[0].id_amitie }
       );
+    }
 
-      if (result.rows.length === 0) {
-        socket.emit('error', { message: 'Access denied to this room' });
+    res.json({ success: true, friendship: result.rows[0] });
+  } catch (error) {
+    console.error('Erreur envoi demande ami:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/friends/accept/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ami_id } = req.body;
+
+    const result = await pgPool.query(`
+      UPDATE amities 
+      SET statut = 'accepte', date_reponse = NOW()
+      WHERE id_amitie = $1 AND ami_id = $2 AND statut = 'en_attente'
+      RETURNING *
+    `, [id, ami_id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Demande non trouvée' });
+    }
+
+    const friendship = result.rows[0];
+    const accepter = await pgPool.query('SELECT nom, prenom FROM utilisateurs WHERE id_utilisateur = $1', [ami_id]);
+    if (accepter.rows[0]) {
+      await createNotification(
+        friendship.utilisateur_id,
+        'friend_accepted',
+        'Demande d\'ami acceptée',
+        `${accepter.rows[0].prenom} ${accepter.rows[0].nom} a accepté votre demande d'ami`,
+        { friend_user_id: ami_id }
+      );
+    }
+
+    res.json({ success: true, friendship: result.rows[0] });
+  } catch (error) {
+    console.error('Erreur acceptation demande ami:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/friends/refuse/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ami_id } = req.body;
+
+    const result = await pgPool.query(`
+      UPDATE amities 
+      SET statut = 'refuse', date_reponse = NOW()
+      WHERE id_amitie = $1 AND ami_id = $2 AND statut = 'en_attente'
+      RETURNING *
+    `, [id, ami_id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Demande non trouvée' });
+    }
+
+    res.json({ success: true, friendship: result.rows[0] });
+  } catch (error) {
+    console.error('Erreur refus demande ami:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/friends/:friendshipId', async (req, res) => {
+  try {
+    const { friendshipId } = req.params;
+    const { userId } = req.body;
+
+    const result = await pgPool.query(`
+      DELETE FROM amities 
+      WHERE id_amitie = $1 
+        AND (utilisateur_id = $2 OR ami_id = $2)
+      RETURNING *
+    `, [friendshipId, userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Amitié non trouvée' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur suppression ami:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/friends/block', async (req, res) => {
+  try {
+    const { utilisateur_id, ami_id } = req.body;
+
+    if (!utilisateur_id || !ami_id) {
+      return res.status(400).json({ error: 'utilisateur_id et ami_id requis' });
+    }
+
+    await pgPool.query(`
+      DELETE FROM amities 
+      WHERE (utilisateur_id = $1 AND ami_id = $2) 
+         OR (utilisateur_id = $2 AND ami_id = $1)
+    `, [utilisateur_id, ami_id]);
+
+    const result = await pgPool.query(`
+      INSERT INTO amities (utilisateur_id, ami_id, statut, date_demande)
+      VALUES ($1, $2, 'bloque', NOW())
+      RETURNING *
+    `, [utilisateur_id, ami_id]);
+
+    res.json({ success: true, friendship: result.rows[0] });
+  } catch (error) {
+    console.error('Erreur blocage utilisateur:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/friends/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pgPool.query(`
+      SELECT 
+        a.id_amitie,
+        a.statut,
+        a.date_demande,
+        a.date_reponse,
+        u.id_utilisateur,
+        u.nom,
+        u.prenom,
+        u.email
+      FROM amities a
+      JOIN utilisateurs u ON (
+        CASE 
+          WHEN a.utilisateur_id = $1 THEN u.id_utilisateur = a.ami_id
+          ELSE u.id_utilisateur = a.utilisateur_id
+        END
+      )
+      WHERE (a.utilisateur_id = $1 OR a.ami_id = $1)
+        AND a.statut = 'accepte'
+      ORDER BY a.date_reponse DESC
+    `, [userId]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erreur récupération amis:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/friends/requests/received/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pgPool.query(`
+      SELECT 
+        a.id_amitie,
+        a.statut,
+        a.date_demande,
+        u.id_utilisateur,
+        u.nom,
+        u.prenom,
+        u.email
+      FROM amities a
+      JOIN utilisateurs u ON u.id_utilisateur = a.utilisateur_id
+      WHERE a.ami_id = $1 AND a.statut = 'en_attente'
+      ORDER BY a.date_demande DESC
+    `, [userId]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erreur récupération demandes reçues:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/friends/requests/sent/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pgPool.query(`
+      SELECT 
+        a.id_amitie,
+        a.statut,
+        a.date_demande,
+        u.id_utilisateur,
+        u.nom,
+        u.prenom,
+        u.email
+      FROM amities a
+      JOIN utilisateurs u ON u.id_utilisateur = a.ami_id
+      WHERE a.utilisateur_id = $1 AND a.statut = 'en_attente'
+      ORDER BY a.date_demande DESC
+    `, [userId]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erreur récupération demandes envoyées:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/friends/check/:userId/:targetUserId', async (req, res) => {
+  try {
+    const { userId, targetUserId } = req.params;
+
+    const result = await pgPool.query(`
+      SELECT sont_amis($1, $2) as are_friends
+    `, [userId, targetUserId]);
+
+    const friendship = await pgPool.query(`
+      SELECT * FROM amities
+      WHERE ((utilisateur_id = $1 AND ami_id = $2) 
+          OR (utilisateur_id = $2 AND ami_id = $1))
+    `, [userId, targetUserId]);
+
+    res.json({ 
+      areFriends: result.rows[0].are_friends,
+      friendship: friendship.rows[0] || null
+    });
+  } catch (error) {
+    console.error('Erreur vérification amitié:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// ============== SALLE MESSAGES ROUTES ==============
+
+app.get('/salles/:salleId/messages', async (req, res) => {
+  try {
+    const { salleId } = req.params;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = parseInt(req.query.skip) || 0;
+
+    const messages = await mongoDB.collection('salle_messages')
+      .find({ salleId: parseInt(salleId) })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .skip(skip)
+      .toArray();
+
+    res.json({ messages: messages.reverse() });
+  } catch (error) {
+    console.error('Erreur récupération messages salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/salles/:salleId/messages', async (req, res) => {
+  try {
+    const { salleId } = req.params;
+    const { senderId, senderName, content, type = 'text' } = req.body;
+
+    if (!senderId || !content) {
+      return res.status(400).json({ error: 'senderId et content requis' });
+    }
+
+    const message = {
+      salleId: parseInt(salleId),
+      senderId: String(senderId),
+      senderName,
+      content,
+      type,
+      timestamp: new Date(),
+      isRead: false,
+      reactions: []
+    };
+
+    const result = await mongoDB.collection('salle_messages').insertOne(message);
+    message._id = result.insertedId;
+
+    await broadcastToSalle(parseInt(salleId), {
+      type: 'salle_message',
+      message
+    });
+
+    res.json(message);
+  } catch (error) {
+    console.error('Erreur envoi message salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/salles/messages/:messageId', async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { content, userId } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ error: 'content requis' });
+    }
+
+    const message = await mongoDB.collection('salle_messages').findOne({ 
+      _id: new ObjectId(messageId) 
+    });
+
+    if (!message || message.senderId !== String(userId)) {
+      return res.status(403).json({ error: 'Non autorisé' });
+    }
+
+    await mongoDB.collection('salle_messages').updateOne(
+      { _id: new ObjectId(messageId) },
+      { 
+        $set: { 
+          content, 
+          editedAt: new Date() 
+        } 
+      }
+    );
+
+    await broadcastToSalle(message.salleId, {
+      type: 'salle_message_edited',
+      messageId,
+      content,
+      editedAt: new Date()
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur modification message salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/salles/messages/:messageId', async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { userId } = req.body;
+
+    const message = await mongoDB.collection('salle_messages').findOne({ 
+      _id: new ObjectId(messageId) 
+    });
+
+    if (!message || message.senderId !== String(userId)) {
+      return res.status(403).json({ error: 'Non autorisé' });
+    }
+
+    await mongoDB.collection('salle_messages').deleteOne({ 
+      _id: new ObjectId(messageId) 
+    });
+
+    await broadcastToSalle(message.salleId, {
+      type: 'salle_message_deleted',
+      messageId
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur suppression message salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/salles/messages/:messageId/react', async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { userId, emoji } = req.body;
+
+    if (!userId || !emoji) {
+      return res.status(400).json({ error: 'userId et emoji requis' });
+    }
+
+    const message = await mongoDB.collection('salle_messages').findOne({ 
+      _id: new ObjectId(messageId) 
+    });
+
+    if (!message) {
+      return res.status(404).json({ error: 'Message non trouvé' });
+    }
+
+    const reactions = message.reactions || [];
+    const existingReactionIndex = reactions.findIndex(
+      r => r.userId === String(userId) && r.emoji === emoji
+    );
+
+    if (existingReactionIndex !== -1) {
+      reactions.splice(existingReactionIndex, 1);
+    } else {
+      reactions.push({ userId: String(userId), emoji });
+    }
+
+    await mongoDB.collection('salle_messages').updateOne(
+      { _id: new ObjectId(messageId) },
+      { $set: { reactions } }
+    );
+
+    await broadcastToSalle(message.salleId, {
+      type: 'salle_message_reaction',
+      messageId,
+      reactions
+    });
+
+    res.json({ success: true, reactions });
+  } catch (error) {
+    console.error('Erreur réaction message salle:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// ============== NOTIFICATIONS ROUTES ==============
+
+app.get('/notifications/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const limit = parseInt(req.query.limit) || 50;
+
+    const result = await pgPool.query(`
+      SELECT * FROM notifications
+      WHERE id_utilisateur = $1
+      ORDER BY created_at DESC
+      LIMIT $2
+    `, [userId, limit]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erreur récupération notifications:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/notifications/:userId/unread', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pgPool.query(`
+      SELECT COUNT(*) as count FROM notifications
+      WHERE id_utilisateur = $1 AND lue = FALSE
+    `, [userId]);
+
+    res.json({ count: parseInt(result.rows[0].count) });
+  } catch (error) {
+    console.error('Erreur comptage notifications:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/notifications', async (req, res) => {
+  try {
+    const { id_utilisateur, type, titre, contenu, data } = req.body;
+
+    if (!id_utilisateur || !type || !titre) {
+      return res.status(400).json({ error: 'id_utilisateur, type et titre requis' });
+    }
+
+    const result = await pgPool.query(`
+      INSERT INTO notifications (id_utilisateur, type, titre, contenu, data)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `, [id_utilisateur, type, titre, contenu, JSON.stringify(data || {})]);
+
+    const notification = result.rows[0];
+
+    sendToUser(String(id_utilisateur), {
+      type: 'notification',
+      notification
+    });
+
+    res.json(notification);
+  } catch (error) {
+    console.error('Erreur création notification:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/notifications/:id/read', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await pgPool.query(`
+      UPDATE notifications
+      SET lue = TRUE
+      WHERE id_notification = $1
+    `, [id]);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur marquage notification lue:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/notifications/:userId/read-all', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    await pgPool.query(`
+      UPDATE notifications
+      SET lue = TRUE
+      WHERE id_utilisateur = $1 AND lue = FALSE
+    `, [userId]);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur marquage toutes notifications lues:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/notifications/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await pgPool.query(`
+      DELETE FROM notifications
+      WHERE id_notification = $1
+    `, [id]);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur suppression notification:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+async function createNotification(userId, type, titre, contenu, data = {}) {
+  try {
+    const result = await pgPool.query(`
+      INSERT INTO notifications (id_utilisateur, type, titre, contenu, data)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `, [userId, type, titre, contenu, JSON.stringify(data)]);
+
+    const notification = result.rows[0];
+
+    sendToUser(String(userId), {
+      type: 'notification',
+      notification
+    });
+
+    return notification;
+  } catch (error) {
+    console.error('Erreur création notification:', error);
+    return null;
+  }
+}
+
+// ============== USER STATS ROUTE ==============
+
+app.get('/users/:userId/stats', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('[STATS] Fetching stats for user:', userId);
+
+    let messagesCount = 0;
+    try {
+      const userIdStr = String(userId);
+      const userIdInt = parseInt(userId);
+      
+      const directMessages = await mongoDB.collection('messages').countDocuments({
+        $or: [
+          { senderId: userIdStr },
+          { senderId: userIdInt }
+        ]
+      });
+      console.log('[STATS] Direct messages count:', directMessages);
+      
+      const salleMessages = await mongoDB.collection('salle_messages').countDocuments({
+        $or: [
+          { senderId: userIdStr },
+          { senderId: userIdInt }
+        ]
+      });
+      console.log('[STATS] Salle messages count:', salleMessages);
+      
+      messagesCount = directMessages + salleMessages;
+      console.log('[STATS] Total messages count:', messagesCount);
+    } catch (mongoError) {
+      console.error('[STATS] Error counting messages:', mongoError);
+    }
+
+    let connectionsCount = 0;
+    try {
+      const result = await pgPool.query(`
+        SELECT COUNT(*) as count FROM amities
+        WHERE (utilisateur_id = $1 OR ami_id = $1)
+          AND statut = 'accepte'
+      `, [userId]);
+      connectionsCount = parseInt(result.rows[0].count);
+      console.log('[STATS] Connections count:', connectionsCount, 'for user', userId);
+    } catch (pgError) {
+      console.error('[STATS] Error counting connections:', pgError);
+    }
+
+    const response = {
+      messagesCount,
+      connectionsCount
+    };
+    console.log('[STATS] Sending response:', response);
+    res.json(response);
+  } catch (error) {
+    console.error('[STATS] Erreur récupération stats utilisateur:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+async function getConversationParticipants(conversationId) {
+  try {
+    const conv = await mongoDB.collection('conversations').findOne({
+      _id: new ObjectId(conversationId)
+    });
+    return conv ? conv.participants : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function sendToUser(userId, payload) {
+  const userWs = onlineUsers.get(String(userId));
+  if (userWs && userWs.readyState === WebSocket.OPEN) {
+    userWs.send(JSON.stringify(payload));
+  }
+}
+
+async function broadcastToConversation(conversationId, payload, excludeUserId = null) {
+  const participants = await getConversationParticipants(conversationId);
+  participants.forEach(participantId => {
+    if (participantId !== excludeUserId) {
+      sendToUser(participantId, payload);
+    }
+  });
+}
+
+async function getSalleMembers(salleId) {
+  try {
+    const salleResult = await pgPool.query('SELECT id_groupe FROM salles WHERE id_salle = $1', [salleId]);
+    if (salleResult.rows.length === 0) return [];
+    
+    const groupId = salleResult.rows[0].id_groupe;
+    const membersResult = await pgPool.query(
+      'SELECT id_utilisateur FROM membre_groupe WHERE id_groupe = $1',
+      [groupId]
+    );
+    
+    return membersResult.rows.map(row => String(row.id_utilisateur));
+  } catch (error) {
+    console.error('Erreur récupération membres salle:', error);
+    return [];
+  }
+}
+
+async function broadcastToSalle(salleId, payload, excludeUserId = null) {
+  const members = await getSalleMembers(salleId);
+  members.forEach(memberId => {
+    if (memberId !== excludeUserId) {
+      sendToUser(memberId, payload);
+    }
+  });
+}
+
+wss.on('connection', (ws) => {
+  console.log('✅ Nouvelle connexion WebSocket');
+
+  ws.on('message', async (data) => {
+    try {
+      const msg = JSON.parse(data.toString());
+
+      if (msg.type === 'auth') {
+        const userId = String(msg.userId || 'guest_' + Date.now());
+        const userName = msg.userName || userId;
+
+        ws.userId = userId;
+        ws.userName = userName;
+        onlineUsers.set(userId, ws);
+
+        ws.send(JSON.stringify({ type: 'auth:ok', userId }));
+        broadcastUserStatus(userId, 'online');
         return;
       }
 
-      socket.join(room);
-      logger.info(`User ${socket.username} joined room ${room}`);
+      if (msg.type === 'send') {
+        const { conversationId, content, messageType, mediaUrl, mediaName, mediaSize, replyTo } = msg;
 
-      socket.emit('room:joined', {
-        roomId: room,
-        timestamp: new Date()
-      });
+        if (!ws.userId) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Non authentifié' }));
+          return;
+        }
 
-      // Notify others in room
-      socket.to(room).emit('user:joined', {
-        userId: socket.userId,
-        username: socket.username,
-        roomId: room,
-        timestamp: new Date()
-      });
-    } catch (error) {
-      logger.error('Error joining room:', error);
-      socket.emit('error', { message: 'Failed to join room' });
-    }
-  });
+        if (!conversationId) {
+          ws.send(JSON.stringify({ type: 'error', message: 'conversationId requis' }));
+          return;
+        }
 
-  // ===========================================
-  // LEAVE ROOM
-  // ===========================================
-  socket.on('room:leave', (data) => {
-    const { roomId } = data;
-    socket.leave(roomId);
-    logger.info(`User ${socket.username} left room ${roomId}`);
+        if (content && content.length > 2000) {
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: 'Message trop long. Max: 2000 caractères (compte gratuit)'
+          }));
+          return;
+        }
 
-    socket.to(roomId).emit('user:left', {
-      userId: socket.userId,
-      username: socket.username,
-      roomId,
-      timestamp: new Date()
-    });
-  });
+        const messageDoc = {
+          conversationId: conversationId,
+          senderId: ws.userId,
+          sender: ws.userName,
+          content: content || '',
+          type: messageType || 'text',
+          mediaUrl: mediaUrl || null,
+          mediaName: mediaName || null,
+          mediaSize: mediaSize || null,
+          replyTo: replyTo || null,
+          isRead: false,
+          createdAt: new Date()
+        };
 
-  // ===========================================
-  // SEND MESSAGE
-  // ===========================================
-  socket.on('message:send', async (data) => {
-    const { roomId, conversationId, content, type = 'text', attachments = [] } = data;
-    const room = roomId || conversationId;
+        const result = await mongoDB.collection('messages').insertOne(messageDoc);
+        messageDoc._id = result.insertedId;
 
-    try {
-      // Save message to MongoDB
-      const message = {
-        conversationId: room,
-        userId: socket.userId,
-        username: socket.username,
-        content,
-        type,
-        attachments,
-        timestamp: new Date(),
-        delivered: false,
-        read: false
-      };
+        await mongoDB.collection('conversations').updateOne(
+          { _id: new ObjectId(conversationId) },
+          { $set: { updatedAt: new Date() } }
+        );
 
-      const result = await mongoDB.collection('messages').insertOne(message);
-      message._id = result.insertedId;
+        const formatted = formatMessage(messageDoc);
 
-      logger.info(`Message sent by ${socket.username} to room ${room}`);
+        const participants = await getConversationParticipants(conversationId);
+        participants.forEach(participantId => {
+          sendToUser(participantId, {
+            type: 'message',
+            message: formatted
+          });
+        });
 
-      // Broadcast to room
-      io.to(room).emit('message:new', {
-        ...message,
-        id: message._id.toString()
-      });
+        return;
+      }
 
-      // Send acknowledgment to sender
-      socket.emit('message:ack', {
-        tempId: data.tempId,
-        messageId: message._id.toString(),
-        timestamp: message.timestamp
-      });
-    } catch (error) {
-      logger.error('Error sending message:', error);
-      socket.emit('error', { message: 'Failed to send message' });
-    }
-  });
+      if (msg.type === 'typing') {
+        if (!ws.userId || !msg.conversationId) return;
+        await broadcastToConversation(msg.conversationId, {
+          type: 'typing',
+          userId: ws.userId,
+          sender: ws.userName,
+          conversationId: msg.conversationId
+        }, ws.userId);
+        return;
+      }
 
-  // ===========================================
-  // TYPING INDICATOR
-  // ===========================================
-  socket.on('typing:start', (data) => {
-    const { roomId } = data;
-    
-    if (!typingUsers.has(roomId)) {
-      typingUsers.set(roomId, new Set());
-    }
-    typingUsers.get(roomId).add(socket.userId);
+      if (msg.type === 'stopTyping') {
+        if (!ws.userId || !msg.conversationId) return;
+        await broadcastToConversation(msg.conversationId, {
+          type: 'stopTyping',
+          userId: ws.userId,
+          conversationId: msg.conversationId
+        }, ws.userId);
+        return;
+      }
 
-    socket.to(roomId).emit('typing:user', {
-      userId: socket.userId,
-      username: socket.username,
-      roomId,
-      isTyping: true
-    });
-  });
-
-  socket.on('typing:stop', (data) => {
-    const { roomId } = data;
-    
-    if (typingUsers.has(roomId)) {
-      typingUsers.get(roomId).delete(socket.userId);
-    }
-
-    socket.to(roomId).emit('typing:user', {
-      userId: socket.userId,
-      username: socket.username,
-      roomId,
-      isTyping: false
-    });
-  });
-
-  // ===========================================
-  // MESSAGE READ/DELIVERED STATUS
-  // ===========================================
-  socket.on('message:delivered', async (data) => {
-    const { messageId, roomId } = data;
-
-    try {
-      await mongoDB.collection('messages').updateOne(
-        { _id: new MongoClient.ObjectId(messageId) },
-        { $set: { delivered: true, deliveredAt: new Date() } }
-      );
-
-      socket.to(roomId).emit('message:status', {
-        messageId,
-        status: 'delivered',
-        timestamp: new Date()
-      });
-    } catch (error) {
-      logger.error('Error updating message status:', error);
-    }
-  });
-
-  socket.on('message:read', async (data) => {
-    const { messageId, roomId } = data;
-
-    try {
-      await mongoDB.collection('messages').updateOne(
-        { _id: new MongoClient.ObjectId(messageId) },
-        { $set: { read: true, readAt: new Date() } }
-      );
-
-      socket.to(roomId).emit('message:status', {
-        messageId,
-        status: 'read',
-        timestamp: new Date()
-      });
-    } catch (error) {
-      logger.error('Error updating message status:', error);
-    }
-  });
-
-  // ===========================================
-  // PRESENCE
-  // ===========================================
-  socket.on('presence:update', (data) => {
-    const { status } = data; // 'online', 'away', 'busy', 'offline'
-    
-    socket.broadcast.emit('presence:changed', {
-      userId: socket.userId,
-      username: socket.username,
-      status,
-      timestamp: new Date()
-    });
-  });
-
-  // ===========================================
-  // DISCONNECT
-  // ===========================================
-  socket.on('disconnect', () => {
-    logger.info(`🔌 User disconnected: ${socket.username} (${socket.id})`);
-
-    // Remove from online users
-    if (onlineUsers.has(socket.userId)) {
-      onlineUsers.get(socket.userId).delete(socket.id);
-      
-      // If no more connections, user is offline
-      if (onlineUsers.get(socket.userId).size === 0) {
-        onlineUsers.delete(socket.userId);
+      if (msg.type === 'react') {
+        const { messageId, emoji } = msg;
         
-        socket.broadcast.emit('user:offline', {
-          userId: socket.userId,
-          username: socket.username,
-          timestamp: new Date()
-        });
-      }
-    }
+        if (!ws.userId || !messageId || !emoji) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
 
-    // Clean up typing indicators
-    typingUsers.forEach((users, roomId) => {
-      if (users.has(socket.userId)) {
-        users.delete(socket.userId);
-        socket.to(roomId).emit('typing:user', {
-          userId: socket.userId,
-          username: socket.username,
-          roomId,
-          isTyping: false
-        });
+        try {
+          const message = await mongoDB.collection('messages').findOne({ _id: new ObjectId(messageId) });
+          if (!message) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Message non trouvé' }));
+            return;
+          }
+
+          const reactions = message.reactions || [];
+          const existingIndex = reactions.findIndex(r => r.userId === ws.userId && r.emoji === emoji);
+          
+          if (existingIndex >= 0) {
+            reactions.splice(existingIndex, 1);
+          } else {
+            reactions.push({ userId: ws.userId, userName: ws.userName, emoji });
+          }
+
+          await mongoDB.collection('messages').updateOne(
+            { _id: new ObjectId(messageId) },
+            { $set: { reactions } }
+          );
+
+          await broadcastToConversation(message.conversationId, {
+            type: 'reaction',
+            messageId,
+            reactions
+          });
+        } catch (error) {
+          ws.send(JSON.stringify({ type: 'error', message: error.message }));
+        }
+        return;
       }
-    });
+
+      if (msg.type === 'delete') {
+        const { messageId } = msg;
+        
+        if (!ws.userId || !messageId) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
+
+        try {
+          const message = await mongoDB.collection('messages').findOne({ _id: new ObjectId(messageId) });
+          if (!message) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Message non trouvé' }));
+            return;
+          }
+
+          if (message.senderId !== ws.userId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Non autorisé' }));
+            return;
+          }
+
+          await mongoDB.collection('messages').updateOne(
+            { _id: new ObjectId(messageId) },
+            { $set: { deleted: true, content: '', mediaUrl: null, mediaName: null, mediaSize: null, reactions: [] } }
+          );
+
+          await broadcastToConversation(message.conversationId, {
+            type: 'deleted',
+            messageId
+          });
+        } catch (error) {
+          ws.send(JSON.stringify({ type: 'error', message: error.message }));
+        }
+        return;
+      }
+
+      if (msg.type === 'edit') {
+        const { messageId, newContent, conversationId } = msg;
+        
+        if (!ws.userId || !messageId || !newContent) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
+
+        try {
+          const message = await mongoDB.collection('messages').findOne({ _id: new ObjectId(messageId) });
+          if (!message) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Message non trouvé' }));
+            return;
+          }
+
+          if (message.senderId !== ws.userId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Non autorisé' }));
+            return;
+          }
+
+          await mongoDB.collection('messages').updateOne(
+            { _id: new ObjectId(messageId) },
+            { $set: { content: newContent, edited: true, editedAt: new Date() } }
+          );
+
+          await broadcastToConversation(message.conversationId || conversationId, {
+            type: 'edited',
+            messageId,
+            newContent
+          });
+        } catch (error) {
+          ws.send(JSON.stringify({ type: 'error', message: error.message }));
+        }
+        return;
+      }
+
+      if (msg.type === 'salle_send') {
+        const { salleId, content, messageType } = msg;
+
+        if (!ws.userId || !salleId) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
+
+        const messageDoc = {
+          salleId: parseInt(salleId),
+          senderId: ws.userId,
+          senderName: ws.userName,
+          content: content || '',
+          type: messageType || 'text',
+          timestamp: new Date(),
+          isRead: false,
+          reactions: []
+        };
+
+        const result = await mongoDB.collection('salle_messages').insertOne(messageDoc);
+        messageDoc._id = result.insertedId;
+
+        await broadcastToSalle(parseInt(salleId), {
+          type: 'salle_message',
+          message: messageDoc
+        });
+
+        return;
+      }
+
+      if (msg.type === 'salle_typing') {
+        const { salleId, typing } = msg;
+        if (!salleId || !ws.userId) return;
+
+        await broadcastToSalle(parseInt(salleId), {
+          type: 'salle_typing',
+          userId: ws.userId,
+          userName: ws.userName,
+          typing
+        }, ws.userId);
+        return;
+      }
+
+      if (msg.type === 'salle_react') {
+        const { messageId, emoji, salleId } = msg;
+
+        if (!ws.userId || !messageId || !emoji) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
+
+        try {
+          const message = await mongoDB.collection('salle_messages').findOne({ _id: new ObjectId(messageId) });
+          if (!message) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Message non trouvé' }));
+            return;
+          }
+
+          const reactions = message.reactions || [];
+          const existingIndex = reactions.findIndex(
+            r => r.userId === ws.userId && r.emoji === emoji
+          );
+
+          if (existingIndex !== -1) {
+            reactions.splice(existingIndex, 1);
+          } else {
+            reactions.push({ userId: ws.userId, emoji });
+          }
+
+          await mongoDB.collection('salle_messages').updateOne(
+            { _id: new ObjectId(messageId) },
+            { $set: { reactions } }
+          );
+
+          await broadcastToSalle(message.salleId, {
+            type: 'salle_message_reaction',
+            messageId,
+            reactions
+          });
+        } catch (error) {
+          ws.send(JSON.stringify({ type: 'error', message: error.message }));
+        }
+        return;
+      }
+
+      if (msg.type === 'salle_edit') {
+        const { messageId, newContent } = msg;
+
+        if (!ws.userId || !messageId || !newContent) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
+
+        try {
+          const message = await mongoDB.collection('salle_messages').findOne({ _id: new ObjectId(messageId) });
+          if (!message || message.senderId !== ws.userId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Non autorisé' }));
+            return;
+          }
+
+          await mongoDB.collection('salle_messages').updateOne(
+            { _id: new ObjectId(messageId) },
+            { $set: { content: newContent, editedAt: new Date() } }
+          );
+
+          await broadcastToSalle(message.salleId, {
+            type: 'salle_message_edited',
+            messageId,
+            content: newContent,
+            editedAt: new Date()
+          });
+        } catch (error) {
+          ws.send(JSON.stringify({ type: 'error', message: error.message }));
+        }
+        return;
+      }
+
+      if (msg.type === 'salle_delete') {
+        const { messageId } = msg;
+
+        if (!ws.userId || !messageId) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Données manquantes' }));
+          return;
+        }
+
+        try {
+          const message = await mongoDB.collection('salle_messages').findOne({ _id: new ObjectId(messageId) });
+          if (!message || message.senderId !== ws.userId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Non autorisé' }));
+            return;
+          }
+
+          await mongoDB.collection('salle_messages').deleteOne({ _id: new ObjectId(messageId) });
+
+          await broadcastToSalle(message.salleId, {
+            type: 'salle_message_deleted',
+            messageId
+          });
+        } catch (error) {
+          ws.send(JSON.stringify({ type: 'error', message: error.message }));
+        }
+        return;
+      }
+
+    } catch (error) {
+      console.error('Erreur WebSocket:', error);
+      ws.send(JSON.stringify({ type: 'error', message: error.message }));
+    }
   });
 
-  // ===========================================
-  // ERROR HANDLING
-  // ===========================================
-  socket.on('error', (error) => {
-    logger.error(`Socket error for ${socket.username}:`, error);
+  ws.on('close', () => {
+    if (ws.userId) {
+      onlineUsers.delete(ws.userId);
+      broadcastUserStatus(ws.userId, 'offline');
+      console.log(`❌ Utilisateur ${ws.userId} déconnecté`);
+    }
+  });
+
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
   });
 });
 
-// ============================================
-// Start Server
-// ============================================
-async function startServer() {
-  try {
-    // Connect to databases
-    await connectMongoDB();
-    connectPostgreSQL();
+function formatMessage(msg) {
+  return {
+    id: msg._id.toString(),
+    conversationId: msg.conversationId,
+    userId: msg.senderId,
+    sender: msg.sender || msg.senderId,
+    content: msg.content,
+    type: msg.type,
+    mediaUrl: msg.mediaUrl,
+    mediaName: msg.mediaName,
+    mediaSize: msg.mediaSize,
+    isRead: msg.isRead,
+    reactions: msg.reactions || [],
+    deleted: msg.deleted || false,
+    time: msg.createdAt instanceof Date ? msg.createdAt.toISOString() : msg.createdAt
+  };
+}
 
-    // Start server
-    server.listen(PORT, HOST, () => {
-      logger.info('═══════════════════════════════════════════════');
-      logger.info('🚀 ALT WebSocket Service Started');
-      logger.info(`📡 Listening on http://${HOST}:${PORT}`);
-      logger.info(`🌍 Environment: ${process.env.NODE_ENV}`);
-      logger.info('═══════════════════════════════════════════════');
+function broadcastUserStatus(userId, status) {
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({
+        type: 'user:status',
+        userId,
+        status
+      }));
+    }
+  });
+}
+
+async function cleanupBrokenConversations() {
+  try {
+    const result = await mongoDB.collection('conversations').deleteMany({
+      participants: 'undefined'
+    });
+    if (result.deletedCount > 0) {
+      console.log(`🧹 Nettoyé ${result.deletedCount} conversations corrompues`);
+    }
+
+    const msgResult = await mongoDB.collection('messages').deleteMany({
+      senderId: 'undefined'
+    });
+    if (msgResult.deletedCount > 0) {
+      console.log(`🧹 Nettoyé ${msgResult.deletedCount} messages corrompus`);
+    }
+  } catch (e) {
+    console.error('Erreur nettoyage:', e);
+  }
+}
+
+async function start() {
+  try {
+    await connectMongoDB();
+    await cleanupBrokenConversations();
+    server.listen(PORT, () => {
+      console.log(`🚀 WebSocket + REST API sur port ${PORT}`);
+      console.log(`📁 Uploads disponibles sur http://localhost:${PORT}/uploads`);
     });
   } catch (error) {
-    logger.error('Failed to start server:', error);
+    console.error('❌ Erreur démarrage:', error);
     process.exit(1);
   }
 }
 
-// ============================================
-// Graceful Shutdown
-// ============================================
-process.on('SIGTERM', async () => {
-  logger.info('SIGTERM signal received: closing HTTP server');
-  server.close(async () => {
-    logger.info('HTTP server closed');
-    
-    if (mongoClient) {
-      await mongoClient.close();
-      logger.info('MongoDB connection closed');
-    }
-    
-    if (pgPool) {
-      await pgPool.end();
-      logger.info('PostgreSQL pool closed');
-    }
-    
-    process.exit(0);
-  });
-});
+start();
 
-process.on('SIGINT', async () => {
-  logger.info('SIGINT signal received: closing HTTP server');
-  server.close(async () => {
-    logger.info('HTTP server closed');
-    
-    if (mongoClient) {
-      await mongoClient.close();
-      logger.info('MongoDB connection closed');
-    }
-    
-    if (pgPool) {
-      await pgPool.end();
-      logger.info('PostgreSQL pool closed');
-    }
-    
-    process.exit(0);
-  });
-});
-
-// Start the server
-startServer();

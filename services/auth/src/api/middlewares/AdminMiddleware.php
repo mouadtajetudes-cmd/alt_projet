@@ -18,15 +18,19 @@ class AdminMiddleware implements MiddlewareInterface
         
         $user = $request->getAttribute('user');
         
-        if (!$user || !isset($user['administrateur']) || !$user['administrateur']) {
-            $response = new Response();
-            $response->getBody()->write(json_encode([
-                'error' => 'Forbidden',
-                'message' => 'Administrator privileges required'
-            ]));
-            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
+        if ($user && is_array($user)) {
+            $isAdmin = $user['administrateur'] == 'true';
+            if ($isAdmin) {
+                return $handler->handle($request);
+            }
         }
-
-        return $handler->handle($request);
+        
+        $response = new Response();
+        $response->getBody()->write(json_encode([
+            'admin' => $user['administrateur'],
+            'error' => 'Forbidden',
+            'message' => 'Administrator privileges required'
+        ]));
+        return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
     }
 }

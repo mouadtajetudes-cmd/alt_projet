@@ -31,30 +31,82 @@ class UserService implements UserServiceInterface
 
     public function createUser(CreateUserDTO $dto): User
     {
-        $user = new User();
-        $user->nom = $dto->nom;
-        $user->prenom = $dto->prenom;
-        $user->email = $dto->email;
-        $user->telephone = $dto->telephone;
-        $user->password = password_hash($dto->password, PASSWORD_BCRYPT);
-        $user->administrateur = false;
-        $user->premium = false;
-        $user->auth_provider = 'local';
-        $user->points = 0;
-        $user->id_avatar = 1;
+        $hashedPassword = password_hash($dto->password, PASSWORD_BCRYPT);
+        
+        // Ensure administrateur and premium are stored as string 'true' or 'false'
+        $administrateur = ($dto->administrateur === true || $dto->administrateur === 'true' || $dto->administrateur === 1 || $dto->administrateur === '1') ? 'true' : 'false';
+        $premium = ($dto->premium === true || $dto->premium === 'true' || $dto->premium === 1 || $dto->premium === '1') ? 'true' : 'false';
+        
+        $user = new User(
+            null,
+            $dto->nom,
+            $dto->prenom,
+            $dto->email,
+            $hashedPassword,
+            $dto->telephone,
+            $administrateur,
+            $premium,
+            'local',
+            0,
+            1
+        );
         
         return $this->userRepository->create($user);
     }
 
     public function updateUser(int $id, UpdateUserDTO $dto): User
     {
-        $data = [
-            'nom' => $dto->nom,
-            'prenom' => $dto->prenom,
-            'email' => $dto->email,
-            'telephone' => $dto->telephone
-        ];
+        $updateData = [];
         
-        return $this->userRepository->update($id, $data);
+        if ($dto->nom !== null) {
+            $updateData['nom'] = $dto->nom;
+        }
+        if ($dto->prenom !== null) {
+            $updateData['prenom'] = $dto->prenom;
+        }
+        if ($dto->email !== null) {
+            $updateData['email'] = $dto->email;
+        }
+        if ($dto->telephone !== null) {
+            $updateData['telephone'] = $dto->telephone;
+        }
+        if ($dto->bio !== null) {
+            $updateData['bio'] = $dto->bio;
+        }
+        if ($dto->statut_personnalise !== null) {
+            $updateData['statut_personnalise'] = $dto->statut_personnalise;
+        }
+        if ($dto->administrateur !== null) {
+            // Ensure administrateur is stored as string 'true' or 'false'
+            $updateData['administrateur'] = ($dto->administrateur === true || $dto->administrateur === 'true' || $dto->administrateur === 1 || $dto->administrateur === '1') ? 'true' : 'false';
+        }
+        if ($dto->premium !== null) {
+            // Ensure premium is stored as string 'true' or 'false'
+            $updateData['premium'] = ($dto->premium === true || $dto->premium === 'true' || $dto->premium === 1 || $dto->premium === '1') ? 'true' : 'false';
+        }
+        if (!empty($dto->password)) {
+            $updateData['password'] = password_hash($dto->password, PASSWORD_BCRYPT);
+        }
+        
+        return $this->userRepository->update($id, $updateData);
+    }
+
+    public function deleteUser(int $id): bool
+    {
+        return $this->userRepository->delete($id);
+    }
+
+    public function updateUserBanner(int $id, string $bannerUrl): bool
+    {
+        return $this->userRepository->update($id, ['banner_url' => $bannerUrl]) !== null;
+    }
+
+    public function updateOnlineStatus(int $id, bool $isOnline): bool
+    {
+        $data = [
+            'is_online' => $isOnline,
+            'last_seen' => date('Y-m-d H:i:s')
+        ];
+        return $this->userRepository->update($id, $data) !== null;
     }
 }

@@ -23,6 +23,9 @@ services:
       - api.avatar
       - api.chat
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   # service api.auth : microservice pour l'authentification
   #
@@ -38,8 +41,11 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt_db
+      - alt.db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   # service api.social : microservice pour le réseau social
   #
@@ -57,6 +63,9 @@ services:
     depends_on:
       - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   # service api.marketplace : microservice pour la marketplace
   #
@@ -74,6 +83,9 @@ services:
     depends_on:
       - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   # service api.avatar : microservice pour les avatars
   #
@@ -91,6 +103,9 @@ services:
     depends_on:
       - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
   
   # service api.chat : microservice pour le chat avec MongoDB
   #
@@ -111,6 +126,9 @@ services:
       - MONGODB_URI=mongodb://alt.mongo:27017
       - MONGODB_DATABASE=chat_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   # service alt.db : base de données PostgreSQL
   #
@@ -140,21 +158,29 @@ services:
       - alt_mongo_data:/data/db
 
   #
-  # service frontend : interface utilisateur
+  # service frontend : interface utilisateur Vue.js + Vite
   #
   frontend:
     image: node:20-alpine
     ports:
-      - '3000:3000'
+      - '5173:5173'
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     working_dir: /app
     networks:
       - alt.net
     depends_on:
       - alt.gateway
       - ws
-    command: sh -c "npm install && npm run dev"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_GATEWAY=http://localhost:6090
+      - VITE_WS_URL=ws://localhost:3001
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   #
   # service ws : serveur WebSocket temps réel
@@ -178,6 +204,9 @@ services:
       - DB_HOST=alt_db
       - DB_PORT=5432
     command: sh -c "npm install && npm start"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   #
   # service administration des bases sql

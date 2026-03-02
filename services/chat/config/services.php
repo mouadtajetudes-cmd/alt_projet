@@ -1,9 +1,14 @@
 <?php
+declare(strict_types=1);
 
-use alt\core\repositories\MessageRepositoryInterface;
-use alt\core\services\MessageService;
-use alt\core\services\MessageServiceInterface;
+use alt\core\application\ports\spi\repositoryInterfaces\MessageRepositoryInterface;
+use alt\core\application\ports\spi\repositoryInterfaces\ConversationRepositoryInterface;
+use alt\core\application\ports\api\MessageServiceInterface;
+use alt\core\application\ports\api\ConversationServiceInterface;
+use alt\core\application\usecases\MessageService;
+use alt\core\application\usecases\ConversationService;
 use alt\infra\repositories\MongoMessageRepository;
+use alt\infra\repositories\MongoConversationRepository;
 use MongoDB\Client;
 
 return [
@@ -19,9 +24,23 @@ return [
         );
     },
     
+    ConversationRepositoryInterface::class => function ($c) {
+        return new MongoConversationRepository(
+            $c->get('mongodb'),
+            $_ENV['MONGODB_DATABASE'] ?? 'chat_db'
+        );
+    },
+    
     MessageServiceInterface::class => function ($c) {
         return new MessageService(
-            $c->get(MessageRepositoryInterface::class)
+            $c->get(MessageRepositoryInterface::class),
+            $c->get(ConversationRepositoryInterface::class)
+        );
+    },
+    
+    ConversationServiceInterface::class => function ($c) {
+        return new ConversationService(
+            $c->get(ConversationRepositoryInterface::class)
         );
     },
 ];

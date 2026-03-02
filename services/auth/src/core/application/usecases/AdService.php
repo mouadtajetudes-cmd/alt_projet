@@ -31,12 +31,16 @@ class AdService implements AdServiceInterface
 
     public function createAd(CreateAdDTO $dto): Ad
     {
-        $ad = new Ad();
-        $ad->titre = $dto->titre;
-        $ad->description = $dto->description;
-        $ad->image = $dto->image;
-        $ad->lien = $dto->lien;
-        $ad->actif = true;
+        $ad = new Ad(
+            null,
+            $dto->titre,
+            $dto->description,
+            $dto->image,
+            $dto->lien,
+            $dto->actif ?? false,
+            null
+        );
+
         
         return $this->adRepository->create($ad);
     }

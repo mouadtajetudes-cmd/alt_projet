@@ -29,7 +29,7 @@ class JWTManager implements JwtManagerInterface
     {
         try {
             $decoded = JWT::decode($token, new Key($this->secret, $this->algorithm));
-            return (array) $decoded;
+            return json_decode(json_encode($decoded), true);
         } catch (\Exception $e) {
             return null;
         }
@@ -38,7 +38,7 @@ class JWTManager implements JwtManagerInterface
     public function createPayload(User $user): array
     {
         $now = time();
-        
+
         return [
             'iss' => 'alt-auth',
             'iat' => $now,

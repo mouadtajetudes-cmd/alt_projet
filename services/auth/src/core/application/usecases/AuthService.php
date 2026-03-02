@@ -38,12 +38,19 @@ class AuthService implements AuthServiceInterface
             'token' => $token,
             'refresh_token' => $refreshToken,
             'user' => [
-                'id' => $user->id_utilisateur,
+                'id_utilisateur' => $user->id_utilisateur,
                 'nom' => $user->nom,
                 'prenom' => $user->prenom,
                 'email' => $user->email,
+                'telephone' => $user->telephone ?? '',
                 'administrateur' => $user->administrateur,
-                'premium' => $user->premium
+                'premium' => $user->premium,
+                'auth_provider' => $user->auth_provider ?? 'local',
+                'points' => $user->points ?? 0,
+                'id_avatar' => $user->id_avatar ?? null,
+                'bio' => $user->bio ?? null,
+                'banner_url' => $user->banner_url ?? null,
+                'statut_personnalise' => $user->statut_personnalise ?? null
             ]
         ];
     }
@@ -55,17 +62,23 @@ class AuthService implements AuthServiceInterface
             throw new \Exception('Email already exists', 400);
         }
         
-        $user = new User();
-        $user->nom = $dto->nom;
-        $user->prenom = $dto->prenom;
-        $user->email = $dto->email;
-        $user->telephone = $dto->telephone;
-        $user->password = password_hash($dto->password, PASSWORD_BCRYPT);
-        $user->administrateur = false;
-        $user->premium = false;
-        $user->auth_provider = 'local';
-        $user->points = 0;
-        $user->id_avatar = 1;
+        $hashedPassword = password_hash($dto->password, PASSWORD_BCRYPT);
+        
+        $user = new User(
+            null,
+            $dto->nom,
+            $dto->prenom,
+            $dto->email,
+            $hashedPassword,
+            $dto->telephone,
+            "false",
+            "false",
+            'local',
+            0,
+            1,
+            null,
+            null
+        );
         
         $user = $this->userRepository->create($user);
         
@@ -76,10 +89,19 @@ class AuthService implements AuthServiceInterface
             'token' => $token,
             'refresh_token' => $refreshToken,
             'user' => [
-                'id' => $user->id_utilisateur,
+                'id_utilisateur' => $user->id_utilisateur,
                 'nom' => $user->nom,
                 'prenom' => $user->prenom,
-                'email' => $user->email
+                'email' => $user->email,
+                'telephone' => $user->telephone ?? '',
+                'administrateur' => $user->administrateur ?? 'false',
+                'premium' => $user->premium ?? 'false',
+                'auth_provider' => $user->auth_provider ?? 'local',
+                'points' => $user->points ?? 0,
+                'id_avatar' => $user->id_avatar ?? null,
+                'bio' => $user->bio ?? null,
+                'banner_url' => $user->banner_url ?? null,
+                'statut_personnalise' => $user->statut_personnalise ?? null
             ]
         ];
     }
@@ -106,12 +128,48 @@ class AuthService implements AuthServiceInterface
             'token' => $newToken,
             'refresh_token' => $newRefreshToken,
             'user' => [
-                'id' => $user->id_utilisateur,
+                'id_utilisateur' => $user->id_utilisateur,
                 'nom' => $user->nom,
                 'prenom' => $user->prenom,
                 'email' => $user->email,
+                'telephone' => $user->telephone ?? '',
                 'administrateur' => $user->administrateur,
-                'premium' => $user->premium
+                'premium' => $user->premium,
+                'auth_provider' => $user->auth_provider ?? 'local',
+                'points' => $user->points ?? 0,
+                'id_avatar' => $user->id_avatar ?? null,
+                'bio' => $user->bio ?? null,
+                'banner_url' => $user->banner_url ?? null,
+                'statut_personnalise' => $user->statut_personnalise ?? null
+            ]
+        ];
+    }
+
+    /**
+     * Generate tokens for a user (used for OAuth)
+     */
+    public function generateTokensForUser(User $user): array
+    {
+        $token = $this->authProvider->generateToken($user);
+        $refreshToken = $this->authProvider->generateRefreshToken($user);
+        
+        return [
+            'access_token' => $token,
+            'refresh_token' => $refreshToken,
+            'user' => [
+                'id_utilisateur' => $user->id_utilisateur,
+                'nom' => $user->nom,
+                'prenom' => $user->prenom,
+                'email' => $user->email,
+                'telephone' => $user->telephone ?? '',
+                'administrateur' => $user->administrateur,
+                'premium' => $user->premium,
+                'auth_provider' => $user->auth_provider ?? 'local',
+                'points' => $user->points ?? 0,
+                'id_avatar' => $user->id_avatar ?? null,
+                'bio' => $user->bio ?? null,
+                'banner_url' => $user->banner_url ?? null,
+                'statut_personnalise' => $user->statut_personnalise ?? null
             ]
         ];
     }
