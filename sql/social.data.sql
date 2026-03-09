@@ -58,4 +58,29 @@ INSERT INTO reactions (type, id_utilisateur, id_post, created_at) VALUES
   ('like', 1, 6, '2026-02-03 16:05:00'),
   ('unlike', 4, 7, '2026-02-03 17:05:00'),
   ('like', 2, 8, '2026-02-03 18:05:00'),
+<<<<<<< HEAD
   ('like', 3, 9, '2026-02-03 19:05:00');
+  ----likes
+  INSERT INTO likes (id_post, id_utilisateur) VALUES (1, 1) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (1, 2) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (1, 3) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (2, 2) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (2, 4) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (3, 1) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (3, 3) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (3, 5) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (4, 2) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (4, 6) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (5, 1) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (5, 7) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (6, 3) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (6, 4) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (7, 5) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (7, 3) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (8, 7) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (8, 8) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (9, 9) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+INSERT INTO likes (id_post, id_utilisateur) VALUES (10, 10) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
+=======
+  ('like', 3, 9, '2026-02-03 19:05:00');
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9

@@ -2,9 +2,15 @@
 
 namespace alt\infra\repositories;
 
+<<<<<<< HEAD
+use alt\core\application\ports\api\CreatePostDTO;
+use alt\core\domain\entities\Post;
+use alt\core\repositories\PostRepositoryInterface;
+=======
 use alt\core\application\dto\CreatePostDTO;
 use alt\core\application\ports\spi\PostRepositoryInterface;
 use alt\core\domain\entities\Post;
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 use PDO;
 
 class PdoPostRepository implements PostRepositoryInterface
@@ -16,6 +22,47 @@ class PdoPostRepository implements PostRepositoryInterface
         $this->pdo = $pdo;
     }
 
+<<<<<<< HEAD
+public function findAll(int $page, int $limit): array
+{
+    $offset = ($page - 1) * $limit;
+
+    $stmt = $this->pdo->prepare(
+        'SELECT p.id_post, p.titre, p.description, p.date_publication, u.nom,u.prenom ,p.type
+         FROM posts p
+         JOIN utilisateurs u ON p.id_utilisateur = u.id_utilisateur
+         ORDER BY date_publication DESC
+         LIMIT :limit OFFSET :offset'
+    );
+
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($posts as &$post) {
+
+        if (!empty($post['description']) && !str_starts_with($post['description'], 'http')) {
+
+            if (preg_match('/\.(jpg|jpeg|png|gif)$/i', $post['description'])) {
+                $post['type'] = 'image';
+                $post['description'] = 'http://localhost:6085/uploads/images/' . $post['description'];
+
+            } elseif (preg_match('/\.(mp4|webm|ogg)$/i', $post['description'])) {
+                $post['type'] = 'video';
+                $post['description'] = 'http://localhost:6085/uploads/videos/' . $post['description'];
+
+            } else {
+                $post['type'] = 'text';
+            }
+        }
+    }
+
+    return $posts;
+}
+
+=======
     public function findAll(int $page, int $limit): array
     {
         $offset = ($page - 1) * $limit;
@@ -36,6 +83,7 @@ class PdoPostRepository implements PostRepositoryInterface
         return $posts;
     }
 
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
     public function findById(int $idPost): Post
     {
         $stmt = $this->pdo->prepare(
@@ -88,6 +136,22 @@ class PdoPostRepository implements PostRepositoryInterface
     public function create(CreatePostDTO $post):CreatePostDTO
     {
         $stmt = $this->pdo->prepare(
+<<<<<<< HEAD
+            'INSERT INTO posts (type, description, id_utilisateur)
+             VALUES (:type, :description, :id_utilisateur)'
+        );
+
+        $stmt->execute([
+            'type' => $post->getType(),
+            'description' => $post->getDescription(),
+            'id_utilisateur' => $post->getIdUtilisateur()
+        ]);
+
+        return new CreatePostDTO(
+            $post->getType(),
+            $post->getDescription(),
+            $post->getIdUtilisateur()
+=======
             'INSERT INTO posts (titre, description,  id_utilisateur)
              VALUES (:titre, :description, :user)'
         );
@@ -103,6 +167,7 @@ class PdoPostRepository implements PostRepositoryInterface
             $post->getDescription(),
             $post->getIdUtilisateur()
 
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
         );
     }
 

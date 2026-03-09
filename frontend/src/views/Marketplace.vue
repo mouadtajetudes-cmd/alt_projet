@@ -1,6 +1,20 @@
 <template>
   <div class="marketplace-page">
     <div class="container">
+<<<<<<< HEAD
+      <h1>Marketplace</h1>
+      
+      <div v-if="loading" class="loading">Chargement des produits...</div>
+      
+      <div v-else class="products-grid">
+        <div v-for="product in products" :key="product.id_produit" class="product-card">
+          <div class="product-image">🛍️</div>
+          <h3>{{ product.nom }}</h3>
+          <p class="description">{{ product.description }}</p>
+          <p class="price">{{ product.prix }} €</p>
+          <button class="btn">Voir détails</button>
+        </div>
+=======
       <div class="page-header">
         <h1>🛒 Marketplace</h1>
         <button class="btn-create" @click="goToCreate">
@@ -104,6 +118,7 @@
         >
           Suivant ›
         </button>
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
       </div>
     </div>
   </div>
@@ -111,6 +126,22 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+<<<<<<< HEAD
+
+export default {
+  name: 'Marketplace',
+  setup() {
+    const products = ref([])
+    const loading = ref(true)
+    
+    const loadProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:6086/products')
+        const data = await response.json()
+        products.value = data
+      } catch (error) {
+        console.error('Erreur chargement produits:', error)
+=======
 import axios from 'axios'
 import ProductCard from '../components/ProductCard.vue'
 
@@ -173,10 +204,21 @@ export default {
       } catch (err) {
         console.error('Erreur chargement produits:', err)
         error.value = 'Impossible de charger les produits. Vérifiez que le serveur est démarré.'
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
       } finally {
         loading.value = false
       }
     }
+<<<<<<< HEAD
+    
+    onMounted(() => {
+      loadProducts()
+    })
+    
+    return {
+      products,
+      loading
+=======
 
     let searchTimeout
     const handleSearch = () => {
@@ -228,6 +270,7 @@ export default {
       changePage,
       resetFilters,
       goToCreate
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
     }
   }
 }
@@ -235,12 +278,25 @@ export default {
 
 <style scoped>
 .marketplace-page {
+<<<<<<< HEAD
+=======
   min-height: 100vh;
   background: #f8f9fa;
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
   padding: 2rem 0;
 }
 
 .container {
+<<<<<<< HEAD
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+h1 {
+  margin-bottom: 2rem;
+  color: #333;
+=======
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 1.5rem;
@@ -385,10 +441,15 @@ export default {
   margin-bottom: 1.5rem;
   color: #6c757d;
   font-size: 0.95rem;
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 }
 
 .loading {
   text-align: center;
+<<<<<<< HEAD
+  padding: 3rem;
+  color: #666;
+=======
   padding: 4rem 0;
 }
 
@@ -429,10 +490,36 @@ export default {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 }
 
 .products-grid {
   display: grid;
+<<<<<<< HEAD
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.product-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.product-image {
+  font-size: 4rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+=======
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
   margin-bottom: 3rem;
@@ -516,6 +603,7 @@ export default {
     gap: 1rem;
   }
 }
+>>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 .product-card h3 {
   margin-bottom: 0.5rem;
   color: #333;
