@@ -114,14 +114,14 @@ export default {
       description: ''
     })
 
-    const API_BASE = 'http://localhost:6082'
+    const API_BASE = 'http://localhost:6090/marketplace'
 
     const isEditing = computed(() => editingCategoryId.value !== null)
 
     const loadCategories = async () => {
       try {
         const response = await axios.get(`${API_BASE}/categories`)
-        categories.value = response.data || []
+        categories.value = response.data.data || []
       } catch (err) {
         console.error('Erreur chargement catégories:', err)
         error.value = 'Impossible de charger les catégories'

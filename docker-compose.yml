@@ -38,7 +38,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt_db
+      - alt.db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
 
   # service api.social : microservice pour le réseau social
@@ -55,7 +55,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt_db
+      - alt.db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
 
   # service api.marketplace : microservice pour la marketplace
@@ -72,7 +72,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt_db
+      - alt.db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
 
   # service api.avatar : microservice pour les avatars
@@ -89,7 +89,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt_db
+      - alt.db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
   
   # service api.chat : microservice pour le chat avec MongoDB
@@ -114,7 +114,7 @@ services:
 
   # service alt.db : base de données PostgreSQL
   #
-  alt_db:
+  alt.db:
     image: 'postgres:16-alpine'
     env_file: ./alt-db.env
     ports:
@@ -125,6 +125,8 @@ services:
       - alt_postgres_data:/var/lib/postgresql/data
       - ./sql/auth_schema.sql:/docker-entrypoint-initdb.d/1-auth_schema.sql
       - ./sql/auth_data.sql:/docker-entrypoint-initdb.d/2-auth_data.sql
+      - ./sql/marketplace_schema.sql:/docker-entrypoint-initdb.d/3-marketplace_schema.sql
+      - ./sql/marketplace_data.sql:/docker-entrypoint-initdb.d/4-marketplace_data.sql
 
   # service alt.mongo : base de données MongoDB pour le chat
   #
@@ -174,13 +176,13 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt_db
+      - alt.db
       - alt.mongo
     environment:
       - WS_PORT=3001
       - WS_HOST=0.0.0.0
       - MONGO_URI=mongodb://alt.mongo:27017/chat_db
-      - DB_HOST=alt_db
+      - DB_HOST=alt.db
       - DB_PORT=5432
     command: sh -c "npm install && npm start"
 

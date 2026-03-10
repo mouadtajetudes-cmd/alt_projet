@@ -4,8 +4,8 @@ namespace alt\api\actions;
 
 use alt\core\application\ports\api\ProductServiceInterface;
 use alt\core\application\ports\api\ProductFiltersDTO;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class GetAllProductsAction
 {
@@ -16,30 +16,53 @@ class GetAllProductsAction
         $this->productService = $productService;
     }
 
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function __invoke(Request $request, Response $response): Response
     {
-        $params = $request->getQueryParams();
+        try {
+            $q = $request->getQueryParams();
 
-        $filters = new ProductFiltersDTO(
-            isset($params['categorie']) ? (int) $params['categorie'] : null,
-            isset($params['prix_min']) ? (float) $params['prix_min'] : null,
-            isset($params['prix_max']) ? (float) $params['prix_max'] : null,
-            $params['statut'] ?? null,
-            isset($params['page']) ? (int) $params['page'] : 1,
-            isset($params['limit']) ? (int) $params['limit'] : 20,
-            $params['search'] ?? null,
-            isset($params['user_id']) ? (int) $params['user_id'] : null
-        );
+            $filters = new ProductFiltersDTO();
+            $filters->page = isset($q['page']) ? max(1, (int)$q['page']) : 1;
+            $filters->limit = isset($q['limit']) ? max(1, (int)$q['limit']) : 12;
 
-        $products = $this->productService->getAllProducts($filters);
-        $data = array_map(fn($p) => $p->toArray(), $products);
+            if (property_exists($filters, 'categorie')) {
+                $filters->categorie = isset($q['category_id']) && $q['category_id'] !== '' ? (int)$q['category_id'] : null;
+            }
+            if (property_exists($filters, 'prixMin')) {
+                $filters->prixMin = isset($q['min_price']) && $q['min_price'] !== '' ? (float)$q['min_price'] : null;
+            }
+            if (property_exists($filters, 'prixMax')) {
+                $filters->prixMax = isset($q['max_price']) && $q['max_price'] !== '' ? (float)$q['max_price'] : null;
+            }
+            if (property_exists($filters, 'statut')) {
+                $filters->statut = isset($q['status']) && $q['status'] !== '' ? (string)$q['status'] : null;
+            }
+            if (property_exists($filters, 'search')) {
+                $filters->search = $q['search'] ?? null;
+            }
+            if (property_exists($filters, 'userId')) {
+                $filters->userId = isset($q['user_id']) ? (int)$q['user_id'] : null;
+            }
 
-        $response->getBody()->write(json_encode([
-            'status' => 'success',
-            'data' => $data,
-            'count' => count($data)
-        ]));
+            $result = $this->productService->getAllProducts($filters);
 
-        return $response->withHeader('Content-Type', 'application/json');
+            $rows = $result['products'] ?? (is_array($result) ? $result : []);
+            $payload = [
+                'status' => 'success',
+                'data' => $rows,
+                'count' => (int)($result['total'] ?? count($rows)),
+                'page' => $filters->page,
+                'limit' => $filters->limit
+            ];
+
+            $response->getBody()->write(json_encode($payload));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+        } catch (\Throwable $e) {
+            $response->getBody()->write(json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
     }
 }

@@ -9,7 +9,9 @@ import Friends from '../views/Friends.vue'
 import Groups from '../views/Groups.vue'
 import GroupChat from '../views/GroupChat.vue'
 import Marketplace from '../views/Marketplace.vue'
-import ProductDetail from '../views/ProductDetail.vue'
+import ProductDetails from '../views/ProductDetails.vue'
+import CreateProduct from '../views/CreateProduct.vue'
+import EditProduct from '../views/EditProduct.vue'
 import Social from '../views/Social.vue'
 import Avatar from '../views/Avatar.vue'
 import AvatarDetail from '../views/AvatarDetail.vue'
@@ -80,11 +82,28 @@ path: '/register',
     beforeEnter: requireAuth
   },
   {
-    path: '/marketplace/:id',
-    name: 'ProductDetail',
-    component: ProductDetail,
+    path: '/marketplace/create',
+    name: 'CreateProduct',
+    component: CreateProduct,
     beforeEnter: requireAuth
-
+  },
+  {
+    path: '/marketplace/:id/edit',
+    name: 'EditProduct',
+    component: EditProduct,
+    beforeEnter: requireAuth
+  },
+  {
+  path: '/marketplace/:id',
+  name: 'ProductDetails',
+  component: ProductDetails,
+  beforeEnter: requireAuth
+  },
+  {
+  path: '/marketplace/my-products',
+  name: 'MyProducts',
+  component: () => import('../views/MyProducts.vue'),
+  beforeEnter: requireAuth
   },
   {
     path: '/social',

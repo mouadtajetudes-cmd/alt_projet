@@ -2,10 +2,19 @@
   <div class="marketplace-page">
     <div class="container">
       <div class="page-header">
-        <h1>🛒 Marketplace</h1>
-        <button class="btn-create" @click="goToCreate">
-          ➕ Ajouter une annonce
-        </button>
+        <div>
+          <p class="page-kicker">Marketplace</p>
+          <h1>Trouvez ce qu’il vous faut</h1>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-primary" @click="goToCreate">
+            Ajouter une annonce
+          </button>
+          <button class="btn btn-secondary" @click="goToMyProducts">
+            Mes annonces
+          </button>
+        </div>
       </div>
 
       <div class="filters-section">
@@ -17,11 +26,15 @@
             @input="handleSearch"
             class="search-input"
           />
-          <button class="search-btn" @click="loadProducts">🔍</button>
+          <button class="search-btn" @click="loadProducts">Rechercher</button>
         </div>
 
         <div class="filters">
-          <select v-model="selectedCategory" @change="loadProducts" class="filter-select">
+          <select
+            v-model="selectedCategory"
+            @change="applyFilters"
+            class="filter-select"
+          >
             <option value="">Toutes les catégories</option>
             <option
               v-for="category in categories"
@@ -40,7 +53,7 @@
               class="price-input"
               min="0"
             />
-            <span>-</span>
+            <span class="price-separator">—</span>
             <input
               v-model.number="priceMax"
               type="number"
@@ -50,13 +63,16 @@
             />
           </div>
 
-          <button class="btn-filter" @click="loadProducts">Appliquer</button>
-          <button class="btn-reset" @click="resetFilters">Réinitialiser</button>
+          <button class="btn btn-dark" @click="applyFilters">Appliquer</button>
+          <button class="btn btn-ghost" @click="resetFilters">Réinitialiser</button>
         </div>
       </div>
 
-      <div class="results-info" v-if="!loading">
-        <p>{{ totalProducts }} annonce{{ totalProducts > 1 ? 's' : '' }} trouvée{{ totalProducts > 1 ? 's' : '' }}</p>
+      <div class="results-info" v-if="!loading && !error">
+        <p>
+          {{ totalProducts }} annonce{{ totalProducts > 1 ? 's' : '' }}
+          trouvée{{ totalProducts > 1 ? 's' : '' }}
+        </p>
       </div>
 
       <div v-if="loading" class="loading">
@@ -65,23 +81,20 @@
       </div>
 
       <div v-else-if="error" class="error-message">
-        <p> {{ error }}</p>
-        <button class="btn-retry" @click="loadProducts">Réessayer</button>
+        <p>{{ error }}</p>
+        <button class="btn btn-primary" @click="loadProducts">Réessayer</button>
       </div>
 
       <div v-else-if="products.length > 0" class="products-grid">
         <ProductCard
-          v-for="product in products"
-          :key="product.id_produit"
+          v-for="(product, idx) in products"
+          :key="product.id_produit || idx"
           :product="product"
         />
       </div>
 
       <div v-else class="no-products">
-        <p> Aucun produit trouvé</p>
-        <button class="btn-create" @click="goToCreate">
-           Créer la première annonce
-        </button>
+        <p>Aucun produit trouvé</p>
       </div>
 
       <div v-if="totalPages > 1" class="pagination">
@@ -90,19 +103,19 @@
           :disabled="currentPage === 1"
           @click="changePage(currentPage - 1)"
         >
-          ‹ Précédent
+          Précédent
         </button>
-        
+
         <span class="page-info">
           Page {{ currentPage }} sur {{ totalPages }}
         </span>
-        
+
         <button
           class="page-btn"
           :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
         >
-          Suivant ›
+          Suivant
         </button>
       </div>
     </div>
@@ -117,78 +130,144 @@ import ProductCard from '../components/ProductCard.vue'
 
 export default {
   name: 'Marketplace',
-  components: {
-    ProductCard
-  },
+  components: { ProductCard },
   setup() {
     const router = useRouter()
+
+    const API_BASE = 'http://localhost:6090/marketplace'
+    const FILES_BASE = 'http://localhost:3001'
+    const itemsPerPage = 12
+
     const products = ref([])
     const categories = ref([])
-    const loading = ref(true)
+    const loading = ref(false)
     const error = ref(null)
-    
+
     const searchQuery = ref('')
     const selectedCategory = ref('')
     const priceMin = ref(null)
     const priceMax = ref(null)
-    
 
     const currentPage = ref(1)
-    const itemsPerPage = 12
     const totalProducts = ref(0)
     const totalPages = ref(1)
 
-    const API_BASE = 'http://localhost:6090/marketplace'
+    const goToCreate = () => router.push('/marketplace/create')
+    const goToMyProducts = () => router.push('/marketplace/my-products')
 
+    const resolveImageUrl = (raw) => {
+      if (!raw || typeof raw !== 'string') return null
+      if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
+      if (raw.startsWith('/')) return `${FILES_BASE}${raw}`
+      return `${FILES_BASE}/${raw}`
+    }
+
+    const normalizeProduct = (p, idx) => {
+      let id = Number(p?.id_produit ?? p?.id ?? 0)
+      if (!Number.isFinite(id) || id <= 0) id = 1000000 + idx
+
+      const rawImage =
+        p?.media_url ??
+        p?.image ??
+        p?.image_url ??
+        (Array.isArray(p?.media_urls) && p.media_urls.length ? p.media_urls[0] : null) ??
+        (Array.isArray(p?.medias) && p.medias.length
+          ? (p.medias[0]?.media_url ?? p.medias[0]?.url)
+          : null)
+
+      return {
+        id_produit: id,
+        nom: p?.nom ?? 'Sans titre',
+        description: p?.description ?? '',
+        prix: Number(p?.prix ?? 0),
+        statut: p?.statut ?? 'disponible',
+        quantite: Number(p?.quantite ?? 0),
+        id_utilisateur: p?.id_utilisateur ?? null,
+        id_categorie: p?.id_categorie ?? null,
+        categorie: p?.categorie ?? 'Non catégorisé',
+        image: resolveImageUrl(rawImage)
+      }
+    }
 
     const loadCategories = async () => {
       try {
         const response = await axios.get(`${API_BASE}/categories`)
-        categories.value = response.data || []
+        categories.value = response?.data?.data || []
       } catch (err) {
         console.error('Erreur chargement catégories:', err)
       }
     }
 
     const loadProducts = async () => {
-      loading.value = true
-      error.value = null
-
       try {
-        let url = `${API_BASE}/products?limit=${itemsPerPage}&page=${currentPage.value}`
-        
-        if (searchQuery.value) {
-          url += `&search=${encodeURIComponent(searchQuery.value)}`
-        }
-        if (selectedCategory.value) {
-          url += `&categorie=${selectedCategory.value}`
-        }
-        if (priceMin.value !== null && priceMin.value !== '') {
-          url += `&prix_min=${priceMin.value}`
-        }
-        if (priceMax.value !== null && priceMax.value !== '') {
-          url += `&prix_max=${priceMax.value}`
+        loading.value = true
+        error.value = null
+
+        const params = {
+          limit: itemsPerPage,
+          page: currentPage.value
         }
 
-        const response = await axios.get(url)
-        products.value = response.data || []
-        totalProducts.value = response.data.count || products.value.length
-        totalPages.value = Math.ceil(totalProducts.value / itemsPerPage)
+        if (searchQuery.value && searchQuery.value.trim() !== '') {
+          params.search = searchQuery.value.trim()
+        }
+
+        if (selectedCategory.value !== '' && selectedCategory.value !== null) {
+          params.category_id = selectedCategory.value
+        }
+
+        if (priceMin.value !== null && priceMin.value !== '') {
+          params.min_price = priceMin.value
+        }
+
+        if (priceMax.value !== null && priceMax.value !== '') {
+          params.max_price = priceMax.value
+        }
+
+    const response = await axios.get(`${API_BASE}/products`, { params })
+    const json = response.data || {}
+
+    console.log('🔍 Réponse API complète:', json)  // ← À ajouter
+
+    const items = json.data ?? json.products ?? json.produits ?? []
+
+    console.log(' Items trouvés:', items)  // ← À ajouter
+
+      products.value = (Array.isArray(items) ? items : []).map((p, idx) =>
+        normalizeProduct(p, idx)
+        )
+
+      totalProducts.value = Number(
+        json.count ??
+        json.total ??
+        json.totalProducts ??
+        products.value.length
+        )
+
+        totalPages.value = Math.max(1, Math.ceil(totalProducts.value / itemsPerPage))
       } catch (err) {
-        console.error('Erreur chargement produits:', err)
-        error.value = 'Impossible de charger les produits. Vérifiez que le serveur est démarré.'
+        console.error('Erreur loadProducts:', err)
+        error.value =
+          err?.response?.data?.message ||
+          err?.message ||
+          'Erreur lors du chargement des annonces'
       } finally {
         loading.value = false
       }
     }
 
-    let searchTimeout
+    let searchTimeout = null
     const handleSearch = () => {
       clearTimeout(searchTimeout)
       searchTimeout = setTimeout(() => {
         currentPage.value = 1
         loadProducts()
-      }, 500)
+      }, 400)
+    }
+
+    const applyFilters = () => {
+      currentPage.value = 1
+      loadProducts()
     }
 
     const changePage = (page) => {
@@ -206,14 +285,9 @@ export default {
       loadProducts()
     }
 
-    const goToCreate = () => {
-alert('Fonctionnalité de création à venir !')
-
-    }
-
-    onMounted(() => {
-      loadCategories()
-      loadProducts()
+    onMounted(async () => {
+      await loadCategories()
+      await loadProducts()
     })
 
     return {
@@ -230,9 +304,11 @@ alert('Fonctionnalité de création à venir !')
       totalProducts,
       handleSearch,
       loadProducts,
+      applyFilters,
       changePage,
       resetFilters,
-      goToCreate
+      goToCreate,
+      goToMyProducts
     }
   }
 }
@@ -241,12 +317,15 @@ alert('Fonctionnalité de création à venir !')
 <style scoped>
 .marketplace-page {
   min-height: 100vh;
-  background: #f8f9fa;
-  padding: 2rem 0;
+  background:
+    radial-gradient(circle at top left, rgba(102, 126, 234, 0.08), transparent 28%),
+    radial-gradient(circle at top right, rgba(118, 75, 162, 0.08), transparent 24%),
+    #f6f7fb;
+  padding: 2.5rem 0 3rem;
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1380px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
@@ -254,156 +333,187 @@ alert('Fonctionnalité de création à venir !')
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
+  gap: 1rem;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.page-kicker {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7c3aed;
+  margin-bottom: 0.35rem;
 }
 
 .page-header h1 {
-  font-size: 2.5rem;
-  color: #212529;
+  font-size: 2.4rem;
+  color: #121826;
   margin: 0;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
 }
 
-.btn-create {
-  background: #28a745;
-  color: white;
+.header-actions {
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.btn {
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 14px;
+  padding: 0.82rem 1.2rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.22s ease;
 }
 
-.btn-create:hover {
-  background: #218838;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  box-shadow: 0 10px 22px rgba(59, 130, 246, 0.22);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 14px 28px rgba(59, 130, 246, 0.28);
+}
+
+.btn-secondary {
+  background: white;
+  color: #1f2937;
+  border: 1px solid #e7eaf3;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.btn-dark {
+  background: #111827;
+  color: white;
+}
+
+.btn-ghost {
+  background: #eef2f7;
+  color: #475569;
 }
 
 .filters-section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  padding: 1.35rem;
+  border-radius: 22px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  margin-bottom: 1.5rem;
 }
 
 .search-bar {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   margin-bottom: 1rem;
 }
 
 .search-input {
   flex: 1;
-  padding: 0.75rem 1rem;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
+  padding: 0.95rem 1rem;
+  border: 1px solid #dbe2ea;
+  border-radius: 14px;
+  font-size: 0.98rem;
+  background: #fbfcfe;
+  color: #111827;
+  transition: all 0.2s ease;
 }
 
-.search-input:focus {
+.search-input:focus,
+.filter-select:focus,
+.price-input:focus {
   outline: none;
-  border-color: #0d6efd;
+  border-color: #9aa8ff;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+  background: white;
 }
 
 .search-btn {
-  background: #0d6efd;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1.2rem;
+  padding: 0.95rem 1.25rem;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.22s ease;
 }
 
 .search-btn:hover {
-  background: #0b5ed7;
+  transform: translateY(-1px);
 }
 
 .filters {
   display: flex;
-  gap: 1rem;
+  gap: 0.9rem;
   flex-wrap: wrap;
   align-items: center;
 }
 
-.filter-select {
-  padding: 0.65rem 1rem;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
+.filter-select,
+.price-input {
+  padding: 0.85rem 1rem;
+  border: 1px solid #dbe2ea;
+  border-radius: 14px;
   font-size: 0.95rem;
-  background: white;
-  cursor: pointer;
-  min-width: 200px;
+  background: #fbfcfe;
+  color: #111827;
+}
+
+.filter-select {
+  min-width: 220px;
 }
 
 .price-filter {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.65rem;
   align-items: center;
 }
 
 .price-input {
-  width: 120px;
-  padding: 0.65rem 1rem;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  width: 130px;
 }
 
-.btn-filter {
-  background: #0d6efd;
-  color: white;
-  border: none;
-  padding: 0.65rem 1.5rem;
-  border-radius: 8px;
+.price-separator {
+  color: #64748b;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-filter:hover {
-  background: #0b5ed7;
-}
-
-.btn-reset {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 0.65rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-reset:hover {
-  background: #5a6268;
 }
 
 .results-info {
-  margin-bottom: 1.5rem;
-  color: #6c757d;
-  font-size: 0.95rem;
+  margin-bottom: 1.3rem;
+}
+
+.results-info p {
+  color: #4b5563;
+  font-size: 0.96rem;
+  font-weight: 500;
 }
 
 .loading {
   text-align: center;
   padding: 4rem 0;
+  color: #475569;
 }
 
 .spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #0d6efd;
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #667eea;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.9s linear infinite;
   margin: 0 auto 1rem;
 }
 
@@ -412,94 +522,94 @@ alert('Fonctionnalité de création à venir !')
   100% { transform: rotate(360deg); }
 }
 
-.error-message {
+.error-message,
+.no-products {
   text-align: center;
   padding: 3rem;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 22px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+  border: 1px solid #edf1f6;
 }
 
 .error-message p {
   color: #dc3545;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   margin-bottom: 1rem;
 }
 
-.btn-retry {
-  background: #0d6efd;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+.no-products p {
+  font-size: 1.08rem;
+  color: #64748b;
+  margin: 0;
 }
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
-  margin-bottom: 3rem;
-}
-
-.no-products {
-  text-align: center;
-  padding: 4rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.no-products p {
-  font-size: 1.3rem;
-  color: #6c757d;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+  gap: 1.6rem;
+  margin-bottom: 2.5rem;
 }
 
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1.5rem;
-  margin-top: 3rem;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 .page-btn {
   background: white;
-  color: #0d6efd;
-  border: 2px solid #0d6efd;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  color: #334155;
+  border: 1px solid #dbe2ea;
+  padding: 0.8rem 1.15rem;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .page-btn:hover:not(:disabled) {
-  background: #0d6efd;
-  color: white;
+  transform: translateY(-1px);
+  border-color: #bcc7d8;
 }
 
 .page-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .page-info {
   font-weight: 600;
-  color: #495057;
+  color: #475569;
 }
 
 @media (max-width: 768px) {
+  .marketplace-page {
+    padding: 1.5rem 0 2rem;
+  }
+
   .page-header {
     flex-direction: column;
-    gap: 1rem;
     align-items: stretch;
   }
 
   .page-header h1 {
     font-size: 2rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .header-actions .btn {
+    width: 100%;
+  }
+
+  .search-bar {
+    flex-direction: column;
   }
 
   .filters {
@@ -508,8 +618,15 @@ alert('Fonctionnalité de création à venir !')
   }
 
   .filter-select,
-  .price-filter {
+  .price-filter,
+  .price-input,
+  .btn-dark,
+  .btn-ghost {
     width: 100%;
+  }
+
+  .price-filter {
+    flex-direction: column;
   }
 
   .products-grid {
@@ -518,43 +635,7 @@ alert('Fonctionnalité de création à venir !')
 
   .pagination {
     flex-direction: column;
-    gap: 1rem;
-  }
-}
-.product-card h3 {
-
-  margin-bottom: 0.5rem;
-  color: #333;
-}
-
-.description {
-  color: #666;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
-.price {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #0d6efd;
-  margin-bottom: 1rem;
-}
-
-.btn {
-  width: 100%;
-  padding: 0.75rem;
-  background: #0d6efd;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn:hover {
-  background: #0b5ed7;
+    gap: 0.75rem;
   }
 }
 </style>
-
-

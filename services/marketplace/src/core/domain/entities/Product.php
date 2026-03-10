@@ -15,7 +15,7 @@ class Product
     private DateTimeInterface $datePublication;
     private int $quantite;
     private int $idUtilisateur;
-    private int $idCategorie;
+    private ?int $idCategorie;
     private DateTimeInterface $createdAt;
     private DateTimeInterface $updatedAt;
     private array $medias = [];
@@ -25,7 +25,7 @@ class Product
         string $nom,
         float $prix,
         int $idUtilisateur,
-        int $idCategorie,
+        ?int $idCategorie,
         string $description,
         string $statut,
         int $quantite,
@@ -111,12 +111,12 @@ class Product
         return $this->idUtilisateur;
     }
 
-    public function getIdCategorie(): int
+    public function getIdCategorie(): ?int
     {
         return $this->idCategorie;
     }
 
-    public function setIdCategorie(int $idCategorie): self
+    public function setIdCategorie(?int $idCategorie): self
     {
         $this->idCategorie = $idCategorie;
         return $this;
@@ -179,7 +179,7 @@ class Product
             $data['nom'] ?? '',
             (float) ($data['prix'] ?? 0.0),
             (int) ($data['id_utilisateur'] ?? 0),
-            (int) ($data['id_categorie'] ?? 0),
+            isset($data['id_categorie']) && $data['id_categorie'] !== null ? (int) $data['id_categorie'] : null,
             $data['description'] ?? '',
             $data['statut'] ?? 'disponible',
             (int) ($data['quantite'] ?? 0),

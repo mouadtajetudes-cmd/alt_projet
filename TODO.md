@@ -53,11 +53,11 @@
 - [❌] Routes
 
 ### 👤 Wiem - Service Marketplace
-- [❌] Entités Produits
-- [❌] Repositories
-- [❌] Services
-- [❌] Actions API
-- [❌] Routes
+- [✅] Entités Produits
+- [✅] Repositories
+- [✅] Services
+- [✅] Actions API
+- [✅] Routes
 
 ## 🚧 Tâches Communes
 

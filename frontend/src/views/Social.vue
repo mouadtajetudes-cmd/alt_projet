@@ -57,7 +57,8 @@
 <script setup>
 import { ref, onMounted ,computed} from 'vue'
 import axios from "axios"
-import { config } from '../conf'
+
+const API_BASE = 'http://localhost:6090/social'
 
 const posts = ref([])
 const loading = ref(true)
@@ -66,7 +67,7 @@ const search = ref('')
 
 const loadPosts = async () => {
   try {
-    const response = await axios.get(`${config}/posts`)
+    const response = await axios.get(`${API_BASE}/posts`)
     posts.value = response.data.data || []
     console.log("DATA API:", response.data)
     console.log("Posts après assignation:", posts.value)
@@ -81,7 +82,7 @@ const loadPosts = async () => {
 }
 
 onMounted(loadPosts)
-const mediaBase='http://localhost:6085/uploads/images/';
+const mediaBase = `${API_BASE}/uploads/images/`;
 function getMediaUrl(description) {
   if (description.startsWith('http')) {
     return description; 

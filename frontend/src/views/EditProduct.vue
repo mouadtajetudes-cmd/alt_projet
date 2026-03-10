@@ -2,9 +2,9 @@
   <div class="edit-product-page">
     <div class="container">
       <div class="page-header">
-        <h1>Modifier l'annonce</h1>
+        <h1>✏️ Modifier l'annonce</h1>
         <button class="btn-back" @click="goBack">
-          ← Retour
+          Retour
         </button>
       </div>
 
@@ -23,7 +23,7 @@
             <label for="nom">Nom de l'annonce *</label>
             <input
               id="nom"
-              v-model="formData.nom"
+              v-model.trim="formData.nom"
               type="text"
               required
               class="form-input"
@@ -31,12 +31,13 @@
           </div>
 
           <div class="form-group">
-            <label for="description">Description</label>
+            <label for="description">Description *</label>
             <textarea
               id="description"
-              v-model="formData.description"
+              v-model.trim="formData.description"
               rows="5"
               class="form-input"
+              required
             ></textarea>
           </div>
 
@@ -55,25 +56,27 @@
             </div>
 
             <div class="form-group">
-              <label for="quantite">Quantité</label>
+              <label for="quantite">Quantité *</label>
               <input
                 id="quantite"
                 v-model.number="formData.quantite"
                 type="number"
                 min="0"
+                required
                 class="form-input"
               />
             </div>
           </div>
 
           <div class="form-group">
-            <label for="categorie">Catégorie</label>
+            <label for="categorie">Catégorie *</label>
             <select
               id="categorie"
               v-model.number="formData.id_categorie"
               class="form-input"
+              required
             >
-              <option value="">Aucune catégorie</option>
+              <option value="">Choisir une catégorie</option>
               <option
                 v-for="category in categories"
                 :key="category.id_categorie"
@@ -92,8 +95,9 @@
               class="form-input"
             >
               <option value="disponible">Disponible</option>
-              <option value="vendu">Vendu</option>
               <option value="reserve">Réservé</option>
+              <option value="indisponible">Indisponible</option>
+              <option value="vendu">Vendu</option>
             </select>
           </div>
 
@@ -109,10 +113,12 @@
             <button type="button" class="btn btn-danger" @click="showDeleteConfirm = true">
               🗑️ Supprimer
             </button>
+
             <div class="actions-right">
               <button type="button" class="btn btn-secondary" @click="goBack">
                 Annuler
               </button>
+
               <button type="submit" class="btn btn-primary" :disabled="submitting">
                 {{ submitting ? 'Enregistrement...' : 'Enregistrer' }}
               </button>
@@ -121,7 +127,6 @@
         </form>
       </div>
 
-      <!-- Modal confirmation suppression -->
       <div v-if="showDeleteConfirm" class="modal-overlay" @click="showDeleteConfirm = false">
         <div class="modal" @click.stop>
           <h3>Confirmer la suppression</h3>
@@ -150,7 +155,7 @@ export default {
   setup() {
     const router = useRouter()
     const route = useRoute()
-    const productId = route.params.id
+    const productId = Number(route.params.id)
 
     const loading = ref(true)
     const error = ref(null)
@@ -170,24 +175,58 @@ export default {
       statut: 'disponible'
     })
 
-    const API_BASE = 'http://localhost:6082'
+    const API_BASE = 'http://localhost:6090/marketplace'
+
+    const validateForm = () => {
+      if (!formData.value.nom?.trim()) {
+        submitError.value = "Le nom de l'annonce est obligatoire"
+        return false
+      }
+
+      if (!formData.value.description?.trim()) {
+        submitError.value = 'La description est obligatoire'
+        return false
+      }
+
+      if (Number(formData.value.prix) < 0) {
+        submitError.value = 'Le prix est invalide'
+        return false
+      }
+
+      if (Number(formData.value.quantite) < 0) {
+        submitError.value = 'La quantité est invalide'
+        return false
+      }
+
+      if (!formData.value.id_categorie) {
+        submitError.value = 'La catégorie est obligatoire'
+        return false
+      }
+
+      return true
+    }
 
     const loadProduct = async () => {
       try {
+        loading.value = true
+        error.value = null
+
         const response = await axios.get(`${API_BASE}/products/${productId}`)
-        const product = response.data || response.data
-        
+        const product = response?.data?.data || response?.data
+
         formData.value = {
-          nom: product.nom,
-          description: product.description || '',
-          prix: product.prix,
-          quantite: product.quantite || 0,
-          id_categorie: product.id_categorie || '',
-          statut: product.statut
+          nom: product?.nom || '',
+          description: product?.description || '',
+          prix: Number(product?.prix || 0),
+          quantite: Number(product?.quantite || 0),
+          id_categorie: product?.id_categorie || '',
+          statut: product?.statut || 'disponible'
         }
       } catch (err) {
         console.error('Erreur chargement produit:', err)
-        error.value = 'Impossible de charger le produit'
+        error.value =
+          err?.response?.data?.message ||
+          'Impossible de charger le produit'
       } finally {
         loading.value = false
       }
@@ -196,7 +235,7 @@ export default {
     const loadCategories = async () => {
       try {
         const response = await axios.get(`${API_BASE}/categories`)
-        categories.value = response.data || []
+        categories.value = response?.data?.data || []
       } catch (err) {
         console.error('Erreur chargement catégories:', err)
       }
@@ -205,37 +244,40 @@ export default {
     const handleSubmit = async () => {
       submitError.value = null
       success.value = null
+
+      if (!validateForm()) return
+
       submitting.value = true
 
       try {
         const productData = {
-          nom: formData.value.nom,
-          description: formData.value.description,
-          prix: formData.value.prix,
-          quantite: formData.value.quantite,
-          statut: formData.value.statut
-        }
-
-        if (formData.value.id_categorie) {
-          productData.id_categorie = formData.value.id_categorie
+          nom: formData.value.nom.trim(),
+          description: formData.value.description.trim(),
+          prix: Number(formData.value.prix || 0),
+          quantite: Number(formData.value.quantite || 0),
+          id_categorie: Number(formData.value.id_categorie),
+          statut: formData.value.statut || 'disponible'
         }
 
         await axios.put(`${API_BASE}/products/${productId}`, productData)
 
-        success.value = 'Produit modifié avec succès !'
-        
+        success.value = 'Annonce modifiée avec succès !'
+
         setTimeout(() => {
           router.push({ name: 'Marketplace' })
-        }, 1500)
+        }, 1200)
       } catch (err) {
         console.error('Erreur modification:', err)
-        submitError.value = err.response?.data?.message || 'Erreur lors de la modification'
+        submitError.value =
+          err?.response?.data?.message ||
+          'Erreur lors de la modification'
       } finally {
         submitting.value = false
       }
     }
 
     const handleDelete = async () => {
+      submitError.value = null
       deleting.value = true
 
       try {
@@ -243,7 +285,9 @@ export default {
         router.push({ name: 'Marketplace' })
       } catch (err) {
         console.error('Erreur suppression:', err)
-        submitError.value = 'Erreur lors de la suppression'
+        submitError.value =
+          err?.response?.data?.message ||
+          'Erreur lors de la suppression'
         showDeleteConfirm.value = false
       } finally {
         deleting.value = false
@@ -254,9 +298,9 @@ export default {
       router.push({ name: 'Marketplace' })
     }
 
-    onMounted(() => {
-      loadProduct()
-      loadCategories()
+    onMounted(async () => {
+      await loadCategories()
+      await loadProduct()
     })
 
     return {
@@ -280,257 +324,215 @@ export default {
 <style scoped>
 .edit-product-page {
   min-height: 100vh;
-  background: #f5f7fa;
-  padding: 2rem 0;
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.10), transparent 28%),
+    linear-gradient(180deg, #f7f8fc 0%, #f1f4fb 100%);
+  padding: 2.5rem 0 3rem;
 }
 
 .container {
-  max-width: 800px;
+  max-width: 880px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .page-header h1 {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #212529;
   margin: 0;
+  color: #0f172a;
+  font-size: 2rem;
+  font-weight: 800;
 }
 
 .btn-back {
+  border: none;
+  border-radius: 14px;
+  padding: 0.85rem 1.2rem;
   background: white;
-  color: #495057;
-  border: 1px solid #dee2e6;
-  padding: 0.625rem 1.25rem;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 0.875rem;
+  color: #334155;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  border: 1px solid #e5e7eb;
 }
 
-.btn-back:hover {
-  background: #f8f9fa;
-  border-color: #adb5bd;
+.form-container,
+.loading,
+.alert-error {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid #e7edf6;
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07);
+}
+
+.form-container {
+  padding: 1.6rem;
 }
 
 .loading {
   text-align: center;
-  padding: 4rem 0;
-  background: white;
-  border-radius: 12px;
+  padding: 3rem 1.5rem;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e9ecef;
-  border-top: 3px solid #0d6efd;
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #6366f1;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 0.9rem;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.form-container {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  to { transform: rotate(360deg); }
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
   display: block;
-  font-weight: 500;
-  color: #495057;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+  margin-bottom: 0.45rem;
+  color: #334155;
+  font-weight: 700;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.625rem 0.875rem;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  transition: border-color 0.15s ease;
+  border: 1px solid #dbe3ef;
+  background: white;
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  font-size: 0.96rem;
+  color: #0f172a;
+  transition: all 0.2s ease;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.10);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .alert {
-  padding: 0.875rem 1rem;
-  border-radius: 6px;
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  font-weight: 700;
   margin-bottom: 1rem;
-  font-size: 0.875rem;
 }
 
 .alert-error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  color: #dc2626;
+  padding: 1rem 1.1rem;
 }
 
 .alert-success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #d1fae5;
 }
 
 .form-actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #dee2e6;
+  gap: 1rem;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
 }
 
 .actions-right {
   display: flex;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .btn {
-  padding: 0.625rem 1.5rem;
   border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border-radius: 14px;
+  padding: 0.9rem 1.2rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  transition: all 0.2s ease;
 }
 
 .btn-secondary {
-  background: white;
-  color: #495057;
-  border: 1px solid #dee2e6;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #adb5bd;
+  background: #eef2f7;
+  color: #475569;
 }
 
 .btn-primary {
-  background: #0d6efd;
   color: white;
-  border: 1px solid #0d6efd;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #0b5ed7;
-  border-color: #0b5ed7;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.24);
 }
 
 .btn-danger {
-  background: #dc3545;
-  color: white;
-  border: 1px solid #dc3545;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
-.btn-danger:hover:not(:disabled) {
-  background: #c82333;
-  border-color: #c82333;
+.btn:hover {
+  transform: translateY(-2px);
 }
 
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1rem;
   z-index: 1000;
 }
 
 .modal {
   background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  max-width: 400px;
-  width: 90%;
+  border-radius: 22px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 430px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
 }
 
 .modal h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.25rem;
-  color: #212529;
+  margin: 0 0 0.75rem;
+  color: #0f172a;
 }
 
 .modal p {
-  margin: 0 0 1.5rem 0;
-  color: #6c757d;
+  color: #64748b;
+  line-height: 1.6;
 }
 
 .modal-actions {
   display: flex;
-  gap: 1rem;
   justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 0 1rem;
-  }
-
-  .page-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-
-  .form-container {
-    padding: 1.5rem;
-  }
-
   .form-row {
     grid-template-columns: 1fr;
   }
 
-  .form-actions {
-    flex-direction: column;
-  }
-
+  .form-actions,
   .actions-right {
     flex-direction: column;
-    width: 100%;
-  }
-
-  .btn {
-    width: 100%;
   }
 }
 </style>

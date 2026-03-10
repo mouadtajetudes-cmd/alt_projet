@@ -1,388 +1,320 @@
 <template>
-  <div class="create-product-page">
+  <main class="create-product-page">
     <div class="container">
-      <div class="page-header">
-        <button class="btn-back" @click="goBack">
-          ← Retour
-        </button>
-      </div>
+      <h1>Créer une annonce</h1>
 
-      <div class="form-container">
-        <form @submit.prevent="handleSubmit">
-          <div class="form-group">
-            <label for="nom">Nom de l'annonce</label>
-            <input
-              id="nom"
-              v-model="formData.nom"
-              type="text"
-              required
-              class="form-input"
-              placeholder="Ex: iPhone 13 Pro"
-            />
-          </div>
+      <form class="form" @submit.prevent="createProduct">
+        <label>
+          Titre *
+          <input v-model="formData.nom" type="text" required />
+        </label>
 
-          <div class="form-group">
-            <label for="description">Description</label>
-            <textarea
-              id="description"
-              v-model="formData.description"
-              rows="5"
-              class="form-input"
-              placeholder="Décrivez votre produit..."
-            ></textarea>
-          </div>
+        <label>
+          Description *
+          <textarea v-model="formData.description" rows="5" required />
+        </label>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="prix">Prix (€) *</label>
-              <input
-                id="prix"
-                v-model.number="formData.prix"
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                class="form-input"
-              />
-            </div>
+        <div class="row">
+          <label>
+            Prix (€) *
+            <input v-model.number="formData.prix" type="number" min="0" step="0.01" required />
+          </label>
 
-            <div class="form-group">
-              <label for="quantite">Quantité</label>
-              <input
-                id="quantite"
-                v-model.number="formData.quantite"
-                type="number"
-                min="0"
-                class="form-input"
-              />
-            </div>
-          </div>
+          <label>
+            Quantité *
+            <input v-model.number="formData.quantite" type="number" min="0" required />
+          </label>
+        </div>
 
-          <div class="form-group">
-            <label for="categorie">Catégorie</label>
-            <select
-              id="categorie"
-              v-model.number="formData.id_categorie"
-              class="form-input"
+        <label>
+          Catégorie
+            <select v-model="formData.id_categorie" required>
+              <option value="">Choisir une catégorie</option>
+            <option
+              v-for="c in categories"
+              :key="c.id_categorie"
+              :value="String(c.id_categorie)"
             >
-              <option value="">Aucune catégorie</option>
-              <option
-                v-for="category in categories"
-                :key="category.id_categorie"
-                :value="category.id_categorie"
-              >
-                {{ category.nom }}
-              </option>
-            </select>
-          </div>
+              {{ c.nom }}
+            </option>
+          </select>
+        </label>
 
-          <div class="form-group">
-            <label for="statut">Statut</label>
-            <select
-              id="statut"
-              v-model="formData.statut"
-              class="form-input"
-            >
-              <option value="disponible">Disponible</option>
-              <option value="vendu">Vendu</option>
-              <option value="reserve">Réservé</option>
-            </select>
-          </div>
+        <label>
+          Images du produit
+          <input type="file" multiple accept="image/*" @change="onFilesSelected" />
+        </label>
 
-          <div v-if="error" class="alert alert-error">
-            {{ error }}
-          </div>
+        <div v-if="previewUrls.length" class="previews">
+          <img v-for="(u, i) in previewUrls" :key="i" :src="u" alt="preview" />
+        </div>
 
-          <div v-if="success" class="alert alert-success">
-            {{ success }}
-          </div>
+        <label>
+          Statut
+          <select v-model="formData.statut">
+            <option value="disponible">Disponible</option>
+            <option value="reserve">Réservé</option>
+            <option value="indisponible">Indisponible</option>
+          </select>
+        </label>
 
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" @click="goBack">
-              Annuler
-            </button>
-            <button type="submit" class="btn btn-primary" :disabled="loading">
-              {{ loading ? 'Création...' : 'Créer l\'annonce' }}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div class="actions">
+          <button type="button" class="btn btn-cancel" @click="router.push('/marketplace')">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-submit" :disabled="loading">
+            {{ loading ? 'Création...' : "Créer l'annonce" }}
+          </button>
+        </div>
+      </form>
     </div>
-  </div>
+  </main>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
-export default {
-  name: 'CreateProduct',
-  setup() {
-    const router = useRouter()
-    const loading = ref(false)
-    const error = ref(null)
-    const success = ref(null)
-    const categories = ref([])
+const router = useRouter()
+const loading = ref(false)
+const categories = ref([])
+const selectedFiles = ref([])
+const previewUrls = ref([])
 
-    const formData = ref({
-      nom: '',
-      description: '',
-      prix: 0,
-      quantite: 0,
-      id_categorie: '',
-      statut: 'disponible',
-      id_utilisateur: 1 
-    })
+const formData = ref({
+  nom: '',
+  description: '',
+  prix: 0,
+  quantite: 0,
+  id_categorie: '',
+  statut: 'disponible'
+})
 
-    const API_BASE = 'http://localhost:6082'
+const API_BASE = 'http://localhost:6090/marketplace'
+const UPLOAD_BASE = 'http://localhost:3001'
 
-    const loadCategories = async () => {
-      try {
-        const response = await axios.get(`${API_BASE}/categories`)
-        console.log('Réponse catégories:', response.data)
-        categories.value = response.data || []
-        console.log('Catégories chargées:', categories.value)
-      } catch (err) {
-        console.error('Erreur chargement catégories:', err)
-      }
-    }
+const onFilesSelected = (e) => {
+  const files = Array.from(e.target.files || [])
+  selectedFiles.value = files
+  previewUrls.value = files.map((f) => URL.createObjectURL(f))
+}
 
-    const handleSubmit = async () => {
-      error.value = null
-      success.value = null
-
-      if (!formData.value.nom || formData.value.prix <= 0) {
-        error.value = 'Veuillez remplir tous les champs obligatoires'
-        return
-      }
-
-      loading.value = true
-
-      try {
-        const productData = {
-          nom: formData.value.nom,
-          description: formData.value.description,
-          prix: formData.value.prix,
-          quantite: formData.value.quantite || 0,
-          statut: formData.value.statut,
-          id_utilisateur: formData.value.id_utilisateur
-        }
-
-        if (formData.value.id_categorie) {
-          productData.id_categorie = formData.value.id_categorie
-        }
-
-        await axios.post(`${API_BASE}/products`, productData)
-
-        success.value = 'Produit créé avec succès !'
-        
-        setTimeout(() => {
-          router.push({ name: 'Marketplace' })
-        }, 1500)
-      } catch (err) {
-        console.error('Erreur création produit:', err)
-        error.value = err.response?.data?.message || 'Erreur lors de la création'
-      } finally {
-        loading.value = false
-      }
-    }
-
-    const goBack = () => {
-      router.push({ name: 'Marketplace' })
-    }
-
-    onMounted(() => {
-      loadCategories()
-    })
-
-    return {
-      formData,
-      categories,
-      loading,
-      error,
-      success,
-      handleSubmit,
-      goBack
-    }
+const loadCategories = async () => {
+  try {
+    const res = await axios.get(`${API_BASE}/categories`)
+    categories.value = res?.data?.data || []
+  } catch (e) {
+    console.error('Erreur catégories:', e)
   }
 }
+
+const extractUploadedUrl = (data) => {
+  return (
+    data?.url ||
+    data?.data?.url ||
+    data?.file?.url ||
+    data?.files?.[0]?.url ||
+    data?.data?.files?.[0]?.url ||
+    null
+  )
+}
+
+const uploadOneFile = async (file) => {
+const keysToTry = ['file']
+let lastError = null
+
+  for (const key of keysToTry) {
+    try {
+      const fd = new FormData()
+      fd.append(key, file)
+      const res = await axios.post(`${UPLOAD_BASE}/upload`, fd)
+      const url = extractUploadedUrl(res.data)
+      if (url) return url
+    } catch (e) {
+      lastError = e
+    }
+  }
+
+  throw lastError || new Error('Upload impossible')
+}
+
+const createProduct = async () => {
+  try {
+    loading.value = true
+
+    const mediaUrls = []
+    for (const file of selectedFiles.value) {
+      const url = await uploadOneFile(file)
+      mediaUrls.push(url)
+    }
+
+    const authUser = JSON.parse(localStorage.getItem('user') || '{}')
+    const idUtilisateur = Number(
+      authUser?.id_utilisateur ?? authUser?.id ?? 1
+    )
+
+    const payload = {
+      nom: formData.value.nom?.trim(),
+      description: formData.value.description?.trim(),
+      prix: Number(formData.value.prix || 0),
+      quantite: Number(formData.value.quantite || 0),
+      statut: formData.value.statut || 'disponible',
+      id_categorie: formData.value.id_categorie
+        ? Number(formData.value.id_categorie)
+        : null,
+      id_utilisateur: idUtilisateur,
+      media_urls: mediaUrls
+    }
+
+    await axios.post(`${API_BASE}/products`, payload)
+    router.push('/marketplace')
+  } catch (e) {
+    console.error('Erreur création annonce:', e)
+    const msg =
+      e?.response?.data?.message ||
+      e?.response?.data?.error ||
+      e?.message ||
+      "Erreur lors de la création de l'annonce"
+    alert(msg)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadCategories)
 </script>
 
 <style scoped>
 .create-product-page {
   min-height: 100vh;
-  background: #f5f7fa;
-  padding: 2rem 0;
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.10), transparent 28%),
+    linear-gradient(180deg, #f7f8fc 0%, #f1f4fb 100%);
+  padding: 2.5rem 0 3rem;
 }
 
 .container {
-  max-width: 800px;
+  max-width: 880px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-}
-
-.page-header h1 {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #212529;
-  margin: 0;
-}
-
-.btn-back {
-  background: white;
-  color: #495057;
-  border: 1px solid #dee2e6;
-  padding: 0.625rem 1.25rem;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-back:hover {
-  background: #f8f9fa;
-  border-color: #adb5bd;
-}
-
-.form-container {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-.form-group {
   margin-bottom: 1.5rem;
 }
 
-.form-group label {
-  display: block;
-  font-weight: 500;
-  color: #495057;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+.page-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 2rem;
+  font-weight: 800;
 }
 
-.form-input {
-  width: 100%;
-  padding: 0.625rem 0.875rem;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  transition: border-color 0.15s ease;
+.form-card {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid #e7edf6;
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07);
+  padding: 1.6rem;
 }
 
-.form-input:focus {
-  outline: none;
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+.form-grid {
+  display: grid;
+  gap: 1rem;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
-.alert {
-  padding: 0.875rem 1rem;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
+label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: #334155;
+  font-weight: 700;
 }
 
-.alert-error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid #dbe3ef;
+  background: white;
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  font-size: 0.96rem;
+  color: #0f172a;
+  transition: all 0.2s ease;
 }
 
-.alert-success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.10);
+}
+
+.previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.previews img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
 }
 
 .form-actions {
   display: flex;
-  gap: 1rem;
   justify-content: flex-end;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #dee2e6;
+  gap: 0.85rem;
+  margin-top: 1.2rem;
 }
 
-.btn {
-  padding: 0.625rem 1.5rem;
+.btn-submit,
+.btn-cancel {
   border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border-radius: 14px;
+  padding: 0.9rem 1.25rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: white;
-  color: #495057;
-  border: 1px solid #dee2e6;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #adb5bd;
-}
-
-.btn-primary {
-  background: #0d6efd;
+.btn-submit {
   color: white;
-  border: 1px solid #0d6efd;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.24);
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: #0b5ed7;
-  border-color: #0b5ed7;
+.btn-cancel {
+  background: #eef2f7;
+  color: #475569;
+}
+
+.btn-submit:hover,
+.btn-cancel:hover {
+  transform: translateY(-2px);
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 0 1rem;
-  }
-
-  .page-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-
-  .form-container {
-    padding: 1.5rem;
-  }
-
   .form-row {
     grid-template-columns: 1fr;
   }
 
   .form-actions {
     flex-direction: column;
-  }
-
-  .btn {
-    width: 100%;
   }
 }
 </style>
