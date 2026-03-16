@@ -13,13 +13,22 @@ INSERT INTO posts (titre, description, date_publication, id_utilisateur) VALUES
   ('Post 10', 'Contenu du post 10', '2026-02-03 19:00:00', 3);
 
 -- Medias
-INSERT INTO medias (titre) VALUES
-  ('Image 1'),
-  ('Image 2'),
-  ('Image 3'),
-  ('Video 1'),
-  ('Document 1'),
-  ('GIF 1');
+INSERT INTO medias (titre,type) VALUES
+  ('img1.jpeg','image'),
+  ('img2.jpeg','image'),
+  ('img3.png','image'),
+  ('img4.png','image'),
+  ('Document 1','texte'),
+  ('img5.png','image'),
+  ('img6.PNG','image'),
+  ('video1.mp4','video'),
+  ('video2.mp4','video'),
+  ('video3.mp4','video'),
+  ('video4.mp4','video'),
+  ('video5.mp4','video'),
+  ('video6.mp4','video'),
+  ('video7.mp4','video');
+
 
 -- Liens post <-> medias 
 INSERT INTO post_medias (id_media, id_post) VALUES
@@ -32,7 +41,13 @@ INSERT INTO post_medias (id_media, id_post) VALUES
   (6, 6),
   (2, 7),
   (3, 8),
-  (1, 9);
+  (1, 9),
+  (7,2),
+  (8,4),
+  (9,2),
+  (10,10),
+  (13,5),
+  (14,8);
 
 -- Commentaires 
 INSERT INTO commentaires (details, id_utilisateur, id_post, created_at) VALUES
@@ -58,9 +73,7 @@ INSERT INTO reactions (type, id_utilisateur, id_post, created_at) VALUES
   ('like', 1, 6, '2026-02-03 16:05:00'),
   ('unlike', 4, 7, '2026-02-03 17:05:00'),
   ('like', 2, 8, '2026-02-03 18:05:00'),
-<<<<<<< HEAD
   ('like', 3, 9, '2026-02-03 19:05:00');
-  ----likes
   INSERT INTO likes (id_post, id_utilisateur) VALUES (1, 1) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
 INSERT INTO likes (id_post, id_utilisateur) VALUES (1, 2) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
 INSERT INTO likes (id_post, id_utilisateur) VALUES (1, 3) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
@@ -81,6 +94,4 @@ INSERT INTO likes (id_post, id_utilisateur) VALUES (8, 7) ON CONFLICT (id_post, 
 INSERT INTO likes (id_post, id_utilisateur) VALUES (8, 8) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
 INSERT INTO likes (id_post, id_utilisateur) VALUES (9, 9) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
 INSERT INTO likes (id_post, id_utilisateur) VALUES (10, 10) ON CONFLICT (id_post, id_utilisateur) DO NOTHING;
-=======
   ('like', 3, 9, '2026-02-03 19:05:00');
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9

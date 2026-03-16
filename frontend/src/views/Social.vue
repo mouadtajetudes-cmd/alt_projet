@@ -1,449 +1,477 @@
 <template>
-  <div class="social-page">
-    <div class="container">
-<<<<<<< HEAD
+<div class="social-page">
 
-          <div class="header">
-        <div class="search-bar">
-          <img src="../assets/images/chercher.png" >
-          <input v-model="search" type="text" placeholder="Rechercher un post..." />
-         </div>
-         <div><AjoutPost/></div>
-         
+<div class="container">
 
-=======
-      <div class="header">
-        <div class="search-bar">
-          <input v-model="search" type="text" placeholder="Rechercher un post..." />
-         </div>
-         <div class="create-btn"> 
-        <button  class="btn-public">Publier</button>
-        <button class="btn-image">Image</button>
-        <button class="btn-video">Vidéo</button>
-         </div>
-       
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
-      </div>
-      
-      <div v-if="loading" class="loading">Chargement des posts...</div>
-      
-      <div v-else-if="error" class="error">{{ error }}</div>
-      
-      <div v-else class="posts-list">
-        <div v-for="post in filteredPosts" :key="post.id_post" class="post-card">
-          <div class="header-card">
-              <div class="post-user">
-            <div class="image-user">
-<<<<<<< HEAD
-              <img src="../assets/images/default.jpeg" >
-=======
-              <img :src="post.image ||'/images/default.jpeg'" >
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
-            </div>
-             <span>{{ post.nom }} {{ post.prenom }}</span>
-          </div>
-          <p class="post-meta">  Publié le {{ new Date(post.date_publication).toLocaleDateString() }}</p>
-          </div>
-          <!-- <h3>{{ post.titre }}</h3> -->
- <div class="post-content">
-    <div class="media-wrapper">
-          <p v-if="post.type === 'text'" class="post-text">{{ post.description }}</p>
+<div class="header">
 
-<<<<<<< HEAD
-          <img v-else-if="post.type === 'image'" :src="post.description"  class="post-media" />
-=======
-          <img v-else-if="post.type === 'image'" :src="getMediaUrl(post.description)"  class="post-media" />
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
+<div class="search-bar">
+<img src="../assets/images/chercher.png">
+<input v-model="search" type="text" placeholder="Rechercher un post..." />
+</div>
 
-    <video v-else-if="post.type === 'video'" controls class="post-media">
-      <source :src="post.description" type="video/mp4" />
-      Votre navigateur ne supporte pas la vidéo.
-    </video>
+<AjoutPost/>
 
-    </div>
-  </div>         
-<<<<<<< HEAD
+</div>
+
+
+<div v-if="loading" class="loading">
+Chargement des posts...
+</div>
+
+<div v-else-if="error" class="error">
+{{ error }}
+</div>
+
+
+<div v-else class="posts-list">
+
+<div
+v-for="post in visibleFilteredPosts"
+:key="post.id_post"
+class="post-card"
+>
+
+<div class="header-card">
+
+<div class="post-user">
+
+<div class="image-user">
+<img src="../assets/images/default.jpeg">
+</div>
+
+<span>{{ post.nom }} {{ post.prenom }}</span>
+
+</div>
+
+<p class="post-meta">
+Publié le {{ new Date(post.date_publication).toLocaleDateString() }}
+</p>
+
+</div>
+
+
+<div class="media-wrapper">
+
+<p v-if="post.media_type === 'text'" class="post-text">
+  <span >{{ post.titre  }}</span>
+</p>
+
+<!-- IMAGE -->
+<img
+   v-else-if="post.media_type === 'image'"
+  :src="post.media_url"
+  class="post-media"
+/>
+
+<!-- VIDEO -->
+<video
+  v-else="post.media_type === 'video'"
+  controls
+  class="post-media"
+>
+  <source :src="post.media_url" type="video/mp4">
+</video>
+  <span>{{ post.description }}</span>
+
+</div>
+
+
+
 <div class="post-actions">
-  <Like :post="post" :userId="currentId"/>
-  <button @click="toggleComments(post.id_post)">
-    <img src="../assets/images/commentaire.png" class="commentImg"> 
-  </button>
+
+<Like :post="post" :userId="currentId"/>
+
+<button @click="openComments(post)">
+<img src="../assets/images/commentaire.png" class="commentImg">
+</button>
+
 </div>
 
-<div v-if="post.showComments" class="comments-zone">
-  <Comment :postId="post.id_post"/>
-  <AjoutComment :postId="post.id_post"/>
 </div>
-=======
-   <div class="post-actions">
-            <button>👍 Réactions</button>
-            <button>💬 Commentaires</button>
-          </div>
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
-        </div>
-      </div>
-    </div>
-  </div>
+
+</div>
+
+</div>
+
+
+<div v-if="showCommentsModal" class="comments-modal">
+
+<div class="comments-content">
+
+<button class="close-btn" @click="closeComments">✖</button>
+
+<h3>Commentaires</h3>
+
+<Comment v-if="selectedPost" :postId="selectedPost.id_post"/>
+
+<AjoutComment v-if="selectedPost" :postId="selectedPost.id_post"/>
+
+</div>
+
+</div>
+
+</div>
 </template>
 
 <script setup>
-import { ref, onMounted ,computed} from 'vue'
-import axios from "axios"
-import { config } from '../conf'
-<<<<<<< HEAD
-import AjoutPost from './social/AjoutPost.vue'
-import Comment from './social/Comment.vue'
-import AjoutComment from './social/AjoutComment.vue'
-import Like from './social/Like.vue'
 
-=======
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
+import { ref, onMounted, onUnmounted, computed } from "vue"
+import axios from "axios"
+
+import AjoutPost from "./social/AjoutPost.vue"
+import Comment from "./social/Comment.vue"
+import AjoutComment from "./social/AjoutComment.vue"
+import Like from "./social/Like.vue"
+
+import { API } from "../shared/config/api"
 
 const posts = ref([])
 const loading = ref(true)
 const error = ref(null)
+
 const search = ref('')
-<<<<<<< HEAD
-const currentId=1;
-=======
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
+const visiblePosts = ref(5)
 
-const loadPosts = async () => {
-  try {
-    const response = await axios.get(`${config}/posts`)
-<<<<<<< HEAD
-   posts.value = (response.data.data || []).map(post => ({
-  ...post,
-  showComments: false
-}))
-=======
-    posts.value = response.data.data || []
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
-    console.log("DATA API:", response.data)
-    console.log("Posts après assignation:", posts.value)
+const showCommentsModal = ref(false)
+const selectedPost = ref(null)
 
-  } catch (err) {
-    console.error('Erreur chargement posts:', err)
-    error.value = 'Impossible de charger les posts'
-  } finally {
-    loading.value = false
+const currentId = ref(Number(localStorage.getItem("userId")) || 1)
 
-  }
+const openComments = (post)=>{
+selectedPost.value = post
+showCommentsModal.value = true
 }
 
-onMounted(loadPosts)
-<<<<<<< HEAD
-=======
-const mediaBase='http://localhost:6085/uploads/images/';
-function getMediaUrl(description) {
-  if (description.startsWith('http')) {
-    return description; 
-  }
-  return mediaBase + description;
+const closeComments = ()=>{
+showCommentsModal.value = false
+selectedPost.value = null
 }
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
-const filteredPosts = computed(() => {
-  return posts.value.filter(post =>
-    post.titre?.toLowerCase().includes(search.value.toLowerCase()) ||
-    post.description?.toLowerCase().includes(search.value.toLowerCase())
-  )
+
+const loadPosts = async ()=>{
+
+try{
+
+const response = await axios.get(`${API.SOCIAL}/posts`)
+
+posts.value = response.data.data || []
+
+}catch(err){
+
+console.error(err)
+error.value="Impossible de charger les posts"
+
+}finally{
+
+loading.value=false
+
+}
+
+}
+
+const filteredPosts = computed(()=>{
+
+const query = search.value.toLowerCase()
+
+return posts.value.filter(post =>
+(post.titre || "").toLowerCase().includes(query) ||
+(post.description || "").toLowerCase().includes(query)
+)
+
 })
-<<<<<<< HEAD
-const toggleComments = (postId) => {
-  const post = posts.value.find(p => p.id_post === postId)
-  if (post) {
-    post.showComments = !post.showComments
-  }
+
+const visibleFilteredPosts = computed(()=>{
+return filteredPosts.value.slice(0, visiblePosts.value)
+})
+
+const handleScroll = ()=>{
+
+if(
+window.innerHeight + window.scrollY >=
+document.body.offsetHeight - 100
+){
+visiblePosts.value +=5
 }
-=======
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
+
+}
+
+onMounted(()=>{
+
+loadPosts()
+
+window.addEventListener("scroll", handleScroll)
+
+})
+
+onUnmounted(()=>{
+
+window.removeEventListener("scroll", handleScroll)
+
+})
+
 </script>
-
 <style scoped>
-.social-page {
-<<<<<<< HEAD
-   display: flex;
-   padding: 2rem 0; }
- .container {
-   max-width: 800px;
-    max-height: 40%;
-     margin: 0 auto;
-     padding: 0 1rem; } 
-.header {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
-}
-.search-bar {
-  position: relative;
-  width: 70%;
-  max-width: 500px;
+
+.social-page{
+  display:flex;
+  justify-content:center;
+  padding:2rem 0;
+  background:#f5f7fb;
 }
 
-.search-bar img {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  opacity: 0.6;
+.container{
+  width:100%;
+  max-width:700px;
+  padding:0 1rem;
 }
 
-.search-bar input {
-  width: 100%;
-  padding: 0.6rem 1rem 0.6rem 35px;
-  border-radius: 25px;
-  border: 1px solid #ddd;
-}
-.search-bar input:focus {
-  border-color: #354b6c;
-  box-shadow: 0 0 0 3px rgba(13,110,253,0.15);
-}
-   .posts-list { 
-    display: grid; 
-    grid-template-rows:repeat(auto-fit, minmax(100px, auto)); 
-     gap: 1.5rem; } 
-   .post-card { 
-    background: #f4f4f4;
-    padding: 1rem; border-radius: 8px;
-     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      }
- .post-user { 
-  display: flex;
-  align-items: center;
-   gap: 0.5rem; 
-   }
-.image-user img
- {
-       
-  width: 40px;     
-  height: 40px;
-  border-radius: 50%;
-   border: 1px solid #ccc;
- } 
-.image-user span { 
-  font-size: 0.9rem;
-   color: #333; 
-  font-weight: 500; 
- margin-left: 0.5rem;
-  } 
-.post-media { 
-  width: 100%;
-   height: 180px;
-   object-fit: cover;
-    border-radius: 12px;
-    transition: transform 0.3s ease; 
-    } 
-    
-.post-content {
- height: 180px;
-opacity: 1;
- margin-bottom: 1rem;
- border-radius: 20px;
-  }
-.post-text { 
-font-size: 1rem;
- color: #333;
-  text-align: center; 
-  background-color:white; 
-  padding: 5rem;
-   line-height: 1; }
-.media-wrapper { width: 100%; 
-height: 200px;
- border-radius: 12px;
- overflow: hidden; }
-.post-media:hover { 
-  transform: scale(1.02);
- } 
-video.post-media {
-   background: rgb(212, 206, 206); 
-   }
-.post-actions {
- display: flex; 
-gap: 1rem; } 
-.post-actions button { border: none;
- cursor: pointer;
-  transition: background 0.2s; }
-.commentImg{ 
-  width: 20px;
- height: 20px; }
- .comments-zone{ 
-  margin-top: 10px;
-  display: flex; 
-  flex-direction: column;
-   gap: 8px; }
-   </style>
-=======
-  padding: 2rem 0;
+/* HEADER */
+
+.header{
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
+  background:#f5f7fb;
+  padding:1rem;
+  border-radius:15px;
+  margin-bottom:2rem;
 }
 
-.container {
-  max-width: 800px;
-  max-height: 40%;
-  margin: 0 auto;
-  padding: 0 1rem;
+/* SEARCH */
+
+.search-bar{
+  position:relative;
+  width:100%;
 }
 
-.header {
-width: auto;
-height: 100px;
-margin-bottom: 4em;
-border-radius: 20px;
-background-color: #EAEAEA;
-
-}
-.search-bar input {
-  width: 98%;
-  margin: 1em;
-  padding: 0.6rem 1rem;
-  border-radius: 25px;
-  border: 1px solid #ddd;
-  background: #FFFFFF;
-}
-.search-bar input:focus {
-  border-color: #354b6c;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(13,110,253,0.15);
+.search-bar img{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  width:18px;
+  opacity:0.6;
 }
 
-
-h1 {
-  color: #333;
-  margin: 0;
+.search-bar input{
+  width:100%;
+  padding:0.6rem 1rem 0.6rem 35px;
+  border-radius:30px;
+  border:1px solid #ddd;
+  background:#f9f9f9;
 }
 
-.create-btn {
-  display: flex;
-  gap: 2rem;
-  margin-left: 1em;
-}
-.btn-public {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.5rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-image {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 0.5rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-video {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 0.5rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;}
-
-.loading {
-  text-align: center;
-  padding: 3rem;
-  color: #666;
+.search-bar input:focus{
+  outline:none;
+  border-color:#4a6cf7;
+  background:white;
+  box-shadow:0 0 0 3px rgba(74,108,247,0.15);
 }
 
-.posts-list {
-  display: grid;
-  grid-template-rows: repeat(auto-fit, minmax(100px, auto));
-  gap: 1.5rem;
+/* POSTS */
 
-}
-.post-card {
-  background: #EAEAEA;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-.header-card {
-  display: flex;
-  justify-content: space-between; 
-  align-items: center;
-  margin-bottom: 1rem;
+.posts-list{
+  display:flex;
+  flex-direction:column;
+  gap:1.5rem;
 }
 
-.post-user {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;          
+/* CARD */
+
+.post-card{
+  background:white;
+  border-radius:15px;
+  padding:1rem;
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+  transition:0.2s;
 }
 
-.image-user img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;  
-  border: 1px solid #ccc; 
+.post-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 25px rgba(0,0,0,0.1);
 }
 
-.image-user span {
-  font-size: 0.9rem;
-  color: #333;
-  font-weight: 500;
-  margin-left: 0.5rem;
+/* HEADER POST */
+
+.header-card{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:1rem;
 }
 
-.post-media {
-  width: 100%;
-  height: 180px; 
-  object-fit: cover; 
-  border-radius: 12px;
-  transition: transform 0.3s ease;
+.post-user{
+  display:flex;
+  align-items:center;
+  gap:0.6rem;
 }
 
-.post-content {
-height: 180px;
-opacity: 1;
-margin-bottom: 1rem;
-border-radius: 20px;
+.image-user img{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:2px solid #eee;
+}
+
+.post-user span{
+  font-weight:600;
+  color:#333;
+}
+
+.post-meta{
+  font-size:0.8rem;
+  color:#777;
+}
+
+/* MEDIA */
+
+.media-wrapper{
+  width:100%;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.post-media{
+  width:100%;
+  max-height:350px;
+  object-fit:cover;
+  border-radius:12px;
+}
+
+.post-text{
+  background:#f1f4ff;
+  padding:2rem;
+  border-radius:12px;
+  text-align:center;
+  font-size:1rem;
+}
+
+/* ACTIONS */
+
+.post-actions{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  margin-top:0.8rem;
+}
+
+.post-actions button{
+  background:#f1f3f7;
+  border:none;
+  padding:0.4rem 0.8rem;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.post-actions button:hover{
+  background:#e4e7ee;
+}
+
+.commentImg{
+  width:20px;
+}
+
+/* COMMENTS MODAL */
+
+.comments-modal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background: rgba(0, 0, 0, 0.02);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+
+.comments-content{
+  background:white;
+  width:400px;
+  max-height:500px;
+  overflow-y:auto;
+  border-radius:10px;
+  padding:20px;
+  box-shadow:0 10px 30px rgba(0, 0, 0, 0);
+}
+
+.close-btn{
+  border:none;
+  background:none;
+  font-size:18px;
+  cursor:pointer;
+  float:right;
+}
+
+/* TABLETTE */
+
+@media (max-width:900px){
+
+.container{
+  max-width:600px;
+}
+
+.post-media{
+  max-height:300px;
+}
+
+.post-text{
+  padding:1.5rem;
+}
 
 }
 
-.post-text {
-  font-size: 1rem;
-  color: #333;
-  text-align: center;
-  background-color: rgb(167, 194, 235);
-  padding: 5rem;
-  line-height: 1;
+/* MOBILE */
+
+@media (max-width:600px){
+
+.container{
+  max-width:100%;
 }
 
-.media-wrapper {
-  width: 100%;
-  height: 200px;
-  border-radius: 12px;
-  overflow: hidden;
+.header{
+  padding:0.8rem;
 }
 
-.post-media:hover {
-  transform: scale(1.02);
+.post-card{
+  padding:0.8rem;
 }
 
-video.post-media {
-  background: rgb(212, 206, 206);
+.image-user img{
+  width:35px;
+  height:35px;
 }
 
-
-.post-actions {
-  display: flex;
-  gap: 1rem;
+.post-text{
+  padding:1rem;
+  font-size:0.9rem;
 }
 
-.post-actions button {
-  background: #f8f9fa;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
+.post-actions{
+  gap:0.5rem;
 }
 
-.post-actions button:hover {
-  background: #e9ecef;
+.post-media{
+  max-height:250px;
 }
+
+}
+
+@media (max-width:400px){
+
+.search-bar input{
+  font-size:0.8rem;
+}
+
+.post-user span{
+  font-size:0.8rem;
+}
+
+.post-meta{
+  display:none;
+}
+
+}
+
 </style>
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9

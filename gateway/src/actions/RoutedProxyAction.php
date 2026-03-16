@@ -28,8 +28,13 @@ class RoutedProxyAction
         $client = $this->container->get($this->serviceClientKey);
         
         $path = $request->getUri()->getPath();
+
         if ($this->prefix && str_starts_with($path, $this->prefix)) {
-            $path = substr($path, strlen($this->prefix)) ?: '/';
+            // Auth service routes are defined with the "/auth" prefix (e.g. /auth/login),
+            // while other services expect the prefix stripped (e.g. /messages for /chat/messages).
+            if ($this->serviceClientKey !== 'auth.client') {
+                $path = substr($path, strlen($this->prefix)) ?: '/';
+            }
         }
         
         $options = [

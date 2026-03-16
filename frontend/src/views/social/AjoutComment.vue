@@ -9,16 +9,14 @@
     <button
       @click="submitComment"
       :disabled="!newComment.trim()"
-      class="comment-btn"
-    >
-      Envoyer
-    </button>
+      class="comment-btn" >Envoyer</button>
   </div>
 </template>
 <script setup>
 import { ref } from 'vue';
-import { config } from '../../conf';
 import axios from 'axios';
+import { API } from '../../shared/config/api'
+
 const newComment =ref('')
 const props = defineProps({
   postId: {
@@ -32,7 +30,7 @@ const comments= ref([])
 const submitComment = async () => {
   if (!newComment.value.trim()) return 
   try {
-    const res = await axios.post(`${config}/posts/${props.postId}/comments`, {
+    const res = await axios.post(`${API.SOCIAL}/posts/${props.postId}/comments`, {
       id_utilisateur:userId,
       details: newComment.value
     })

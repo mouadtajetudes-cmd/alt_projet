@@ -2,14 +2,8 @@
 
 namespace alt\infra\repositories;
 
-<<<<<<< HEAD
 use alt\core\application\ports\api\CreateCommentDTO;
 use alt\core\repositories\CommentRepositoryInterface;
-=======
-use alt\core\application\dto\CreateCommentDTO;
-use alt\core\application\ports\spi\CommentRepositoryInterface;
-use alt\core\domain\entities\Commentaire;
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 use PDO;
 
 class PdoCommentRepository implements CommentRepositoryInterface
@@ -24,7 +18,6 @@ class PdoCommentRepository implements CommentRepositoryInterface
     public function findByPost(int $idPost): array
     {
          $stmt = $this->pdo->prepare(
-<<<<<<< HEAD
     'SELECT 
         c.id_commentaire, 
         c.details, 
@@ -42,16 +35,6 @@ class PdoCommentRepository implements CommentRepositoryInterface
      WHERE c.id_post = :post
      ORDER BY c.created_at ASC'
 );
-
-=======
-            'SELECT c.id_commentaire, c.details, c.created_at, c.id_post, c.id_utilisateur,
-                    p.titre AS post_titre, p.description AS post_description
-             FROM commentaires c
-             INNER JOIN posts p ON c.id_post = p.id_post
-             WHERE c.id_post = :post
-             ORDER BY c.created_at ASC'
-        );
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 
         $stmt->execute(['post' => $idPost]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -71,11 +54,6 @@ class PdoCommentRepository implements CommentRepositoryInterface
             'user' => $commentaire->getIdUtilisateur(),
         ]);
 
-<<<<<<< HEAD
-=======
-        $id = (int) $this->pdo->lastInsertId();
-
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
         return new CreateCommentDTO(
             $commentaire->getIdUtilisateur(),
             $commentaire->getIdPost(),

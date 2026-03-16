@@ -31,7 +31,7 @@ services:
   #
   api.auth:
     build:
-      context: build
+      context: ./build
       dockerfile: 8.4-cli.Dockerfile
     ports:
       - '6081:80'
@@ -41,7 +41,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
+      - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
     dns:
       - 8.8.8.8
@@ -71,7 +71,7 @@ services:
   #
   api.marketplace:
     build:
-      context: build
+      context: ./build
       dockerfile: 8.4-cli.Dockerfile
     ports:
       - '6082:80'

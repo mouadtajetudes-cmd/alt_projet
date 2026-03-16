@@ -10,7 +10,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
-import { config } from '../../conf'
+import { API } from '../../shared/config/api'
 
 import likeImg from '../../assets/images/coeur.png'
 import likedImg from '../../assets/images/coeur2.png'
@@ -24,13 +24,12 @@ const liked = ref(false)
 const likesCount = ref(0)
 
 
-// Vérifie si l'utilisateur a liké
 const checkLiked = async () => {
   if (!props.post) return
 
   try {
     const res = await axios.get(
-      `${config}/posts/${props.post.id_post}/liked/${props.userId}`
+      `${API.SOCIAL}/posts/${props.post.id_post}/liked/${props.userId}`
     )
 
     liked.value = res.data.liked
@@ -43,7 +42,7 @@ const checkLiked = async () => {
 
 const loadLikesCount = async () => {
   try {
-    const res = await axios.get(`${config}/posts/${props.post.id_post}/likes/count`)
+    const res = await axios.get(`${API.SOCIAL}/posts/${props.post.id_post}/likes/count`)
     likesCount.value = res.data.count
     console.log(res.data.count)
   } catch (err) {
@@ -56,7 +55,7 @@ const toggleLike = async (postId) => {
 
     if (liked.value) {
 
-      await axios.delete(`${config}/posts/${postId}/likes`, {
+      await axios.delete(`${API.SOCIAL}/posts/${postId}/likes`, {
         data: { id_utilisateur: props.userId }
       })
 
@@ -64,7 +63,7 @@ const toggleLike = async (postId) => {
 
     } else {
 
-      await axios.post(`${config}/posts/${postId}/likes`, {
+      await axios.post(`${API.SOCIAL}/posts/${postId}/likes`, {
         id_utilisateur: props.userId
       })
 

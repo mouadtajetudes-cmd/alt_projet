@@ -2,15 +2,9 @@
 
 namespace alt\infra\repositories;
 
-<<<<<<< HEAD
 use alt\core\application\ports\api\CreatePostDTO;
 use alt\core\domain\entities\Post;
 use alt\core\repositories\PostRepositoryInterface;
-=======
-use alt\core\application\dto\CreatePostDTO;
-use alt\core\application\ports\spi\PostRepositoryInterface;
-use alt\core\domain\entities\Post;
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
 use PDO;
 
 class PdoPostRepository implements PostRepositoryInterface
@@ -22,16 +16,25 @@ class PdoPostRepository implements PostRepositoryInterface
         $this->pdo = $pdo;
     }
 
-<<<<<<< HEAD
 public function findAll(int $page, int $limit): array
 {
     $offset = ($page - 1) * $limit;
 
     $stmt = $this->pdo->prepare(
-        'SELECT p.id_post, p.titre, p.description, p.date_publication, u.nom,u.prenom ,p.type
+        'SELECT p.id_post,
+                p.description,
+                p.date_publication,
+                u.nom,
+                u.prenom,
+                m.id_media,
+                m.titre,
+                m.url AS media_url,
+                m.type AS media_type
          FROM posts p
          JOIN utilisateurs u ON p.id_utilisateur = u.id_utilisateur
-         ORDER BY date_publication DESC
+         LEFT JOIN post_medias pm ON p.id_post = pm.id_post
+         LEFT JOIN medias m ON pm.id_media = m.id_media
+         ORDER BY p.date_publication DESC
          LIMIT :limit OFFSET :offset'
     );
 
@@ -39,52 +42,21 @@ public function findAll(int $page, int $limit): array
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
 
-    $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    foreach ($posts as &$post) {
+    foreach ($rows as &$row) {
 
-        if (!empty($post['description']) && !str_starts_with($post['description'], 'http')) {
+        if ($row['media_type'] === 'image') {
+            $row['media_url'] = 'http://localhost:6085/uploads/images/' . $row['titre'];
+        }
 
-            if (preg_match('/\.(jpg|jpeg|png|gif)$/i', $post['description'])) {
-                $post['type'] = 'image';
-                $post['description'] = 'http://localhost:6085/uploads/images/' . $post['description'];
-
-            } elseif (preg_match('/\.(mp4|webm|ogg)$/i', $post['description'])) {
-                $post['type'] = 'video';
-                $post['description'] = 'http://localhost:6085/uploads/videos/' . $post['description'];
-
-            } else {
-                $post['type'] = 'text';
-            }
+        if ($row['media_type'] === 'video') {
+            $row['media_url'] = 'http://localhost:6085/uploads/videos/' . $row['titre'];
         }
     }
 
-    return $posts;
-}
-
-=======
-    public function findAll(int $page, int $limit): array
-    {
-        $offset = ($page - 1) * $limit;
-
-        $stmt = $this->pdo->prepare(
-            'SELECT id_post, titre, description, date_publication, id_utilisateur
-             FROM posts
-             ORDER BY date_publication DESC
-             LIMIT :limit OFFSET :offset'
-        );
-
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $posts = $stmt->fetchAll(PDO::FETCH_ASSOC) ;
-
-        return $posts;
-    }
-
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
-    public function findById(int $idPost): Post
+    return $rows;
+}    public function findById(int $idPost): Post
     {
         $stmt = $this->pdo->prepare(
             'SELECT id_post, titre, description, date_publication, id_utilisateur
@@ -136,7 +108,6 @@ public function findAll(int $page, int $limit): array
     public function create(CreatePostDTO $post):CreatePostDTO
     {
         $stmt = $this->pdo->prepare(
-<<<<<<< HEAD
             'INSERT INTO posts (type, description, id_utilisateur)
              VALUES (:type, :description, :id_utilisateur)'
         );
@@ -151,23 +122,6 @@ public function findAll(int $page, int $limit): array
             $post->getType(),
             $post->getDescription(),
             $post->getIdUtilisateur()
-=======
-            'INSERT INTO posts (titre, description,  id_utilisateur)
-             VALUES (:titre, :description, :user)'
-        );
-
-        $stmt->execute([
-            'titre' => $post->getTitre(),
-            'description' => $post->getDescription(),
-            'user' => $post->getIdUtilisateur(),
-        ]);
-
-        return new CreatePostDTO(
-            $post->getTitre(),
-            $post->getDescription(),
-            $post->getIdUtilisateur()
-
->>>>>>> 12cf330f2b803327b9789fc239e81dd5bfbec9a9
         );
     }
 

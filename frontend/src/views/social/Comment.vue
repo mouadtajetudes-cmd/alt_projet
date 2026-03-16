@@ -24,8 +24,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
-import { config } from '../../conf'
-import defaultAvatar from '../../assets/images/default.jpeg'
+import { API } from '../../shared/config/api'
 
 const props = defineProps({
   postId: {
@@ -42,7 +41,7 @@ const loadComments = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await axios.get(`${config}/posts/${props.postId}/comments`)
+    const response = await axios.get(`${API.SOCIAL}/posts/${props.postId}/comments`)
     comments.value = response.data.data || []
   } catch (err) {
     console.error('Erreur chargement commentaires:', err)
