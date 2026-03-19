@@ -1,3 +1,5 @@
+SET CLIENT_ENCODING TO 'UTF8';
+
 INSERT INTO niveaux (nom, description, points) VALUES
   ('Débutant', 'Niveau de base', 0),
   ('Intermédiaire', 'Quelques points acquis', 100),
@@ -6,55 +8,68 @@ INSERT INTO niveaux (nom, description, points) VALUES
   ('Maître', 'Niveau ultime', 1000);
 
 INSERT INTO avatars (nom, image, id_utilisateur) VALUES
-  ('Héros', 'hero.png', 1),
-  ('Mage', 'mage.png', 2),
-  ('Guerrier', 'warrior.png', 3),
-  ('Archer', 'archer.png', 4),
-  ('Paladin', 'paladin.png', 5),
-  ('Ninja', 'ninja.png', 6),
-  ('Samouraï', 'samurai.png', 7),
-  ('Druide', 'druid.png', 8),
-  ('Nécromancien', 'necromancer.png', 9),
-  ('Sorcier', 'sorcerer.png', 10),
-  ('Barde', 'bard.png', 11),
-  ('Voleur', 'thief.png', 12),
-  ('Assassin', 'assassin.png', 13),
-  ('Chevalier', 'knight.png', 14),
-  ('Viking', 'viking.png', 15),
-  ('Spartiate', 'spartan.png', 16),
-  ('Gladiateur', 'gladiator.png', 17),
-  ('Moine', 'monk.png', 18),
-  ('Alchimiste', 'alchemist.png', 19),
-  ('Ingénieur', 'engineer.png', 20),
-  ('Artificier', 'artificer.png', 21),
-  ('Ranger', 'ranger.png', 22),
-  ('Chasseur', 'hunter.png', 23),
-  ('Mercenaire', 'mercenary.png', 24),
-  ('Pirate', 'pirate.png', 25);
+  ('Rex le Fidèle', 'chien.png', 0),
+  ('Vif-Argent', 'lapin.png', 0),
+  ('Grizzly le Sage', 'ours.png', 0),
+  ('Nova l''Éclaireur', 'perso5.png', 0),
+  ('Aria la Chasseuse', 'perso7.png', 0);
 
-INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) VALUES
-  ('Le Brave', 1, 1, 1),
-  ('Le Sage', 2, 2, 2),
-  ('Le Protecteur', 5, 3, 5),
-  ('L''Œil de Faucon', 3, 4, 3),
-  ('Le Juste', 4, 5, 4),
-  ('L''Ombre', 5, 6, 5),
-  ('L''Honorable', 4, 7, 4),
-  ('Le Gardien de la Nature', 3, 8, 3),
-  ('Le Sombre', 5, 9, 5),
-  ('L''Élémental', 4, 10, 4),
-  ('Le Chanteur', 2, 11, 2),
-  ('Le Furtif', 3, 12, 3),
-  ('Le Tueur Silencieux', 5, 13, 5),
-  ('Le Noble', 4, 14, 4),
-  ('Le Conquérant', 5, 15, 5),
-  ('Le Guerrier Légendaire', 5, 16, 5),
-  ('Le Champion', 4, 17, 4),
-  ('Le Zen', 3, 18, 3),
-  ('Le Savant', 2, 19, 2),
-  ('Le Bricoleur', 2, 20, 2),
-  ('Le Créatif', 3, 21, 3),
-  ('Le Traqueur', 3, 22, 3),
-  ('Le Pisteur', 2, 23, 2),
-  ('Le Sans-Loi', 1, 24, 1),
-  ('Le Corsaire', 4, 25, 4);
+-- REX LE FIDÈLE
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Rex le Jeune', 1, id_avatar, 1 FROM avatars WHERE nom = 'Rex le Fidèle';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Rex le Gardien', 2, id_avatar, 2 FROM avatars WHERE nom = 'Rex le Fidèle';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Rex le Protecteur', 3, id_avatar, 3 FROM avatars WHERE nom = 'Rex le Fidèle';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Rex le Héros', 4, id_avatar, 4 FROM avatars WHERE nom = 'Rex le Fidèle';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Rex le Légendaire', 5, id_avatar, 5 FROM avatars WHERE nom = 'Rex le Fidèle';
+
+-- VIF-ARGENT
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Lapinou Débutant', 1, id_avatar, 1 FROM avatars WHERE nom = 'Vif-Argent';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Lapin Agile', 2, id_avatar, 2 FROM avatars WHERE nom = 'Vif-Argent';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Vif-Argent', 3, id_avatar, 3 FROM avatars WHERE nom = 'Vif-Argent';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Éclair Blanc', 4, id_avatar, 4 FROM avatars WHERE nom = 'Vif-Argent';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Fantôme de Lune', 5, id_avatar, 5 FROM avatars WHERE nom = 'Vif-Argent';
+
+-- GRIZZLY LE SAGE
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Ourson Curieux', 1, id_avatar, 1 FROM avatars WHERE nom = 'Grizzly le Sage';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Ours Expérimenté', 2, id_avatar, 2 FROM avatars WHERE nom = 'Grizzly le Sage';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Grizzly Puissant', 3, id_avatar, 3 FROM avatars WHERE nom = 'Grizzly le Sage';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Sage des Bois', 4, id_avatar, 4 FROM avatars WHERE nom = 'Grizzly le Sage';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Grizzly Ancien', 5, id_avatar, 5 FROM avatars WHERE nom = 'Grizzly le Sage';
+
+-- NOVA L'ÉCLAIREUR
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Nova la Recrue', 1, id_avatar, 1 FROM avatars WHERE nom = 'Nova l''Éclaireur';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Nova la Scout', 2, id_avatar, 2 FROM avatars WHERE nom = 'Nova l''Éclaireur';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Nova l''Éclaireur', 3, id_avatar, 3 FROM avatars WHERE nom = 'Nova l''Éclaireur';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Nova la Pionnière', 4, id_avatar, 4 FROM avatars WHERE nom = 'Nova l''Éclaireur';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Nova la Visionnaire', 5, id_avatar, 5 FROM avatars WHERE nom = 'Nova l''Éclaireur';
+
+-- ARIA LA CHASSEUSE
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Aria l''Apprentie', 1, id_avatar, 1 FROM avatars WHERE nom = 'Aria la Chasseuse';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Aria la Tireuse', 2, id_avatar, 2 FROM avatars WHERE nom = 'Aria la Chasseuse';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Aria la Chasseuse', 3, id_avatar, 3 FROM avatars WHERE nom = 'Aria la Chasseuse';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Aria la Sniper', 4, id_avatar, 4 FROM avatars WHERE nom = 'Aria la Chasseuse';
+INSERT INTO avatars_versions (surnom, level, id_avatar, id_niveau) 
+SELECT 'Aria la Légende', 5, id_avatar, 5 FROM avatars WHERE nom = 'Aria la Chasseuse';

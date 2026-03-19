@@ -18,16 +18,13 @@ class PdoAvatarRepository implements AvatarRepositoryInterface
     public function findAll(): array
     {
         $sql = '
-            SELECT 
+            SELECT DISTINCT
                 a.id_avatar,
                 a.nom,
                 a.image,
-                a.id_utilisateur,
-                COALESCE(av.level, 1) as niveau,
-                COALESCE(n.points, 0) as points
+                a.created_at
             FROM avatars a
-            LEFT JOIN avatars_versions av ON a.id_avatar = av.id_avatar
-            LEFT JOIN niveaux n ON av.id_niveau = n.id_niveau
+            WHERE a.id_utilisateur = 0
             ORDER BY a.id_avatar
         ';
         $stmt = $this->pdo->query($sql);
@@ -42,23 +39,37 @@ class PdoAvatarRepository implements AvatarRepositoryInterface
                 a.nom,
                 a.image,
                 a.id_utilisateur,
-                a.created_at,
-                av.id_avatar_version,
-                av.surnom,
-                av.level as niveau,
-                n.id_niveau,
-                n.nom as niveau_nom,
-                n.description as niveau_description,
-                n.points
+                a.created_at
             FROM avatars a
-            LEFT JOIN avatars_versions av ON a.id_avatar = av.id_avatar
-            LEFT JOIN niveaux n ON av.id_niveau = n.id_niveau
-            WHERE a.id_avatar = :id_avatar
+            WHERE a.id_avatar = :id_avatar AND a.id_utilisateur = 0
         ';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id_avatar' => $avatarId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result ?: null;
+        $avatar = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$avatar) {
+            return null;
+        }
+        
+        $sqlVersions = '
+            SELECT 
+                av.id_avatar_version,
+                av.surnom,
+                av.level,
+                n.id_niveau,
+                n.nom as niveau_nom,
+                n.description as niveau_description,
+                n.points as points_requis
+            FROM avatars_versions av
+            JOIN niveaux n ON av.id_niveau = n.id_niveau
+            WHERE av.id_avatar = :id_avatar
+            ORDER BY av.level
+        ';
+        $stmtVersions = $this->pdo->prepare($sqlVersions);
+        $stmtVersions->execute(['id_avatar' => $avatarId]);
+        $avatar['versions'] = $stmtVersions->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $avatar;
     }
 
     public function findByUserId(int $userId): ?array
@@ -93,5 +104,21 @@ class PdoAvatarRepository implements AvatarRepositoryInterface
             'nom' => $avatar->getNom(),
             'image' => $avatar->getImage()
         ]);
+    }
+    
+    public function createSimple(string $nom, string $image, int $id_utilisateur): array
+    {
+        $stmt = $this->pdo->prepare('INSERT INTO avatars (nom, image, id_utilisateur) VALUES (:nom, :image, :id_utilisateur)');
+        $stmt->execute([
+            'nom' => $nom,
+            'image' => $image,
+            'id_utilisateur' => $id_utilisateur
+        ]);
+        return [
+            'id_avatar' => (int)$this->pdo->lastInsertId(),
+            'nom' => $nom,
+            'image' => $image,
+            'id_utilisateur' => $id_utilisateur
+        ];
     }
 }

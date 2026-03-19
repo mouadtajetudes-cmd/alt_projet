@@ -24,10 +24,10 @@ class GetAllAvatarsAction
         try {
             $avatars = $this->avatarService->getAllAvatars();
             
-            $response->getBody()->write(json_encode($avatars));
+            $response->getBody()->write(json_encode($avatars, JSON_UNESCAPED_UNICODE));
             
             return $response
-                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Content-Type', 'application/json; charset=utf-8')
                 ->withStatus(200);
                 
         } catch (\Exception $e) {
@@ -35,10 +35,10 @@ class GetAllAvatarsAction
                 'type' => 'error',
                 'error' => 500,
                 'message' => $e->getMessage()
-            ]));
+            ], JSON_UNESCAPED_UNICODE));
             
             return $response
-                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Content-Type', 'application/json; charset=utf-8')
                 ->withStatus(500);
         }
     }

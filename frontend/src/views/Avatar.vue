@@ -3,23 +3,19 @@
     <div class="container">
       <div class="header">
         <h1>🎭 Galerie des Avatars</h1>
-        <p class="subtitle">Découvrez tous les avatars disponibles</p>
-        
-        <!-- TODO: Réactiver quand le backend admin sera prêt -->
-        <!-- <router-link 
-          v-if="isAdmin" 
-          to="/avatar/create" 
-          class="btn-admin-create"
-        >
-          ➕ Créer un avatar
-        </router-link> -->
+        <p class="subtitle">Choisissez votre compagnon parmi les 5 avatars disponibles</p>
+      </div>
+
+      <div v-if="isAdmin" class="admin-actions">
+        <router-link to="/avatar/create" class="btn-admin-create">
+          Créer un nouvel avatar
+        </router-link>
       </div>
       
-      <!-- TODO: Réactiver quand authentification sera prête -->
-      <!-- <div v-if="errorMessage" class="alert-error">
+      <div v-if="errorMessage" class="alert-error">
         <span class="alert-icon">⚠️</span>
         {{ errorMessage }}
-      </div> -->
+      </div>
       
       <div class="filters-section">
         <div class="search-box">
@@ -66,7 +62,7 @@
           class="avatar-card"
         >
           <div class="card-header">
-            <div class="avatar-icon">🎭</div>
+            <img :src="`/avatars/${avatar.image}`" :alt="avatar.nom" class="avatar-image" />
           </div>
           
           <div class="card-body">
@@ -78,9 +74,6 @@
             <button @click="chooseAvatar(avatar)" class="btn-choose">
               ✓ Choisir cet avatar
             </button>
-            <router-link :to="`/avatar/${avatar.id_avatar}`" class="btn-details">
-              Voir les détails →
-            </router-link>
           </div>
         </div>
       </div>
@@ -91,17 +84,34 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useAuth } from '../modules/auth/composables/useAuth'
 
 export default {
   name: 'Avatar',
   setup() {
     const router = useRouter()
     const route = useRoute()
+    const { isAdmin, isAuthenticated, getUserId, initAuth, user } = useAuth()
     
     const avatars = ref([])
     const loading = ref(true)
     const error = ref(null)
     const searchQuery = ref('')
+    const errorMessage = ref(null)
+    
+    initAuth()
+    
+    console.log('[AVATAR] User après initAuth:', user.value)
+    console.log('[AVATAR] isAdmin:', isAdmin.value)
+    console.log('[AVATAR] isAuthenticated:', isAuthenticated.value)
+    
+    if (route.query.error === 'admin-required') {
+      errorMessage.value = '⛔ Accès refusé : seuls les administrateurs peuvent créer des avatars.'
+      setTimeout(() => errorMessage.value = null, 5000)
+    } else if (route.query.error === 'login-required') {
+      errorMessage.value = '🔒 Veuillez vous connecter pour accéder à cette page.'
+      setTimeout(() => errorMessage.value = null, 5000)
+    }
     
     const loadAvatars = async () => {
       try {
@@ -143,25 +153,38 @@ export default {
       console.log('[AVATAR] Avatar choisi:', avatar.nom)
       
       try {
+        const userId = getUserId()
+        
+        if (!userId) {
+          alert('Veuillez vous connecter pour choisir un avatar.')
+          router.push('/login')
+          return
+        }
+        
         const response = await fetch('http://localhost:6090/avatar/avatars', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            nom: avatar.nom,
-            image: avatar.image
+            id_avatar: avatar.id_avatar,
+            id_utilisateur: userId
           })
         })
         
         if (!response.ok) {
-          throw new Error(`Erreur HTTP: ${response.status}`)
+          const errorData = await response.json().catch(() => ({}))
+          if (response.status === 400 && errorData.message?.includes('already has')) {
+            router.push('/my-avatars')
+            return
+          }
+          throw new Error(errorData.message || `Erreur HTTP: ${response.status}`)
         }
         
         const result = await response.json()
-        console.log('[AVATAR] Avatar assigné:', result)
+        console.log('[AVATAR] Avatar sélectionné:', result)
         
-        alert(`Vous avez choisi "${avatar.nom}" ! Votre compagnon commence son aventure à 0 points.`)
+        router.push('/my-avatars')
         
       } catch (err) {
         console.error('[AVATAR] Erreur lors du choix:', err)
@@ -180,41 +203,20 @@ export default {
       searchQuery,
       filteredAvatars,
       loadAvatars,
-      chooseAvatar
+      chooseAvatar,
+      isAdmin,
+      errorMessage
     }
   }
 }
 </script>
 
 <style scoped>
+
 .avatar-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--avatar-gradient);
   padding: 2rem 0;
-}
-
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 3rem;
-  color: white;
-}
-
-.header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-}
-
-.subtitle {
-  font-size: 1.1rem;
-  opacity: 0.9;
 }
 
 .filters-section {
@@ -275,86 +277,33 @@ export default {
 
 .results-count {
   font-weight: 600;
-  color: #667eea;
+  color: var(--avatar-primary);
   font-size: 0.95rem;
   padding: 0.75rem 1.25rem;
   background: rgba(102, 126, 234, 0.1);
-  border-radius: 12px;
+  border-radius: var(--avatar-radius-md);
   white-space: nowrap;
-}
-
-.loading {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: white;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.error-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 16px;
-  color: #dc3545;
-}
-
-.error-icon {
-  font-size: 4rem;
-  display: block;
-  margin-bottom: 1rem;
-}
-
-.btn-retry {
-  margin-top: 1.5rem;
-  padding: 0.875rem 2rem;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.btn-retry:hover {
-  background: #5568d3;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .empty-state {
   text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 16px;
-  color: #666;
+  padding: var(--avatar-spacing-huge) var(--avatar-spacing-lg);
+  background: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-lg);
+  color: var(--avatar-text-medium);
 }
 
 .empty-icon {
   font-size: 4rem;
   display: block;
-  margin-bottom: 1rem;
+  margin-bottom: var(--avatar-spacing-sm);
   opacity: 0.5;
 }
 
 .empty-hint {
-  margin-top: 0.5rem;
+  margin-top: var(--avatar-spacing-xs);
   font-size: 0.9rem;
-  color: #999;
+  color: var(--avatar-text-light);
 }
 
 .avatars-grid {
@@ -377,10 +326,10 @@ export default {
 
 .avatar-card {
   display: block;
-  background: white;
-  border-radius: 16px;
+  background: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-lg);
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: var(--avatar-shadow-sm);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: default;
   text-decoration: none;
@@ -392,106 +341,51 @@ export default {
   box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
 }
 
-.card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem 1.5rem;
-  position: relative;
-  text-align: center;
-}
-
-.avatar-icon {
-  font-size: 5rem;
-  margin-bottom: 0.5rem;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-.card-body {
-  padding: 1.5rem;
-}
-
-.avatar-name {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 0.5rem;
-  text-align: center;
-}
-
 .avatar-description {
   text-align: center;
-  color: #999;
+  color: var(--avatar-text-light);
   font-size: 0.9rem;
   margin: 0;
-}
-
-.card-footer {
-  padding: 0 1.5rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
 }
 
 .btn-choose {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--avatar-gradient);
+  color: var(--avatar-text-white);
   border: none;
-  border-radius: 12px;
+  border-radius: var(--avatar-radius-md);
   cursor: pointer;
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: all var(--avatar-transition-normal);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .btn-choose:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--avatar-shadow-primary);
 }
 
-.btn-details {
-  display: block;
-  width: 100%;
-  padding: 0.875rem;
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-align: center;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.btn-details:hover {
-  background: #667eea;
-  color: white;
-  transform: translateY(-2px);
+.admin-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--avatar-spacing-lg);
 }
 
 .btn-admin-create {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.75rem;
+  gap: var(--avatar-spacing-sm);
+  padding: 1rem 2rem;
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
-  border-radius: 12px;
+  color: var(--avatar-text-white);
+  border-radius: var(--avatar-radius-md);
   text-decoration: none;
   font-weight: 700;
   font-size: 1rem;
-  margin-top: 1.5rem;
-  transition: all 0.3s ease;
+  transition: all var(--avatar-transition-normal);
   box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);
 }
 
@@ -502,40 +396,21 @@ export default {
 
 .alert-error {
   background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-  color: white;
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 2rem;
+  color: var(--avatar-text-white);
+  padding: var(--avatar-spacing-sm) var(--avatar-spacing-md);
+  border-radius: var(--avatar-radius-md);
+  margin-bottom: var(--avatar-spacing-lg);
   display: flex;
   align-items: center;
   gap: 0.75rem;
   font-weight: 600;
   box-shadow: 0 4px 16px rgba(220, 53, 69, 0.3);
-  animation: slideDown 0.4s ease-out;
-}
-
-.alert-icon {
-  font-size: 1.5rem;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  animation: slideDown var(--avatar-transition-slow) ease-out;
 }
 
 @media (max-width: 768px) {
   .filters-section {
     grid-template-columns: 1fr;
-  }
-  
-  .header h1 {
-    font-size: 2rem;
   }
   
   .avatars-grid {

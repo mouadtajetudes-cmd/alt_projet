@@ -16,7 +16,7 @@ return function(\Slim\App $app): \Slim\App {
         $response->getBody()->write(json_encode([
             'service' => 'alt-avatar',
             'status' => 'running',
-            'version' => '1.0.0'
+            'version' => '2.0.0'
         ]));
         return $response->withHeader('Content-Type', 'application/json');
     });
@@ -27,15 +27,14 @@ return function(\Slim\App $app): \Slim\App {
         //->add(AuthMiddleware::class);
     $app->post('/avatars', CreateAvatarAction::class);
         //->add(AuthMiddleware::class);
-    $app->get('/users/{userId}/avatars', GetUserAvatarAction::class);
+    $app->get('/users/{userId}/avatar', GetUserAvatarAction::class);
         //->add(AuthMiddleware::class);
     $app->put('/avatars/{avatarId}', UpdateAvatarAction::class);
         //->add(AuthMiddleware::class);
     
     $app->get('/levels', GetLevelsAction::class);
         //->add(AuthMiddleware::class);
-
-    $app->post('/avatar-versions/{versionId}/level-up', LevelUpAvatarAction::class);
+    $app->post('/users/{userId}/avatar/level-up', LevelUpAvatarAction::class);
         //->add(AuthMiddleware::class);
 
     return $app;
