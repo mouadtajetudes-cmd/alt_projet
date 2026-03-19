@@ -24,7 +24,7 @@ return [
     'pdo' => static function ($c): \PDO {
         $dbConfig = $c->get('settings')['database'];
         $driver  = $dbConfig['driver'] ?? 'pgsql';
-        $host    = $dbConfig['host'] ?? 'alt.db';
+        $host    = $dbConfig['host'] ?? 'alt_db';
         $dbname  = $dbConfig['database'] ?? 'alt';
         $user    = $dbConfig['username'] ?? 'alt';
         $pass    = $dbConfig['password'] ?? 'alt';

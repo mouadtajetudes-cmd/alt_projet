@@ -15,32 +15,31 @@ class PdoCommentRepository implements CommentRepositoryInterface
         $this->pdo = $pdo;
     }
 
-    public function findByPost(int $idPost): array
-    {
-         $stmt = $this->pdo->prepare(
-    'SELECT 
-        c.id_commentaire, 
-        c.details, 
-        c.created_at, 
-        c.id_post, 
+public function findByPost(int $idPost): array
+{
+    $sql = "SELECT 
+        c.id_commentaire,
+        c.details,
+        c.created_at,
+        c.id_post,
         c.id_utilisateur,
-        p.titre AS post_titre, 
+        p.titre AS post_titre,
         p.description AS post_description,
         u.nom AS user_nom,
         u.prenom AS user_prenom,
-        u.image AS user_image
-     FROM commentaires c
-     INNER JOIN posts p ON c.id_post = p.id_post
-     INNER JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
-     WHERE c.id_post = :post
-     ORDER BY c.created_at ASC'
-);
+        u.banner_url AS user_image
+    FROM commentaires c
+    INNER JOIN posts p ON c.id_post = p.id_post
+    INNER JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
+    WHERE c.id_post = :post
+    ORDER BY c.created_at ASC";
 
-        $stmt->execute(['post' => $idPost]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->bindParam(':post', $idPost, PDO::PARAM_INT);
+    $stmt->execute();
 
-    }
-
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
     public function create(CreateCommentDTO $commentaire): CreateCommentDTO
     {
         $stmt = $this->pdo->prepare(

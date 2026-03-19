@@ -18,9 +18,9 @@ class GetCommentsByPostAction
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         try {
-            $postId = $request->getAttribute('id');
+            $postId = (int)$request->getAttribute('id');
 
-            if ($postId === null) {
+            if (!$postId ) {
                 throw new \InvalidArgumentException('postId manquant');
             }
 

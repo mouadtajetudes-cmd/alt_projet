@@ -20,53 +20,67 @@ class CreatePostAction extends JsonError
     {
         try {
 
-            $parsedBody = $request->getParsedBody() ;
-             if (empty($parsedBody)) {
-    $parsedBody = $_POST  ;
-}
-if (empty($parsedBody)) {
-    $parsedBody = $_REQUEST;
-}
-           
-            $files = $request->getUploadedFiles();
-            $type = $parsedBody['type'] ?? null;
+            $parsedBody = $request->getParsedBody() ?: $_POST ?: $_REQUEST;
+            $files = $_FILES;
+            var_dump($files);
             $idUtilisateur = $parsedBody['id_utilisateur'] ?? null;
-           
+            $file = null;
 
-            if (!$type || !$idUtilisateur) {
-                throw new \InvalidArgumentException('Paramètres manquants');
+            if (!$idUtilisateur) {
+                throw new \InvalidArgumentException('Utilisateur manquant');
             }
 
             $description = $parsedBody['description'] ?? '';
+if (isset($files['file'])) {
 
-            if ($type === 'image' || $type === 'video') {
-                if (!isset($files['file'])) {
-                    throw new \InvalidArgumentException('Fichier manquant');
-                }
+    $uploadedFile = $files['file'];
 
-                $uploadedFile = $files['file'];
+    $filename = uniqid() . "_" . $uploadedFile['name'];
+    $mime = $uploadedFile['type'];
 
-                if ($uploadedFile->getError() !== UPLOAD_ERR_OK) {
-                    throw new \RuntimeException('Erreur upload fichier');
-                }
+    if (str_starts_with($mime, 'image/')) {
+        $type = 'image';
+        $folder = 'images';
+    } elseif (str_starts_with($mime, 'video/')) {
+        $type = 'video';
+        $folder = 'videos';
+    } else {
+        throw new \InvalidArgumentException('Type non supporté');
+    }
 
-                $folder = $type === 'image' ? 'images' : 'videos';
-                $uploadPath = __DIR__ . "/../uploads/$folder/";
+    $uploadPath = __DIR__ . "/../uploads/$folder/";
 
-                if (!is_dir($uploadPath)) mkdir($uploadPath, 0777, true);
+    if (!is_dir($uploadPath)) {
+        mkdir($uploadPath, 0777, true);
+    }
 
-                $filename = uniqid() . "_" . $uploadedFile->getClientFilename();
-                $uploadedFile->moveTo($uploadPath . $filename);
+    move_uploaded_file(
+        $uploadedFile['tmp_name'],
+        $uploadPath . $filename
+    );
 
-                $description = $filename;
-            }
+    $file = [
+        'name' => $filename,
+        'type' => $type,
+        'folder' => $folder
+    ];
+}
+            $dto = new CreatePostDTO($description, $idUtilisateur);
+            $post = $this->postService->createPost($dto, $file);
 
-            $dto = new CreatePostDTO($type, $description, $idUtilisateur);
-            $post = $this->postService->createPost($dto);
-           
-            $response->getBody()->write(json_encode([
+            // --- Construire le retour complet pour le frontend ---
+$postArray = [
+    'id_post' => $post->getIdPost(),
+    'description' => $post->getDescription(),
+    'id_utilisateur' => $post->getIdUtilisateur(),
+    'titre' => $post->getTitre(),
+    'media_type' => $post->getMediaType(),
+    'media_url' => $post->getMediaUrl(),
+    'nom' => $parsedBody['nom'] ?? 'Utilisateur',
+    'prenom' => $parsedBody['prenom'] ?? ''
+];            $response->getBody()->write(json_encode([
                 'status' => 'success',
-                'data' => $post
+                'data' => $postArray
             ]));
 
             return $response
@@ -75,10 +89,8 @@ if (empty($parsedBody)) {
 
         } catch (\InvalidArgumentException $e) {
             return $this->jsonError($response, $e->getMessage(), 400);
-
         } catch (\RuntimeException $e) {
             return $this->jsonError($response, $e->getMessage(), 500);
-
         } catch (\Exception $e) {
             return $this->jsonError($response, 'Erreur interne serveur', 500);
         }

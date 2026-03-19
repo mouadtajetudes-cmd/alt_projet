@@ -15,7 +15,7 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
-import { API } from '../../shared/config/api'
+import { API } from '../../shared/config/api';
 
 const newComment =ref('')
 const props = defineProps({
@@ -24,9 +24,11 @@ const props = defineProps({
     required: true
   }
 })
-const userId=3
-const comments= ref([])
-
+const user = JSON.parse(localStorage.getItem('user') || '{}');
+const userId = user.id_utilisateur; 
+const resetComment = () => {
+  newComment.value = ''
+}
 const submitComment = async () => {
   if (!newComment.value.trim()) return 
   try {
@@ -34,10 +36,8 @@ const submitComment = async () => {
       id_utilisateur:userId,
       details: newComment.value
     })
-
     comments.value.push(res.data)
-
-    newComment.value = ''
+    resetComment()
   } catch (err) {
     console.error("Erreur ajout commentaire:", err)
   }

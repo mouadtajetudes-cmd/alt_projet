@@ -3,17 +3,24 @@ declare(strict_types=1);
 
 use alt\api\actions\CountPostAction;
 use alt\api\actions\CreateCommentAction;
+use alt\api\actions\CreateFollowerAction;
 use alt\api\actions\CreateLikeAction;
 use alt\api\actions\CreatePostAction;
 use alt\api\actions\CreateReactionAction;
+use alt\api\actions\DeleteFollowerAction;
 use alt\api\actions\DeleteLikeAction;
 use alt\api\actions\DeleteReactionAction;
+use alt\api\actions\DeletePostAction;
 use alt\api\actions\GetAllPostsAction;
 use alt\api\actions\GetByIdAction;
 use alt\api\actions\GetByIdwithStatusAction;
 use alt\api\actions\GetCommentsByPostAction;
+use alt\api\actions\GetFollowerAction;
+use alt\api\actions\GetFollowingAction;
 use alt\api\actions\GetReactionsByPostAction;
 use alt\api\actions\HasLikeAction;
+use alt\api\actions\GetByUserPostsAction;
+use alt\api\actions\IsFollowingAction;
 
 return function(\Slim\App $app): \Slim\App {
 
@@ -30,6 +37,8 @@ return function(\Slim\App $app): \Slim\App {
     $app->get('/posts',GetAllPostsAction::class);
     $app->get('/posts/{id}/stats',GetByIdwithStatusAction::class);
     $app->post('/posts',CreatePostAction::class);
+    $app->get('/posts/user/{id}', GetByUserPostsAction::class);
+    $app->delete('/posts/{id}', DeletePostAction::class);
 
 
     $app->get('/posts/{id}/reactions', GetReactionsByPostAction::class);
@@ -44,6 +53,11 @@ return function(\Slim\App $app): \Slim\App {
     $app->delete('/posts/{id}/likes',DeleteLikeAction::class);
     $app->get('/posts/{postId}/liked/{userId}', HasLikeAction::class);
     $app->get('/posts/{id}/likes/count', CountPostAction::class);
+    $app->get('/users/{id}/followers',GetFollowerAction::class);
+    $app->get('/users/{id}/following',GetFollowingAction::class);
+    $app->post('/users/{id}/following', CreateFollowerAction::class);
+    $app->delete('/users/{followerId}/following/{followingId}', DeleteFollowerAction::class);
+    $app->get('/users/{followerId}/following/{followingId}', IsFollowingAction::class);
 $app->get('/uploads/{folder}/{filename}', function ($request, $response, $args) {
 
     $folder = basename($args['folder']);

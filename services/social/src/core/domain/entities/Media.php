@@ -11,7 +11,7 @@ class Media
     {
         $this->idMedia = $idMedia;
         $this->titre = $titre;
-        $this->type=$type
+        $this->type=$type;
     }
 
 
@@ -26,6 +26,6 @@ class Media
     }
     public function getType():string
     {
-        return $this->type
+        return $this->type;
     }
 }

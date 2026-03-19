@@ -21,6 +21,8 @@ import UserAvatar from '../views/UserAvatar.vue'
 import Home from '../views/Home.vue'
 import Social from '../views/Social.vue'
 import Marketplace from '../views/Marketplace.vue'
+import UserPosts from '../views/social/UserPosts.vue'
+import ListFollowers from '../views/social/ListFollowers.vue'
 
 const routes = [
   {
@@ -87,6 +89,16 @@ const routes = [
     path:'/like',
     name:'like',
     component:Like
+  },
+  {
+    path: '/posts/user/:id',
+    name: 'UserPosts',
+    component: UserPosts
+  },
+  {
+    path: '/followers',
+    name: 'Followers',
+    component: ListFollowers
   },
   {
     path: '/avatar/create',

@@ -8,7 +8,7 @@ return [
         
         'database' => [
             'driver' => $_ENV['DB_DRIVER'] ?? 'pgsql',
-            'host' => $_ENV['DB_HOST'] ?? 'alt.db',
+            'host' => $_ENV['DB_HOST'] ?? 'alt_db',
             'database' => $_ENV['DB_NAME'] ?? 'alt',
             'username' => $_ENV['DB_USER'] ?? 'alt',
             'password' => $_ENV['DB_PASSWORD'] ?? 'alt',

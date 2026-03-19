@@ -1,9 +1,14 @@
 <?php
 
 use alt\core\application\ports\api\CommentServiceInterface;
+use alt\core\application\ports\api\FollowerServiceInterface;
 use alt\core\application\ports\api\ReactionServiceInterface;
 use alt\core\repositories\CommentRepositoryInterface;
+use alt\core\repositories\FollowerRepositoryInterface;
 use alt\core\repositories\LikeRepositoryInterface;
+use alt\core\repositories\PostRepositoryInterface;
+use alt\core\services\FollowerService;
+use alt\infra\repositories\PdoFollowerRepository;
 use alt\infra\repositories\PdoLikeRepository;
 use alt\core\application\ports\api\PostServiceInterface;
 use alt\core\repositories\ReactionRepositoryInterface;
@@ -50,6 +55,10 @@ return [
     LikeRepositoryInterface::class => function ($c){
         return new PdoLikeRepository($c->get('pdo'));
     },
+    FollowerRepositoryInterface::class => function($c){
+        return new PdoFollowerRepository($c->get('pdo'));
+    },
+
 
     //service
     PostServiceInterface::class => function ($c) {
@@ -67,5 +76,8 @@ return [
     },
     LikeServiceInterface::class => function ($c){
         return new LikeService($c->get(LikeRepositoryInterface::class));
+    },
+    FollowerServiceInterface::class => function($c){
+        return new FollowerService($c->get(FollowerRepositoryInterface::class));
     }
 ];

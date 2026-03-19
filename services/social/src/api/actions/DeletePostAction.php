@@ -14,28 +14,30 @@ class DeletePostAction
         $this->postService = $postService;
     }
 
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $idPost = $args['id'];
+public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+{
+    $idPost = (int) $args['id'];
 
-        try {
-            $this->postService->deletePost($idPost);
+    $currentUser = $request->getAttribute('user');
+    $currentUserId = $currentUser['id'];
 
-            $response->getBody()->write(json_encode([
-                'status' => 'success',
-                'message' => 'Post deleted successfully'
-            ]));
+    try {
 
-            return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(200);
+        $this->postService->deletePost($idPost, $currentUserId);
 
-        } catch (\Exception $e) {
-            $response->getBody()->write(json_encode([
-                'error' => 'An error occurred while deleting the post'
-            ]));
+        $response->getBody()->write(json_encode([
+            'status' => 'success',
+            'message' => 'Post deleted'
+        ]));
 
-            return $response->withStatus(500)
-                            ->withHeader('Content-Type', 'application/json');
-        }
+        return $response->withHeader('Content-Type','application/json')->withStatus(200);
+
+    } catch (\Exception $e) {
+
+        $response->getBody()->write(json_encode([
+            'error' => $e->getMessage()
+        ]));
+
+        return $response->withHeader('Content-Type','application/json')->withStatus(403);
     }
-}
+}}

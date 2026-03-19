@@ -7,6 +7,8 @@ use alt\core\domain\entities\Post;
 interface PostServiceInterface{
     public function getAllPosts(int $page, int $limit):array;
     public function getById(int $idPost):Post;
+    public function getByUserPosts(int $idUser):array;
     public function getByIdwithStatus(int $idPost):array;
-    public function createPost(CreatePostDTO $post):CreatePostDTO;
+    public function createPost(CreatePostDTO $post, $file):Post;
+    public function deletePost(int $idPost,int $currentUserId):bool;
 }

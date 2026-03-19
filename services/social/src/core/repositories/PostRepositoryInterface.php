@@ -9,5 +9,7 @@ interface PostRepositoryInterface
     public function findAll(int $page, int $limit): array;
     public function findById(int $idPost): Post;
     public function findByIdWithStats(int $idPost): array;
-    public function create(CreatePostDTO $post): CreatePostDTO;
+    public function create(CreatePostDTO $post): Post;
+    public function findByUserPosts(int $idUser): array;
+    public function delete(int $idPost): bool;
 }
