@@ -18,8 +18,8 @@ $container = $builder->build();
 AppFactory::setContainer($container);
 $app = AppFactory::create();
 
-$app->addBodyParsingMiddleware();
-$app->addRoutingMiddleware();
+$app->addBodyParsingMiddleware();   
+$app->addRoutingMiddleware(); 
 
 $settings = $container->get('settings') ?? [];
 $errorMw = $app->addErrorMiddleware(

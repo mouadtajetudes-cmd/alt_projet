@@ -235,7 +235,7 @@ const handleRegister = async () => {
   loading.value = true
   
   try {
-    const response = await fetch('http://localhost:6090/auth/auth/register', {
+    const response = await fetch('http://localhost:6090/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

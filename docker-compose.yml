@@ -7,7 +7,7 @@ services:
   #
   alt.gateway:
     build:
-      context: build
+      context: ./build
       dockerfile: 8.4-cli.Dockerfile
     ports:
       - '6090:80'
@@ -31,7 +31,7 @@ services:
   #
   api.auth:
     build:
-      context: build
+      context: ./build
       dockerfile: 8.4-cli.Dockerfile
     ports:
       - '6081:80'
@@ -41,9 +41,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
-    env_file:
-      - ./alt-auth-oauth.env
+      - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
     dns:
       - 8.8.8.8
@@ -63,7 +61,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
+      - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
     dns:
       - 8.8.8.8
@@ -73,7 +71,7 @@ services:
   #
   api.marketplace:
     build:
-      context: build
+      context: ./build
       dockerfile: 8.4-cli.Dockerfile
     ports:
       - '6082:80'
@@ -83,7 +81,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
+      - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
     dns:
       - 8.8.8.8
@@ -104,7 +102,7 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
+      - alt_db
     command: sh -c "composer install && php -S 0.0.0.0:80 -t /var/php/public"
     dns:
       - 8.8.8.8
@@ -135,7 +133,7 @@ services:
 
   # service alt.db : base de données PostgreSQL
   #
-  alt.db:
+  alt_db:
     image: 'postgres:16-alpine'
     env_file: ./alt-db.env
     ports:
@@ -198,13 +196,13 @@ services:
     networks:
       - alt.net
     depends_on:
-      - alt.db
+      - alt_db
       - alt.mongo
     environment:
       - WS_PORT=3001
       - WS_HOST=0.0.0.0
       - MONGO_URI=mongodb://alt.mongo:27017/chat_db
-      - DB_HOST=alt.db
+      - DB_HOST=alt_db
       - DB_PORT=5432
     command: sh -c "npm install && npm start"
     dns:

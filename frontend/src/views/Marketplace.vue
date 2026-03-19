@@ -1,7 +1,18 @@
 <template>
   <div class="marketplace-page">
     <div class="container">
-      <div class="page-header">
+      <h1>Marketplace</h1>
+      
+      <div v-if="loading" class="loading">Chargement des produits...</div>
+      
+      <div v-else class="products-grid">
+        <div v-for="product in products" :key="product.id_produit" class="product-card">
+          <div class="product-image">🛍️</div>
+          <h3>{{ product.nom }}</h3>
+          <p class="description">{{ product.description }}</p>
+          <p class="price">{{ product.prix }} €</p>
+          <button class="btn">Voir détails</button>
+        </div>      <div class="page-header">
         <h1>🛒 Marketplace</h1>
         <button class="btn-create" @click="goToCreate">
           ➕ Ajouter un produit
@@ -106,6 +117,7 @@
         </button>
       </div>
     </div>
+  </div>
   </div>
 </template>
 

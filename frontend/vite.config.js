@@ -15,5 +15,12 @@ export default defineConfig({
     watch: {
       usePolling: true
     }
+  },
+   optimizeDeps: {
+    include: [
+      '@fortawesome/vue-fontawesome',
+      '@fortawesome/fontawesome-svg-core',
+      '@fortawesome/free-solid-svg-icons'
+    ]
   }
 })

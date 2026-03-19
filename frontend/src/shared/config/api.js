@@ -11,12 +11,12 @@ export const API = {
 
 export const ENDPOINTS = {
   AUTH: {
-    LOGIN: `${API.AUTH}/auth/login`,
-    REGISTER: `${API.AUTH}/auth/register`,
-    VALIDATE_TOKEN: `${API.AUTH}/auth/tokens/validate`,
-    REFRESH_TOKEN: `${API.AUTH}/auth/tokens/refresh`,
-    GOOGLE_OAUTH: `${API.AUTH}/auth/google`,
-    APPLE_OAUTH: `${API.AUTH}/auth/apple`,
+    LOGIN: `${API.AUTH}/login`,
+    REGISTER: `${API.AUTH}/register`,
+    VALIDATE_TOKEN: `${API.AUTH}/tokens/validate`,
+    REFRESH_TOKEN: `${API.AUTH}/refresh`,
+    GOOGLE_OAUTH: `${API.AUTH}/google`,
+    APPLE_OAUTH: `${API.AUTH}/apple`,
     USERS: `${API.AUTH}/users`,
     GROUPS: `${API.AUTH}/groupes`
   },

@@ -2,8 +2,8 @@
 
 namespace alt\core\services;
 
-use alt\core\application\ports\api\CreateCommentDTO;
 use alt\core\application\ports\api\CommentServiceInterface;
+use alt\core\application\ports\api\CreateCommentDTO;
 use alt\core\repositories\CommentRepositoryInterface;
 
 class CommentService implements CommentServiceInterface

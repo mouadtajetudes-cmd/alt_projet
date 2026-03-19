@@ -14,11 +14,10 @@ RUN curl -sSLf -o /usr/local/bin/install-php-extensions \
 # PHP extensions (ajuste selon besoin)
 RUN install-php-extensions \
     gettext iconv intl tidy zip sockets \
-    mysqli pdo_mysql pdo_pgsql \
-    @composer
-
-# Optionnel (dev only)
-RUN install-php-extensions xdebug
+    mysqli pdo_pgsql \
+    @composer \
+    xdebug
+    
 
 WORKDIR /var/php
 EXPOSE 80

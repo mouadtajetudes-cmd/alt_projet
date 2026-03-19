@@ -2,10 +2,10 @@
 
 namespace alt\infra\repositories;
 
-use alt\core\application\dto\CreateReactionDTO;
-use alt\core\application\ports\spi\ReactionRepositoryInterface;
+use alt\core\application\ports\api\CreateReactionDTO;
 use alt\core\domain\entities\Post;
 use alt\core\domain\entities\Reaction;
+use alt\core\repositories\ReactionRepositoryInterface;
 use PDO;
 
 class PdoReactionRepository implements ReactionRepositoryInterface
@@ -16,11 +16,7 @@ class PdoReactionRepository implements ReactionRepositoryInterface
     {
         $this->pdo = $pdo;
     }
-
-    /**
-     * Retourne toutes les réactions d’un post
-     */
-    public function findByPost(Post $post): array
+    public function findByPost(int $post): array
     {
         $stmt = $this->pdo->prepare(
             'SELECT id_reaction, type, id_post, id_utilisateur
