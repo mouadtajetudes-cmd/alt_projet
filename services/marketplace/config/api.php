@@ -6,9 +6,11 @@ use alt\api\actions\CreateProductAction;
 use alt\api\actions\UpdateProductAction;
 use alt\api\actions\GetCategoriesAction;
 use alt\api\actions\CreateCategoryAction;
+use alt\api\actions\UploadMediaAction;
 use alt\api\middlewares\AuthMiddleware;
 use alt\core\application\ports\api\ProductServiceInterface;
 use alt\core\application\ports\api\CategoryServiceInterface;
+use alt\core\application\ports\spi\repositoryInterfaces\MediaRepositoryInterface;
 
 return [
     GetAllProductsAction::class => function ($c) {
@@ -24,9 +26,7 @@ return [
     },
 
     CreateProductAction::class => function ($c) {
-        return new CreateProductAction(
-            $c->get(ProductServiceInterface::class)
-        );
+    return new CreateProductAction();
     },
 
     UpdateProductAction::class => function ($c) {
@@ -44,6 +44,12 @@ return [
     CreateCategoryAction::class => function ($c) {
         return new CreateCategoryAction(
             $c->get(CategoryServiceInterface::class)
+        );
+    },
+
+    UploadMediaAction::class => function ($c) {
+        return new UploadMediaAction(
+            $c->get(MediaRepositoryInterface::class)
         );
     },
 ];

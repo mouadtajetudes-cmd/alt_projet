@@ -38,9 +38,15 @@ class RegisterAction
             $response->getBody()->write(json_encode([
                 'error' => $e->getMessage()
             ]));
+            
+            $statusCode = $e->getCode();
+            if ($statusCode < 100 || $statusCode > 599) {
+                $statusCode = 500;
+            }
+            
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withStatus($e->getCode() ?: 500);
+                ->withStatus($statusCode);
         }
     }
 }

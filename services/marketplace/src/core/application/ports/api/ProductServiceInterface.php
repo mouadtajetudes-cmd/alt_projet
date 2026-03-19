@@ -8,11 +8,11 @@ interface ProductServiceInterface
 {
     public function getAllProducts(ProductFiltersDTO $filters): array;
 
-    public function getProductById(int $id): Product;
+    public function getProductById(int $id): array;
 
-    public function createProduct(CreateProductDTO $dto): Product;
+    public function createProduct(array $data): Product;
 
-    public function updateProduct(UpdateProductDTO $dto): Product;
+    public function updateProduct(int $id, array $data): Product;
 
     public function deleteProduct(int $id): bool;
 }

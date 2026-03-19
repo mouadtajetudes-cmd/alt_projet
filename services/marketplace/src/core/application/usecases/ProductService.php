@@ -2,133 +2,105 @@
 
 namespace alt\core\application\usecases;
 
-use alt\core\application\ports\spi\repositoryInterfaces\ProductRepositoryInterface;
-use alt\core\application\ports\spi\repositoryInterfaces\MediaRepositoryInterface;
-use alt\core\application\ports\api\CreateProductDTO;
-use alt\core\application\ports\api\UpdateProductDTO;
+use Exception;
 use alt\core\application\ports\api\ProductFiltersDTO;
 use alt\core\application\ports\api\ProductServiceInterface;
+use alt\infra\ports\ProductRepositoryInterface;
 use alt\core\domain\entities\Product;
-use Exception;
-use DateTimeImmutable;
 
 class ProductService implements ProductServiceInterface
 {
     private ProductRepositoryInterface $productRepository;
-    private MediaRepositoryInterface $mediaRepository;
 
-    public function __construct(
-        ProductRepositoryInterface $productRepository,
-        MediaRepositoryInterface $mediaRepository
-    ) {
+    public function __construct(ProductRepositoryInterface $productRepository)
+    {
         $this->productRepository = $productRepository;
-        $this->mediaRepository = $mediaRepository;
     }
 
     public function getAllProducts(ProductFiltersDTO $filters): array
     {
-        $filterArray = [
-            'categorie' => $filters->categorie,
-            'prix_min' => $filters->prixMin,
-            'prix_max' => $filters->prixMax,
-            'statut' => $filters->statut,
-            'search' => $filters->search,
-            'user_id' => $filters->userId,
-            'limit' => $filters->limit,
-            'offset' => $filters->getOffset()
-        ];
-
-        return $this->productRepository->findAll($filterArray);
+        return $this->productRepository->findAll([
+            'page' => $filters->page ?? 1,
+            'limit' => $filters->limit ?? 12,
+            'search' => $filters->search ?? null,
+            'categorie' => $filters->categorie ?? null,
+            'min_price' => $filters->prixMin ?? null,
+            'max_price' => $filters->prixMax ?? null,
+            'statut' => $filters->statut ?? null,
+            'userId' => $filters->userId ?? null,
+        ]);
     }
 
-    public function getProductById(int $id): Product
+    public function getProductById(int $id): array
     {
         $product = $this->productRepository->findById($id);
-        
-        if (!$product) {
-            throw new Exception("Product not found", 404);
-        }
 
-        $medias = $this->mediaRepository->findByProductId($id);
-        $product->setMedias($medias);
+        if (!$product) {
+            throw new Exception('Produit introuvable');
+        }
 
         return $product;
     }
 
-    public function createProduct(CreateProductDTO $dto): Product
+    public function createProduct(array $data): Product
     {
-        $product = new Product(
-            0,
-            $dto->nom,
-            $dto->prix,
-            $dto->idUtilisateur,
-            $dto->idCategorie,
-            $dto->description,
-            $dto->statut,
-            $dto->quantite,
-            new DateTimeImmutable(),
-            new DateTimeImmutable(),
-            new DateTimeImmutable()
-        );
+        $product = Product::fromArray([
+            'id_produit' => 0,
+            'nom' => $data['nom'] ?? '',
+            'description' => $data['description'] ?? '',
+            'prix' => $data['prix'] ?? 0,
+            'statut' => $data['statut'] ?? 'disponible',
+            'quantite' => $data['quantite'] ?? 0,
+            'id_utilisateur' => $data['id_utilisateur'] ?? null,
+            'id_categorie' => $data['id_categorie'] ?? null,
+        ]);
 
-        $createdProduct = $this->productRepository->create($product);
-
-        foreach ($dto->mediaIds as $index => $mediaId) {
-            $this->mediaRepository->attachToProduct($mediaId, $createdProduct->getId(), $index);
-        }
-
-        return $createdProduct;
+        return $this->productRepository->create($product);
     }
 
-    public function updateProduct(UpdateProductDTO $dto): Product
+    public function updateProduct(int $id, array $data): Product
     {
-        $product = $this->productRepository->findById($dto->id);
-        
-        if (!$product) {
-            throw new Exception("Product not found", 404);
+        $existing = $this->productRepository->findById($id);
+
+        if (!$existing) {
+            throw new Exception('Produit introuvable');
         }
 
-        if ($dto->nom !== null) {
-            $product->setNom($dto->nom);
-        }
-        if ($dto->prix !== null) {
-            $product->setPrix($dto->prix);
-        }
-        if ($dto->idCategorie !== null) {
-            $product->setIdCategorie($dto->idCategorie);
-        }
-        if ($dto->description !== null) {
-            $product->setDescription($dto->description);
-        }
-        if ($dto->statut !== null) {
-            $product->setStatut($dto->statut);
-        }
-        if ($dto->quantite !== null) {
-            $product->setQuantite($dto->quantite);
+        $product = Product::fromArray($existing);
+
+        if (isset($data['nom'])) {
+            $product->setNom($data['nom']);
         }
 
-        $updatedProduct = $this->productRepository->update($product);
-
-        if ($dto->mediaIds !== null) {
-            $currentMedias = $this->mediaRepository->findByProductId($dto->id);
-            foreach ($currentMedias as $media) {
-                $this->mediaRepository->detachFromProduct($media->getId(), $dto->id);
-            }
-
-            foreach ($dto->mediaIds as $index => $mediaId) {
-                $this->mediaRepository->attachToProduct($mediaId, $dto->id, $index);
-            }
+        if (isset($data['prix'])) {
+            $product->setPrix((float) $data['prix']);
         }
 
-        return $updatedProduct;
+        if (isset($data['id_categorie'])) {
+            $product->setIdCategorie((int) $data['id_categorie']);
+        }
+
+        if (isset($data['description'])) {
+            $product->setDescription($data['description']);
+        }
+
+        if (isset($data['statut'])) {
+            $product->setStatut($data['statut']);
+        }
+
+        if (isset($data['quantite'])) {
+            $product->setQuantite((int) $data['quantite']);
+        }
+
+        return $this->productRepository->update($product);
     }
 
     public function deleteProduct(int $id): bool
     {
-        $product = $this->productRepository->findById($id);
-        
-        if (!$product) {
-            throw new Exception("Product not found", 404);
+        $existing = $this->productRepository->findById($id);
+
+        if (!$existing) {
+            throw new Exception('Produit introuvable');
         }
 
         return $this->productRepository->delete($id);

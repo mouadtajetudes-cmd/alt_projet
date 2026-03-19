@@ -7,7 +7,7 @@ class CreateProductDTO
     public string $nom;
     public float $prix;
     public int $idUtilisateur;
-    public int $idCategorie;
+    public ?int $idCategorie;
     public ?string $description;
     public string $statut;
     public int $quantite;
@@ -17,7 +17,7 @@ class CreateProductDTO
         string $nom,
         float $prix,
         int $idUtilisateur,
-        int $idCategorie,
+        ?int $idCategorie = null,
         ?string $description = null,
         string $statut = 'disponible',
         int $quantite = 0,
@@ -39,7 +39,7 @@ class CreateProductDTO
             $data['nom'],
             (float) $data['prix'],
             (int) $data['id_utilisateur'],
-            (int) $data['id_categorie'],
+            isset($data['id_categorie']) && $data['id_categorie'] !== '' ? (int) $data['id_categorie'] : null,
             $data['description'] ?? null,
             $data['statut'] ?? 'disponible',
             (int) ($data['quantite'] ?? 0),

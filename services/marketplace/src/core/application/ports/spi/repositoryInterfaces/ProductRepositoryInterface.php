@@ -1,18 +1,18 @@
 <?php
 
-namespace alt\core\application\ports\spi\repositoryInterfaces;
+namespace alt\core\application\ports\api;
 
 use alt\core\domain\entities\Product;
 
-interface ProductRepositoryInterface
+interface ProductServiceInterface
 {
-    public function findAll(array $filters = []): array;
+    public function getAllProducts(ProductFiltersDTO $filters): array;
 
-    public function findById(int $id): ?Product;
+    public function getProductById(int $id): array;
 
-    public function create(Product $product): Product;
+    public function createProduct(array $data): Product;
 
-    public function update(Product $product): Product;
+    public function updateProduct(int $id, array $data): Product;
 
-    public function delete(int $id): bool;
+    public function deleteProduct(int $id): bool;
 }

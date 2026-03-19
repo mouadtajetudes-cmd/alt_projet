@@ -18,11 +18,11 @@ return [
     'pdo' => static function ($c): \PDO {
         $dbConfig = $c->get('settings')['database'];
         $driver = $dbConfig['driver'] ?? 'pgsql';
-        $host = $dbConfig['host'] ?? 'alt-db';
+        $host = $dbConfig['host'] ?? 'alt.db';
         $port = $dbConfig['port'] ?? '5432';
-        $dbname = $dbConfig['database'] ?? 'marketplace_db';
-        $user = $dbConfig['username'] ?? 'marketplace_user';
-        $pass = $dbConfig['password'] ?? 'marketplace_password';
+        $dbname = $dbConfig['database'] ?? 'alt';
+        $user = $dbConfig['username'] ?? 'alt';
+        $pass = $dbConfig['password'] ?? 'alt';
 
         $dsn = "{$driver}:host={$host};port={$port};dbname={$dbname}";
         

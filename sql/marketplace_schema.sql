@@ -23,11 +23,11 @@ CREATE TABLE IF NOT EXISTS produits (
     date_publication TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     quantite INTEGER DEFAULT 0,
     id_utilisateur INTEGER NOT NULL,
-    id_categorie INTEGER NOT NULL,
+    id_categorie INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur) ON DELETE CASCADE,
-    FOREIGN KEY (id_categorie) REFERENCES categories(id_categorie) ON DELETE RESTRICT
+    FOREIGN KEY (id_categorie) REFERENCES categories(id_categorie) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS produit_medias (

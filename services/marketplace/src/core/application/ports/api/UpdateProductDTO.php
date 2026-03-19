@@ -39,7 +39,7 @@ class UpdateProductDTO
             (int) $data['id'],
             $data['nom'] ?? null,
             isset($data['prix']) ? (float) $data['prix'] : null,
-            isset($data['id_categorie']) ? (int) $data['id_categorie'] : null,
+            isset($data['id_categorie']) && $data['id_categorie'] !== '' ? (int) $data['id_categorie'] : null,
             $data['description'] ?? null,
             $data['statut'] ?? null,
             isset($data['quantite']) ? (int) $data['quantite'] : null,

@@ -1,6 +1,7 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-50">
+<div id="app" class="min-h-screen bg-gray-50">
     <Navbar />
+
     
     <main>
       <router-view />
@@ -39,6 +40,7 @@ onMounted(() => {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
 }
 
 main {
@@ -58,6 +60,7 @@ footer .container {
   margin: 0 auto;
   padding: 0 1rem;
 }
+
 
 footer p {
   margin: 0;
