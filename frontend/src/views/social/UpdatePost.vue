@@ -1,6 +1,6 @@
 <template>
   <div class="update-post">
-    <button class="modal-close" @click="$emit('close')">&times;</button>
+    <button class="modal-close" @click="closeModal('close')">&times;</button>
     <h2>Modifier le post</h2>
 
     <textarea
@@ -31,13 +31,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted ,watch} from 'vue';
+import { ref, computed ,watch} from 'vue';
 import axios from 'axios';
 import {API} from '../../shared/config/api'
-import { useRoute } from 'vue-router';
 
-const route = useRoute();
-const postId = route.params.id;
 const props = defineProps({
   post: { type: Object, required: true }
 })
@@ -61,18 +58,9 @@ const handleFile = (event) => {
 watch(() => props.post, (newPost) => {
   description.value = newPost.description || ''
   previewUrl.value = newPost.media_url || null
+  file.value=null
 })
 
-onMounted(async () => {
-  try {
-    const response = await axios.get(`${API.SOCIAL}/posts/${postId}`);
-    description.value = response.data.description || '';
-    previewUrl.value = response.data.media_url || null;
-
-  } catch (err) {
-    console.error(err);
-  }
-});
 
 const updatePost = async () => {
   if (!description.value && !file.value) {
@@ -90,20 +78,24 @@ const updatePost = async () => {
     if (file.value) formData.append('file', file.value);
     formData.append('is_draft', isDraft.value ? true : false);
 
-await axios.post(`${API.SOCIAL}/posts/${postId}`, formData, {
+await axios.post(`${API.SOCIAL}/posts/${props.post.id_post}`, formData, {
   headers: {
     Authorization: 'Bearer ' + localStorage.getItem('token')
   }
 })
    
 
- emit('updated', { ...props.post, description: description.value, media_url: previewUrl.value })
-    emit('close')  } catch (err) {
+ emit('updated', response.data.data)
+    emit('close')  } 
+    catch (err) {
     error.value = err.response?.data?.error || 'Erreur lors de la mise à jour';
     console.error(err);
   } finally {
     loading.value = false;
   }
+  const closeModal = () => {
+  emit('close')
+}
 };
 </script>
 
