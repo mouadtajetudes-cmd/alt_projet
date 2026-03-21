@@ -1,6 +1,6 @@
 <template>
   <div class="update-post">
-    <button class="modal-close" @click="closeModal('close')">&times;</button>
+    <button class="modal-close" @click="closeModal">&times;</button>
     <h2>Modifier le post</h2>
 
     <textarea
@@ -31,74 +31,97 @@
 </template>
 
 <script setup>
-import { ref, computed ,watch} from 'vue';
-import axios from 'axios';
-import {API} from '../../shared/config/api'
+import { ref, computed, watch } from 'vue'
+import axios from 'axios'
+import { API } from '../../shared/config/api'
 
 const props = defineProps({
   post: { type: Object, required: true }
 })
 
-const description = ref(props.post.description || '');
-const file = ref(null);
-const previewUrl = ref(props.post.media_url || null);
-const loading = ref(false);
-const error = ref('');
 const emit = defineEmits(['close', 'updated'])
-const isImage = computed(() => file.value && file.value.type.startsWith('image/'));
-const isDraft=ref(true)
+
+const description = ref(props.post.description || '')
+const file = ref(null)
+const previewUrl = ref(props.post.media_url || null)
+const loading = ref(false)
+const error = ref('')
+const isDraft = ref(true)
+
+const isImage = computed(() => {
+  if (!file.value) return false
+  return file.value.type.startsWith('image/')
+})
+
 const handleFile = (event) => {
-  const selectedFile = event.target.files[0];
-  if (!selectedFile) return;
+  const selectedFile = event.target.files[0]
+  if (!selectedFile) return
 
-  file.value = selectedFile;
+  file.value = selectedFile
+  previewUrl.value = URL.createObjectURL(selectedFile)
+}
 
-  previewUrl.value = URL.createObjectURL(selectedFile);
-};
 watch(() => props.post, (newPost) => {
   description.value = newPost.description || ''
   previewUrl.value = newPost.media_url || null
-  file.value=null
+  file.value = null
 })
 
-
-const updatePost = async () => {
-  if (!description.value && !file.value) {
-    error.value = 'Vous devez fournir un texte ou un fichier';
-    return;
-  }
-
-  loading.value = true;
-  error.value = '';
-
-  try {
-    const formData = new FormData();
-    formData.append('description', description.value);
-    formData.append('_method','PUT');
-    if (file.value) formData.append('file', file.value);
-    formData.append('is_draft', isDraft.value ? true : false);
-
-await axios.post(`${API.SOCIAL}/posts/${props.post.id_post}`, formData, {
-  headers: {
-    Authorization: 'Bearer ' + localStorage.getItem('token')
-  }
-})
-   
-
- emit('updated', response.data.data)
-    emit('close')  } 
-    catch (err) {
-    error.value = err.response?.data?.error || 'Erreur lors de la mise à jour';
-    console.error(err);
-  } finally {
-    loading.value = false;
-  }
-  const closeModal = () => {
+const closeModal = () => {
   emit('close')
 }
-};
-</script>
 
+const updatePost = async () => {
+
+  if (!description.value && !file.value) {
+    error.value = 'Vous devez fournir un texte ou un fichier'
+    return
+  }
+
+  loading.value = true
+  error.value = ''
+
+  try {
+
+    const formData = new FormData()
+    formData.append('description', description.value)
+    formData.append('_method', 'PUT')
+    formData.append('is_draft', isDraft.value)
+
+    if (file.value) {
+      formData.append('file', file.value)
+    }
+
+    const response = await axios.post(
+      `${API.SOCIAL}/posts/${props.post.id_post}`,
+      formData,
+      {
+        headers: {
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        }
+      }
+    )
+
+    emit('updated', {
+  ...props.post,
+  description: description.value,
+  media_url: previewUrl.value
+})
+    emit('close')
+
+  } catch (err) {
+
+    error.value = err.response?.data?.error || 'Erreur lors de la mise à jour'
+    console.error(err)
+
+  } finally {
+
+    loading.value = false
+
+  }
+
+}
+</script>
 <style scoped>
 .update-post {
   max-width: 520px;
