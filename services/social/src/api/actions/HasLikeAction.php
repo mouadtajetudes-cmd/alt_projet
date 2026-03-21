@@ -18,7 +18,7 @@ public function __invoke(ServerRequestInterface $request, ResponseInterface $res
 {
     try {
         $postId = (int) $request->getAttribute('postId');
-        $userId = (int) $request->getAttribute('userId');
+        $userId = (int) $request->getAttribute('id_utilisateur');
 
         $hasLiked = $this->likeService->hasLiked($postId, $userId);
 

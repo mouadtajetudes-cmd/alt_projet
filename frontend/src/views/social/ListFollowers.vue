@@ -39,10 +39,13 @@ const getAvatar = (user) => {
     : 'https://placehold.co/40x40/eeeeee/6b7280?text=Avatar'
 }
 
-// Fetch followers
 const loadFollowers = async () => {
   try {
-    const res = await axios.get(`${API.SOCIAL}/users/${props.userId}/followers`)
+    const res = await axios.get(`${API.SOCIAL}/users/${props.userId}/followers`, {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+      }
+    })
     console.log("API RESPONSE:", res.data)
 
     followers.value = res.data.data || res.data || []

@@ -15,12 +15,16 @@ use alt\api\actions\GetAllPostsAction;
 use alt\api\actions\GetByIdAction;
 use alt\api\actions\GetByIdwithStatusAction;
 use alt\api\actions\GetCommentsByPostAction;
+use alt\api\actions\GetDraftsAction;
 use alt\api\actions\GetFollowerAction;
 use alt\api\actions\GetFollowingAction;
 use alt\api\actions\GetReactionsByPostAction;
 use alt\api\actions\HasLikeAction;
 use alt\api\actions\GetByUserPostsAction;
 use alt\api\actions\IsFollowingAction;
+use alt\api\actions\PublishDraftAction;
+use alt\api\actions\UpdatePostAction;
+use alt\api\middlewares\AuthMiddleware;
 
 return function(\Slim\App $app): \Slim\App {
 
@@ -38,9 +42,15 @@ return function(\Slim\App $app): \Slim\App {
     $app->get('/posts/{id}/stats',GetByIdwithStatusAction::class);
     $app->post('/posts',CreatePostAction::class);
     $app->get('/posts/user/{id}', GetByUserPostsAction::class);
-    $app->delete('/posts/{id}', DeletePostAction::class);
+    $app->delete('/posts/{id}', DeletePostAction::class)
+        ->add(AuthMiddleware::class);
+    $app->put('/posts/{id}', UpdatePostAction::class)
+        ->add(AuthMiddleware::class);
 
-
+    $app->get('/users/{id}/drafts', GetDraftsAction::class)
+        ->add(AuthMiddleware::class);
+    $app->post('/posts/{id}/publish', PublishDraftAction::class)
+          ->add(AuthMiddleware::class);
     $app->get('/posts/{id}/reactions', GetReactionsByPostAction::class);
     $app->post('/posts/{id}/reactions',CreateReactionAction::class);
     $app->delete('/reactions/{id}', DeleteReactionAction::class);
@@ -49,14 +59,22 @@ return function(\Slim\App $app): \Slim\App {
     $app->post('/posts/{id}/comments',CreateCommentAction::class);
 
     $app->post('/signin', alt\api\actions\SignInAction::class);
-    $app->post('/posts/{id}/likes', CreateLikeAction::class);
-    $app->delete('/posts/{id}/likes',DeleteLikeAction::class);
-    $app->get('/posts/{postId}/liked/{userId}', HasLikeAction::class);
+    $app->post('/posts/{id}/likes', CreateLikeAction::class)
+             ->add(AuthMiddleware::class);
+    $app->delete('/posts/{id}/likes',DeleteLikeAction::class)
+             ->add(AuthMiddleware::class);
+    $app->get('/posts/{postId}/liked/{userId}', HasLikeAction::class)
+        ->add(AuthMiddleware::class);
+         
     $app->get('/posts/{id}/likes/count', CountPostAction::class);
-    $app->get('/users/{id}/followers',GetFollowerAction::class);
-    $app->get('/users/{id}/following',GetFollowingAction::class);
-    $app->post('/users/{id}/following', CreateFollowerAction::class);
-    $app->delete('/users/{followerId}/following/{followingId}', DeleteFollowerAction::class);
+    $app->get('/users/{id}/followers',GetFollowerAction::class)
+             ->add(AuthMiddleware::class);
+    $app->get('/users/{id}/following',GetFollowingAction::class)
+             ->add(AuthMiddleware::class);
+    $app->post('/users/{id}/following', CreateFollowerAction::class)
+             ->add(AuthMiddleware::class);
+    $app->delete('/users/{followerId}/following/{followingId}', DeleteFollowerAction::class)
+             ->add(AuthMiddleware::class);
     $app->get('/users/{followerId}/following/{followingId}', IsFollowingAction::class);
 $app->get('/uploads/{folder}/{filename}', function ($request, $response, $args) {
 

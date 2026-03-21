@@ -9,6 +9,9 @@ interface PostServiceInterface{
     public function getById(int $idPost):Post;
     public function getByUserPosts(int $idUser):array;
     public function getByIdwithStatus(int $idPost):array;
-    public function createPost(CreatePostDTO $post, $file):Post;
+    public function createPost(CreatePostDTO $post,array $file):Post;
     public function deletePost(int $idPost,int $currentUserId):bool;
+    public function updatePost(int $idPost, UpdatePostDTO $post, int $currentUserId ,?array $file = null):Post;
+    public function getdrafts( int $currentUserId):array;
+    public function publishDraft(int $postId): Post;
 }

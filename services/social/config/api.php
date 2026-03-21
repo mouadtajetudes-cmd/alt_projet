@@ -10,6 +10,7 @@ use alt\api\actions\GetCommentsByPostAction;
 use alt\api\actions\GetFollowingAction;
 use alt\api\actions\GetReactionsByPostAction;
 use alt\api\actions\IsFollowingAction;
+use alt\api\provider\jwt\JwtManagerInterface;
 use alt\core\application\ports\api\CommentServiceInterface;
 use alt\core\application\ports\api\PostServiceInterface;
 use alt\api\middlewares\AuthMiddleware;
@@ -47,9 +48,9 @@ return [
         return new CreateCommentAction($c->get(CommentServiceInterface::class));
     },
 
-    // AuthMiddleware::class => function ($c) {
-    //     return new AuthMiddleware();
-    // },
+    AuthMiddleware::class => function ($c) {
+        return new AuthMiddleware($c->get(JwtManagerInterface::class));
+    },
     GetByUserPostsAction::class => function ($c) {
         return new GetByUserPostsAction($c->get(PostServiceInterface::class));
     },

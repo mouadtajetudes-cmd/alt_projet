@@ -7,6 +7,10 @@ date_publication TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 id_utilisateur INTEGER NOT NULL, 
 FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
 );
+ALTER TABLE posts
+ADD COLUMN is_draft BOOLEAN DEFAULT TRUE;
+ALTER TABLE posts
+ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ;
 -- table:medias
 CREATE TABLE medias ( 
 id_media SERIAL PRIMARY KEY, 

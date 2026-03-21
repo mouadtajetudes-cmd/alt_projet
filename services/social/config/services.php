@@ -1,5 +1,7 @@
 <?php
 
+use alt\api\provider\jwt\JwtManager;
+use alt\api\provider\jwt\JwtManagerInterface;
 use alt\core\application\ports\api\CommentServiceInterface;
 use alt\core\application\ports\api\FollowerServiceInterface;
 use alt\core\application\ports\api\ReactionServiceInterface;
@@ -79,5 +81,9 @@ return [
     },
     FollowerServiceInterface::class => function($c){
         return new FollowerService($c->get(FollowerRepositoryInterface::class));
-    }
+    },
+    JwtManagerInterface::class=>function($c){
+        return new JwtManager("341e24419bac01ddffd0964991bc701b");
+    },
+
 ];

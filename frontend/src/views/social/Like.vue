@@ -9,6 +9,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import {useRouter} from'vue-router'
 import axios from 'axios'
 import { API } from '../../shared/config/api'
 
@@ -19,17 +20,26 @@ const props = defineProps({
   post: { type: Object, required: true },
   userId: { type: Number, required: true }
 })
-
+const router=useRouter()
 const liked = ref(false)
 const likesCount = ref(0)
-
+const token=localStorage.getItem('token')
 
 const checkLiked = async () => {
+  if(!token){
+    router.push('/login')
+    return
+  }
   if (!props.post) return
 
   try {
     const res = await axios.get(
-      `${API.SOCIAL}/posts/${props.post.id_post}/liked/${props.userId}`
+      `${API.SOCIAL}/posts/${props.post.id_post}/liked/${props.userId}` ,
+      {
+         headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      }
     )
 
     liked.value = res.data.liked
@@ -42,7 +52,8 @@ const checkLiked = async () => {
 
 const loadLikesCount = async () => {
   try {
-    const res = await axios.get(`${API.SOCIAL}/posts/${props.post.id_post}/likes/count`)
+    const res = await axios.get(`${API.SOCIAL}/posts/${props.post.id_post}/likes/count`
+    )
     likesCount.value = res.data.count
     console.log(res.data.count)
   } catch (err) {
@@ -50,34 +61,31 @@ const loadLikesCount = async () => {
   }
 }
 const toggleLike = async (postId) => {
-
   try {
-
     if (liked.value) {
-
+      // UNLIKE
       await axios.delete(`${API.SOCIAL}/posts/${postId}/likes`, {
-        data: { id_utilisateur: props.userId }
-      })
-
-      liked.value = false
-
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+      liked.value = false;
     } else {
-
-      await axios.post(`${API.SOCIAL}/posts/${postId}/likes`, {
-        id_utilisateur: props.userId
-      })
-
-      liked.value = true
-
+      // LIKE
+      await axios.post(`${API.SOCIAL}/posts/${postId}/likes`, null, {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+      liked.value = true;
     }
 
-    await loadLikesCount()
+    await loadLikesCount();
 
   } catch (err) {
-    console.error("Erreur like/unlike:", err)
+    console.error("Erreur like/unlike:", err);
   }
-}
-
+};
 
 onMounted(() => {
   checkLiked()

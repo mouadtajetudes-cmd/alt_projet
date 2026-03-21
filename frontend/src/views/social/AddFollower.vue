@@ -14,16 +14,17 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { API } from '../../shared/config/api'
+import { useRouter } from 'vue-router'
 
-// Props
 const props = defineProps({
   targetUserId: { type: Number, required: true },
   currentUserId: { type: Number, required: true }
 })
-
+const router = useRouter()
 const isFollowing = ref(false)
 const loading = ref(false)
 const error = ref(null)
+const token=localStorage.getItem('token')
 
 const checkIsFollowing = async () => {
   try {
@@ -38,7 +39,10 @@ const checkIsFollowing = async () => {
 const toggleFollow = async () => {
   loading.value = true
   error.value = null
-
+  if(!token){
+    router.push('/login')
+    return
+  }
   try {
     if (!isFollowing.value) {
 await axios.post(
@@ -46,13 +50,23 @@ await axios.post(
         {
           follower_id: props.currentUserId,
           following_id: props.targetUserId
+        },
+        {
+          headers: {
+          'Authorization': 'Bearer ' + token
         }
+        }
+
       )
 
       isFollowing.value = true
     } else {
       await axios.delete(
-  `${API.SOCIAL}/users/${props.currentUserId}/following/${props.targetUserId}`
+  `${API.SOCIAL}/users/${props.currentUserId}/following/${props.targetUserId}`,{
+    headers: {
+          'Authorization': 'Bearer ' + token
+        }
+  }
 )
       isFollowing.value = false
     }

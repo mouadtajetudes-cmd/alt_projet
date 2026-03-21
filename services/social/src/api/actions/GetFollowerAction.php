@@ -17,7 +17,7 @@ class GetFollowerAction
 
     public function __invoke(Request $request, Response $response, array $args): Response
     {
-        $userId = (int)$args['id']; 
+        $userId = (int)$args['id_utilisateur']; 
 
         try {
             $followers = $this->followerService->getFollowers($userId);

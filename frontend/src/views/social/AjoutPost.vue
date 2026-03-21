@@ -1,7 +1,6 @@
 <template>
   <div class="create-post-card">
     <form @submit.prevent="submitPost" class="create-post-form">
-      <!-- AVATAR + TEXTAREA -->
       <div class="post-header">
         <img :src="avatarUrl" alt="Avatar" class="avatar"/>
         <textarea
@@ -26,19 +25,47 @@
       </div>
 
       <div class="submit-wrapper">
-        <button type="submit" class="submit-btn">Publier</button>
+        <button type="button" class="submit-btn" @click="showPopup=true" >Publier</button>
       </div>
     </form>
   </div>
+  <div v-if="showPopup" class="popup-overlay">
+
+  <div class="popup">
+
+    <h3>Que voulez-vous faire ?</h3>
+
+    <div class="popup-buttons">
+
+      <button class="publish" @click="sendPost(true)">
+        Publier
+      </button>
+
+      <button class="draft" @click="sendPost(false)">
+        Brouillon
+      </button>
+
+      <button class="cancel" @click="showPopup = false">
+        Annuler
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import {useRouter} from 'vue-router'
 import { API } from '../../shared/config/api'
 import defaultImg from '../../assets/images/default.jpeg'
 
 const user = JSON.parse(localStorage.getItem('user') || '{}')
-const userId = user.id_utilisateur || null  
+const userId = user.id_utilisateur || null
+const showPopup=ref(false) 
+const router=useRouter() 
 
 const post = ref({
   description: '',
@@ -51,9 +78,11 @@ const onFileChange = (event) => {
   post.value.file = event.target.files[0] || null
 }
 
-const submitPost = async () => {
+const sendPost = async (isDraft) => {
+    showPopup.value = false
   if (!userId) {
     console.error('Utilisateur non authentifié !')
+    router.push('/login')
     return
   }
 
@@ -63,6 +92,7 @@ const submitPost = async () => {
     formData.append("nom", user.nom || "")
     formData.append("prenom", user.prenom || "")
     formData.append("description", post.value.description || "")
+    formData.append("is_draft",isDraft)
 
 if (post.value.file) {
   formData.append("file", post.value.file)
@@ -79,7 +109,7 @@ if (post.value.file) {
     })
 
     const data = await response.json()
-
+    
     if (data.status === 'success') {
       console.log("Post créé :", data.data)
       post.value.description = ''
@@ -87,6 +117,7 @@ if (post.value.file) {
     } else {
       console.error("Erreur backend :", data.message || data)
     }
+
 
   } catch (err) {
     console.error("Erreur réseau ou serveur :", err)
@@ -196,6 +227,61 @@ textarea:focus {
 
 .submit-btn:hover {
   background: #456df0;
+}
+.popup-overlay{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;  
+  align-items: center;     
+  z-index: 1000;
+  overflow-y: auto;         
+}
+
+.popup{
+  background:white;
+  padding:25px;
+  border-radius:12px;
+  width:300px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+
+.popup h3{
+  margin-bottom:20px;
+}
+
+.popup-buttons{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.popup-buttons button{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.publish{
+  background:#0659f4;
+  color:white;
+}
+
+.draft{
+  background:#16a34a;
+  color:white;
+}
+
+.cancel{
+  background:#ef4444;
+  color:white;
 }
 
 @media (max-width: 768px) {

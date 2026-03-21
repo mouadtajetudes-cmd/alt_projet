@@ -22,15 +22,17 @@ class CreatePostAction extends JsonError
 
             $parsedBody = $request->getParsedBody() ?: $_POST ?: $_REQUEST;
             $files = $_FILES;
-            var_dump($files);
             $idUtilisateur = $parsedBody['id_utilisateur'] ?? null;
             $file = null;
 
             if (!$idUtilisateur) {
                 throw new \InvalidArgumentException('Utilisateur manquant');
             }
-
+            $isDraft = isset($parsedBody['is_draft']) 
+    ? filter_var($parsedBody['is_draft'], FILTER_VALIDATE_BOOLEAN) 
+    : false;
             $description = $parsedBody['description'] ?? '';
+            
 if (isset($files['file'])) {
 
     $uploadedFile = $files['file'];
@@ -65,13 +67,13 @@ if (isset($files['file'])) {
         'folder' => $folder
     ];
 }
-            $dto = new CreatePostDTO($description, $idUtilisateur);
+            $dto = new CreatePostDTO($description, $idUtilisateur,$isDraft);
             $post = $this->postService->createPost($dto, $file);
 
-            // --- Construire le retour complet pour le frontend ---
 $postArray = [
     'id_post' => $post->getIdPost(),
     'description' => $post->getDescription(),
+    'isDraft'=>$post->getIsDraft(),
     'id_utilisateur' => $post->getIdUtilisateur(),
     'titre' => $post->getTitre(),
     'media_type' => $post->getMediaType(),

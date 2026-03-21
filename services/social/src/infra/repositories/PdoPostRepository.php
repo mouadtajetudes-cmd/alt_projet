@@ -3,6 +3,8 @@
 namespace alt\infra\repositories;
 
 use alt\core\application\ports\api\CreatePostDTO;
+use alt\core\application\ports\api\UpdateAdDTO;
+use alt\core\application\ports\api\UpdatePostDTO;
 use alt\core\domain\entities\Post;
 use alt\core\repositories\PostRepositoryInterface;
 use PDO;
@@ -24,6 +26,7 @@ public function findAll(int $page, int $limit): array
         'SELECT p.id_post,
                 p.description,
                 p.date_publication,
+                p.is_draft,
                 u.id_utilisateur,
                 u.nom,
                 u.prenom,
@@ -36,6 +39,7 @@ public function findAll(int $page, int $limit): array
          JOIN utilisateurs u ON p.id_utilisateur = u.id_utilisateur
          LEFT JOIN post_medias pm ON p.id_post = pm.id_post
          LEFT JOIN medias m ON pm.id_media = m.id_media
+         WHERE P.is_draft=TRUE
          ORDER BY p.date_publication DESC
          LIMIT :limit OFFSET :offset'
     );
@@ -61,7 +65,7 @@ public function findAll(int $page, int $limit): array
 }    public function findById(int $idPost): Post
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id_post, titre, description, date_publication, id_utilisateur
+            'SELECT id_post, titre, description, date_publication, id_utilisateur,is_draft
              FROM posts
              WHERE id_post = :id'
         );
@@ -75,10 +79,10 @@ public function findAll(int $page, int $limit): array
 
         return new Post(
         (int) $row['id_post'],
-        $row['titre'],
+        $row['is_draft'],
         $row['description'],
-        $row['date_publication'],
-         $row['id_utilisateur']
+        (int) $row['id_utilisateur'],
+        $row['titre'],
     );
     }
 
@@ -112,16 +116,16 @@ public function create(CreatePostDTO $postDTO, ?array $file = null): Post
     try {
         $this->pdo->beginTransaction();
 
-        // --- Insert post ---
         $stmt = $this->pdo->prepare(
-            'INSERT INTO posts (description, id_utilisateur)
-             VALUES (:description, :id_utilisateur)
-             RETURNING id_post, description, id_utilisateur'
+            'INSERT INTO posts (description, id_utilisateur,is_draft)
+             VALUES (:description, :id_utilisateur,:is_draft)
+             RETURNING id_post, description, id_utilisateur,is_draft'
         );
-        $stmt->execute([
-            'description' => $postDTO->getDescription(),
-            'id_utilisateur' => $postDTO->getIdUtilisateur()
-        ]);
+        $stmt->bindValue(':description', $postDTO->getDescription(), PDO::PARAM_STR);
+        $stmt->bindValue(':id_utilisateur', $postDTO->getIdUtilisateur(), PDO::PARAM_INT);
+        $stmt->bindValue(':is_draft', $postDTO->getIsDraft(), PDO::PARAM_BOOL);
+        $stmt->execute();
+
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         $postId = (int) $row['id_post'];
@@ -161,7 +165,8 @@ public function create(CreatePostDTO $postDTO, ?array $file = null): Post
         $this->pdo->commit();
 
         return new Post(
-            $postId,                 
+            $postId,
+            $row['is_draft'] ,                
             $row['description'],       
             (int)$row['id_utilisateur'], 
             $titre,                   
@@ -189,7 +194,7 @@ public function create(CreatePostDTO $postDTO, ?array $file = null): Post
             JOIN utilisateurs u ON p.id_utilisateur = u.id_utilisateur
             LEFT JOIN post_medias pm ON p.id_post = pm.id_post
             LEFT JOIN medias m ON pm.id_media = m.id_media      
-            WHERE p.id_utilisateur = :idUser
+            WHERE p.id_utilisateur = :idUser AND p.is_draft= true
             ORDER BY p.date_publication DESC";
 
     $stmt = $this->pdo->prepare($sql);
@@ -211,14 +216,250 @@ public function create(CreatePostDTO $postDTO, ?array $file = null): Post
 
     return $rows;
 }
-public function delete(int $idPost): bool
+public function delete(int $idPost, int $currentUserId): bool
+{
+    $this->pdo->beginTransaction();
+
+    try {
+        $stmt = $this->pdo->prepare('SELECT id_utilisateur FROM posts WHERE id_post = :id');
+        $stmt->execute(['id' => $idPost]);
+        $post = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$post) return false;
+
+        if ((int)$post['id_utilisateur'] !== $currentUserId) {
+            throw new \RuntimeException("Non autorisé");
+        }
+
+        $stmt = $this->pdo->prepare('SELECT id_media FROM post_medias WHERE id_post = :id');
+        $stmt->execute(['id' => $idPost]);
+        $medias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmt = $this->pdo->prepare('DELETE FROM post_medias WHERE id_post = :id');
+        $stmt->execute(['id' => $idPost]);
+
+        if (!empty($medias)) {
+            $ids = array_column($medias, 'id_media');
+            $in  = str_repeat('?,', count($ids) - 1) . '?';
+            $stmt = $this->pdo->prepare("DELETE FROM medias WHERE id_media IN ($in)");
+            $stmt->execute($ids);
+        }
+
+        $stmt = $this->pdo->prepare('DELETE FROM posts WHERE id_post = :id');
+        $stmt->execute(['id' => $idPost]);
+
+        $this->pdo->commit();
+
+        return true;
+
+    } catch (\Exception $e) {
+        $this->pdo->rollBack();
+        throw $e;
+    }
+}
+public function update(int $idPost,UpdatePostDTO $postDTO,int $currentUserId,?array $file = null): Post {
+
+    $this->pdo->beginTransaction();
+
+    try {
+
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM posts WHERE id_post = :id'
+        );
+        $stmt->execute(['id' => $idPost]);
+
+        $existingPost = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$existingPost) {
+            throw new \RuntimeException('Post introuvable');
+        }
+
+        if ((int)$existingPost['id_utilisateur'] !== $currentUserId) {
+            throw new \RuntimeException('Non autorisé');
+        }
+
+        $description = $postDTO->getDescription() ?? $existingPost['description'];
+        $isdraft=(bool) $postDTO->getIsDraft();
+
+        $stmt = $this->pdo->prepare(
+            'UPDATE posts
+             SET description = :description,is_draft
+             WHERE id_post = :id
+             RETURNING id_post, description, id_utilisateur'
+        );
+
+        $stmt->execute([
+            'id_draft'=>$isdraft,
+            'description' => $description,
+            'id' => $idPost
+        ]);
+
+        $postRow = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $titre = null;
+        $mediaType = null;
+        $mediaUrl = null;
+
+        if($file !== null && isset($file['tmp_name'], $file['name'])) {
+
+            $stmt = $this->pdo->prepare(
+                'SELECT m.id_media, m.titre
+                 FROM medias m
+                 JOIN post_medias pm ON pm.id_media = m.id_media
+                 WHERE pm.id_post = :id'
+            );
+
+            $stmt->execute(['id' => $idPost]);
+            $oldMedia = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($oldMedia) {
+
+                $oldPath = __DIR__ . '/../../api/uploads/'. $file['folder'] .'/' . $oldMedia['titre'];
+
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+
+                $stmt = $this->pdo->prepare(
+                    'DELETE FROM post_medias WHERE id_post = :id'
+                );
+                $stmt->execute(['id' => $idPost]);
+
+                $stmt = $this->pdo->prepare(
+                    'DELETE FROM medias WHERE id_media = :id'
+                );
+                $stmt->execute(['id' => $oldMedia['id_media']]);
+            }
+
+            $uploadDir = __DIR__ . '/../../api/uploads/'. $file['folder'] .'/';
+            if (!file_exists($uploadDir) && !is_dir($uploadDir)) {
+                  mkdir($uploadDir, 0777, true);
+            }
+            $fileName = uniqid() . '_' . basename($file['name']);
+            $destination = $uploadDir . $fileName;
+
+            move_uploaded_file($file['tmp_name'], $destination);
+
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO medias (titre, type)
+                 VALUES (:titre, :type)
+                 RETURNING id_media, titre, type'
+            );
+
+            $stmt->execute([
+                'titre' => $fileName,
+                'type' => $file['type']
+            ]);
+
+            $mediaRow = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO post_medias (id_post, id_media)
+                 VALUES (:post, :media)'
+            );
+
+            $stmt->execute([
+                'post' => $idPost,
+                'media' => $mediaRow['id_media']
+            ]);
+            $titre = $mediaRow['titre'];
+            $mediaType = $mediaRow['type'];
+
+            $mediaUrl = "http://localhost:6085/uploads/" . $file['folder'] . "/" . $fileName;
+        }
+    
+
+        $this->pdo->commit();
+
+        return new Post(
+            (int)$postRow['id_post'],
+            $postRow['is_draft'],
+            $postRow['description'],
+            (int)$currentUserId,
+            $titre,
+            $mediaType,
+            $mediaUrl
+        );
+
+    } catch (\Exception $e) {
+
+        $this->pdo->rollBack();
+        throw $e;
+    }
+}
+public function findDrafts(int $idUser): array
+{
+    $sql = "
+        SELECT 
+            p.id_post,
+            p.description,
+            p.date_publication,
+            m.titre,
+            m.url AS media_url,
+            m.type AS media_type
+        FROM posts p
+        LEFT JOIN post_medias pm ON p.id_post = pm.id_post
+        LEFT JOIN medias m ON pm.id_media = m.id_media
+        WHERE p.id_utilisateur = :id
+        AND p.is_draft = FALSE
+        ORDER BY p.date_publication DESC
+    ";
+
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute(['id' => $idUser]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as &$row) {
+
+        if ($row['media_type'] === 'image') {
+            $row['media_url'] = 'http://localhost:6085/uploads/images/' . $row['titre'];
+        }
+
+        if ($row['media_type'] === 'video') {
+            $row['media_url'] = 'http://localhost:6085/uploads/videos/' . $row['titre'];
+        }
+    }
+
+
+    return $rows;
+}
+public function createDraft(int $idpost): Post
 {
     $stmt = $this->pdo->prepare(
-        'DELETE FROM posts WHERE id_post = :id'
+        "UPDATE posts 
+         SET is_draft = TRUE, updated_at = NOW() 
+         WHERE id_post = :id"
+    );
+    $stmt->execute(['id' => $idpost]);
+
+    $stmt = $this->pdo->prepare(
+        "SELECT 
+            p.id_post,
+            p.description,
+            p.is_draft,
+            p.date_publication,
+            m.url AS media_url,
+            m.type AS media_type
+        FROM posts p
+        LEFT JOIN post_medias pm ON p.id_post = pm.id_post
+        LEFT JOIN medias m ON pm.id_media = m.id_media
+         WHERE p.id_post = :id"
+    );
+    $stmt->execute(['id' => $idpost]);
+    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$data) {
+        throw new \Exception("Post non trouvé");
+    }
+
+    $post = new Post(
+        idPost: $data['id_post'],
+        isDraft: (bool)$data['is_draft'],
+        description: $data['description'],
+        idUtilisateur: $data['id_utilisateur'],
+        mediaUrl: $data['media_url'] ?? null,
+        mediaType: $data['media_type'] ?? null
     );
 
-    $stmt->execute(['id' => $idPost]);
-
-    return $stmt->rowCount() > 0;
+    return $post;
 }
 }

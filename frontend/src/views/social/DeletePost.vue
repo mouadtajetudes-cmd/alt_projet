@@ -14,9 +14,15 @@ const deletePost = async (postId) => {
   if (!confirm("Voulez-vous vraiment supprimer ce post ?")) return
 
   try {
-    await axios.delete(`${API.SOCIAL}/posts/${postId}`)
+    await axios.delete(`${API.SOCIAL}/posts/${postId}`,
+      {
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        }
+      }
 
-    // retirer le post de la liste
+    )
+
     posts.value = posts.value.filter(post => post.id_post !== postId)
 
   } catch (err) {

@@ -17,6 +17,7 @@ RUN install-php-extensions \
     mysqli pdo_pgsql \
     @composer \
     xdebug
+COPY /usr/local/etc/php/php.ini
     
 
 WORKDIR /var/php

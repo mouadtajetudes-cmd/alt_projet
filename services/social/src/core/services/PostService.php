@@ -4,6 +4,7 @@ namespace alt\core\services;
 
 use alt\core\application\ports\api\CreatePostDTO;
 use alt\core\application\ports\api\PostServiceInterface;
+use alt\core\application\ports\api\UpdatePostDTO;
 use alt\core\domain\entities\Post;
 use alt\core\repositories\PostRepositoryInterface;
 
@@ -31,7 +32,7 @@ class PostService implements PostServiceInterface
         return $this->postRepository->findByIdWithStats($idPost);
     }
 
-    public function createPost(CreatePostDTO $dto, $file): Post
+    public function createPost(CreatePostDTO $dto, ?array $file = null): Post
     {
         return $this->postRepository->create($dto, $file);
     }
@@ -47,10 +48,22 @@ public function deletePost(int $idPost, int $currentUserId): bool
         throw new \Exception("Post introuvable");
     }
 
-    // Vérification sécurité
     if ($post->getIdUtilisateur() !== $currentUserId) {
         throw new \Exception("Non autorisé");
     }
 
-    return $this->postRepository->delete($idPost);
-}}
+    return $this->postRepository->delete($idPost,$currentUserId);
+}
+public function updatePost(int $idPost, UpdatePostDTO $post, int $currentUserId,?array $file = null):Post
+{
+    return $this->postRepository->update($idPost, $post,$currentUserId, $file);
+}
+public function getDrafts(int $currentUserId): array
+{
+    return $this->postRepository->findDrafts($currentUserId);
+
+}
+public function publishDraft(int $postId): Post{
+    return $this->postRepository->createDraft($postId);
+}
+}

@@ -48,18 +48,33 @@
             <span>{{ post.description }}</span>
           </div>
 
-          <!-- ACTIONS -->
           <div class="post-s">
-            <Like :post="post" :userId="currentId" />
-            <button @click="openComments(post)" class="comment-btn">
-              <img src="../assets/images/commentaire.png" class="commentImg" alt="Commentaire">
-            </button>
-          </div>
-        </div>
-      </div>
+  <Like :post="post" :userId="currentId" />
 
+  <button @click="openComments(post)" class="comment-btn">
+    <img src="../assets/images/commentaire.png" class="commentImg">
+  </button>
+
+<a  v-if="post.media_url"
+    :href="post.media_url"
+    :download="'post-' + post.id_post"
+    class="download-btn">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24" width="20" height="20">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 12v8m0 0l-4-4m4 4l4-4M12 4v8"/>
+  </svg>
+</a>
+  <!-- <a
+    v-if="post.media_url"
+    :href="post.media_url"
+    download
+    class="download-btn"
+  >
+    ⬇️
+  </a> -->
+</div>
     </div>
-
+      </div>
+    </div>
     <div v-if="showCommentsModal" class="comments-modal">
       <div class="comments-content">
         <button class="close-btn" @click="closeComments">✖</button>
@@ -69,6 +84,8 @@
       </div>
     </div>
   </div>
+
+
 </template>
 
 <script setup>
@@ -94,7 +111,6 @@ const showCommentsModal = ref(false);
 const selectedPost = ref(null);
 const router = useRouter();
 
-// Utilisateur authentifié
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 const currentId = user.id_utilisateur ? Number(user.id_utilisateur) : null;
 
@@ -117,7 +133,12 @@ const getUserAvatar = (post) => {
 const loadPosts = async () => {
   try {
     const response = await axios.get(`${API.SOCIAL}/posts`);
-    posts.value = response.data.data || [];
+    const allPosts = response.data.data || response.data || []
+
+    posts.value = allPosts.filter(
+  post => post.is_draft === true || post.is_draft === 1 || post.is_draft === "true"
+);
+
   } catch(err) {
     console.error(err);
     error.value = "Impossible de charger les posts";
@@ -211,16 +232,16 @@ onUnmounted(() => {
   width:100%;
   padding:0.6rem 1rem 0.6rem 35px;
   border-radius:30px;
-  background:white;
+  background:#f8f9fa;
+  border:none;
 }
 
 .search-bar input:focus{
   outline:none;
-  border-color:#4a6cf7;
+  border-color:#1c2f7b;
   background:white;
-  box-shadow:0 0 0 3px rgba(74,108,247,0.15);
+  box-shadow:0 0 0 3px rgba(14, 31, 100, 0.15);
 }
-
 
 .posts-list{
   display:flex;
@@ -228,23 +249,20 @@ onUnmounted(() => {
   gap:1.5rem;
 }
 
-
 .post-card{
-  background: rgba(255,255,255,0.95);
-  border-radius:16px;
-  padding:1.15rem;
-  box-shadow:0 8px 24px rgba(23, 40, 63, 0.08);
-  border: 1px solid rgba(141, 157, 216, 0.2);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-  animation: card-in 0.5s ease both;
+  background: white;
+  border-radius:18px;
+  padding:1rem;
+  box-shadow:0 6px 20px rgba(0,0,0,0.08);
+  border:1px solid #e5e7eb;
+  transition: all 0.25s ease;
 }
 
-.post-card:hover{
-  transform:translateY(-5px) scale(1.005);
-  box-shadow:0 14px 30px rgba(23, 40, 63, 0.16);
-  border-color: rgba(81, 103, 196, 0.35);
+.post-card:hover
+{
+  transform: translateY(-4px);
+  box-shadow:0 12px 30px rgba(0,0,0,0.15);
 }
-
 .header-card{
   display:flex;
   justify-content:space-between;
@@ -268,12 +286,12 @@ button.image-user{
 }
 
 .image-user img{
-  width:42px;
-  height:42px;
+  width:44px;
+  height:44px;
   border-radius:50%;
-  object-fit:cover;
-  }
-
+  border:2px solid white;
+  box-shadow:0 3px 8px rgba(0,0,0,0.15);
+}
 .post-user span{
   font-weight:700;
   color:#1f305b;
@@ -285,7 +303,6 @@ button.image-user{
   font-weight:500;
 }
 
-/* MEDIA */
 
 .media-wrapper{
   width:100%;
@@ -330,8 +347,8 @@ button.image-user{
 .post-s{
   display:flex;
   align-items:center;
-  gap:12px;
-  margin-top:0.8rem;
+  gap:14px;
+  margin-top:10px;
 }
 
 .comment-btn{
@@ -355,6 +372,23 @@ button.image-user{
   width: 22px;
   height: 22px;
   display:block;
+}
+.download-btn{
+  background: #091241;
+  border: none;
+  font-size:20px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  padding:6px;
+  transition: all 0.2s ease;
+}
+
+.download-btn:hover{
+  background: rgba(61, 34, 178, 0.63);
+  transform: scale(1.1);
 }
 @keyframes card-in {
   0% {

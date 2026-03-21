@@ -1,7 +1,6 @@
 <?php
-namespace App\core\Application\Middleware;
+namespace alt\api\middlewares;
 
-use App\Core\Application\ports\spi\RendezVousRepository;
 use App\core\Application\Provider\jwt\JwtManager;
 use App\core\Application\useCase\AuthzService;
 use App\core\Application\DTO\ProfileDTO;
@@ -14,38 +13,31 @@ class AuthzMiddleware {
 
     private AuthzService $authzservice;
     private JwtManager $authnService;
-    private RendezVousRepository $rdv;
 
     public function __construct(
         AuthzService $authzservice, 
-        RendezVousRepository $rdv,
         JwtManager $authnService
     ){
         $this->authzservice = $authzservice;
-        $this->rdv = $rdv;
         $this->authnService = $authnService;
     }
 
     public function __invoke(Request $request, RequestHandler $handler): Response {
 
-        // 1. Vérifier le token
         $token = $request->getHeaderLine('Authorization');
         if (!$token) {
             return $this->forbiddenResponse('Token manquant');
         }
 
         try {
-            // 2. Valider le token → Récupérer ProfileDTO
             $profile = $this->authnService->validate($token);
 
             if (!$profile instanceof ProfileDTO) {
                 return $this->forbiddenResponse('Token invalide');
             }
 
-            // 3. Ajouter profile dans la requête
             $request = $request->withAttribute('profile', $profile);
 
-            // 4. Obtenir la route & arguments
             $routeContext = \Slim\Routing\RouteContext::fromRequest($request);
             $route = $routeContext->getRoute();
 
@@ -56,7 +48,6 @@ class AuthzMiddleware {
             $routeName = $route->getName() ?? '';
             $args = $route->getArguments();
 
-            // 5. Vérification des permissions
             switch($routeName){
 
                 case 'agenda_pratien':
@@ -79,7 +70,6 @@ class AuthzMiddleware {
                     break;
             }
 
-            // 6. OK → continuer
             return $handler->handle($request);
 
         } catch (\Exception $e) {

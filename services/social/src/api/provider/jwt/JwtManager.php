@@ -6,12 +6,12 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
 class JwtManager implements JwtManagerInterface{
-    private string $secret='0a0e486437eeb3b670b2869a4acc2f5bb178baa0eea9b79111b6da0896fcb394';
+    private string $secret='341e24419bac01ddffd0964991bc701b';
     private int $access_expiration_time=3600;
     private int $refresh_expiration_time=604800;
     private string $issuer="toubilib";
 
-    public function __construct(string $secret='0a0e486437eeb3b670b2869a4acc2f5bb178baa0eea9b79111b6da0896fcb394'
+    public function __construct(string $secret='341e24419bac01ddffd0964991bc701b'
     ,int $access_expiration_time=3600,int $refresh_expiration_time=604800
     ,string $issuer="toubilib"){
         $this->secret = $secret?? $_ENV['JWT_SECRET'];
@@ -31,15 +31,15 @@ class JwtManager implements JwtManagerInterface{
             'sub'=>$payload['id'],
             'exp'=>$expTime,
             'upr'=>$payload
-        ],$this->secret, 'HS512');
+        ],$this->secret, 'HS256');
         return $token;
     }
 public function validate(string $token): array
 {
     try {
-        $decoded = JWT::decode($token, new Key($this->secret, 'HS512'));
+        $decoded = JWT::decode($token, new Key($this->secret, 'HS256'));
 
-        $userPayload = (array) $decoded->upr; 
+        $userPayload = isset($decoded->upr) ? (array) $decoded->upr : [];
 
         return [
             'userId' => $decoded->sub,

@@ -19,11 +19,11 @@ class DeleteLikeAction
         try {
             $postId = (int) $request->getAttribute('id');
 
-            $data = json_decode((string) $request->getBody(), true);
-            if (empty($data['id_utilisateur'])) {
+            $userId = (int) $request->getAttribute('id_utilisateur');
+            if (empty($userId)) {
                 throw new \InvalidArgumentException('Utilisateur manquant');
             }
-            $userId = (int) $data['id_utilisateur'];
+            
 
             $deleted = $this->likeService->unlike($postId, $userId);
 

@@ -18,8 +18,15 @@ public function __invoke(ServerRequestInterface $request, ResponseInterface $res
 {
     $idPost = (int) $args['id'];
 
-    $currentUser = $request->getAttribute('user');
-    $currentUserId = $currentUser['id'];
+    $currentUserId =(int) $request->getAttribute('id_utilisateur');
+
+    if (!$currentUserId) {
+        $response->getBody()->write(json_encode([
+            'error' => 'Utilisateur non authentifié'
+        ]));
+
+        return $response->withHeader('Content-Type','application/json')->withStatus(401);
+    }
 
     try {
 
@@ -40,4 +47,5 @@ public function __invoke(ServerRequestInterface $request, ResponseInterface $res
 
         return $response->withHeader('Content-Type','application/json')->withStatus(403);
     }
-}}
+}
+}

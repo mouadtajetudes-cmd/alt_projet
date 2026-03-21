@@ -23,6 +23,7 @@ import Social from '../views/Social.vue'
 import Marketplace from '../views/Marketplace.vue'
 import UserPosts from '../views/social/UserPosts.vue'
 import ListFollowers from '../views/social/ListFollowers.vue'
+import UpdatePost from '../views/social/UpdatePost.vue'
 
 const routes = [
   {
@@ -75,6 +76,11 @@ const routes = [
     component:Reaction
   }
   ,
+  {
+    path:'/updatePost/:id',
+    name:'UpdatePost',
+    component: UpdatePost
+  },
   {
     path:'/comment',
     name:'commantaire',

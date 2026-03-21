@@ -14,6 +14,8 @@
 </template>
 <script setup>
 import { ref } from 'vue';
+import {useRouter} from'vue-router'
+
 import axios from 'axios';
 import { API } from '../../shared/config/api';
 
@@ -24,12 +26,17 @@ const props = defineProps({
     required: true
   }
 })
+const router=useRouter()
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 const userId = user.id_utilisateur; 
 const resetComment = () => {
   newComment.value = ''
 }
 const submitComment = async () => {
+  if(!userId){
+    router.push('/login')
+    return
+  }
   if (!newComment.value.trim()) return 
   try {
     const res = await axios.post(`${API.SOCIAL}/posts/${props.postId}/comments`, {

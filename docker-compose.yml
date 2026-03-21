@@ -13,6 +13,7 @@ services:
       - '6090:80'
     volumes:
       - ./gateway:/var/php
+      - ./build/php.ini:/usr/local/etc/php/php.ini
     working_dir: /var/php
     networks:
       - alt.net
@@ -57,6 +58,7 @@ services:
       - '6085:80'
     volumes:
       - ./services/social:/var/php
+      - ./build/php.ini:/usr/local/etc/php/php.ini
     working_dir: /var/php
     networks:
       - alt.net

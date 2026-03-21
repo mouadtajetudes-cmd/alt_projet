@@ -41,7 +41,11 @@ const getAvatar = (user) => {
 
 const loadFollowing = async () => {
   try {
-    const res = await axios.get(`${API.SOCIAL}/users/${props.userId}/following`)
+    const res = await axios.get(`${API.SOCIAL}/users/${props.userId}/following`, {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+      }
+    })
     following.value = res.data.data || res.data || []
     followingCount.value = following.value.length
     emit('update-count', followingCount.value)

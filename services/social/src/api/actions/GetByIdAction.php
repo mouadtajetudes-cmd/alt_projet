@@ -31,11 +31,9 @@ class GetByIdAction extends JsonError
 
             $data = [
     'id' => $post->getIdPost(),
-    'titre' => $post->getTitre(),
     'description' => $post->getDescription(),
-    'date_publication' => $post->getDatePublication(),
-    'id_utilisateur' => $post->getIdUtilisateur()
-];
+    'id_utilisateur' => $post->getIdUtilisateur(),
+    'titre' => $post->getTitre()];
 
 $response->getBody()->write(json_encode([
     'status' => 'success',

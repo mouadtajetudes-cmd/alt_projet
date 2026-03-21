@@ -16,7 +16,7 @@ class GetFollowingAction
 
     public function __invoke( ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
-        $userId = (int)$args['id'];
+        $userId = (int)$args['id_utilisateur'];
         $following = $this->followerService->getFollowing($userId);
 
         $response->getBody()->write(json_encode($following));
