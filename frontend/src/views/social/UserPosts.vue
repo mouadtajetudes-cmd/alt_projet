@@ -96,7 +96,7 @@
       <path d="M3 6h18v2H3V6zm2 3h14l-1 12H6L5 9zm4 2v8h2v-8H9zm4 0v8h2v-8h-2z"/>
     </svg>
   </button>
-  <button @click="openEditModal(post)" class="edit-btn">
+  <button @click="openEditModal(post)" class="edit-btn" v-if="canEdit(post)">
     <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24">
       <path d="M3 17.25V21h3.75l11-11.03-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
     </svg>
@@ -167,8 +167,8 @@
 <div v-if="showEditModal" class="modal-overlay" @click="closeModal">
   <UpdatePost
     :post="postToEdit"
-    @close="closeModal"
-    @updated="onUpdated"
+    @close="closeEditModal"
+    @updated="handlePostUpdated"
     @click.stop
   />
 </div>
@@ -186,7 +186,6 @@ import UpdatePost from './UpdatePost.vue';
 
 
 const route = useRoute()
-const router=useRouter()
 const userId = Number(route.params.id)
 const posts = ref([])
 const userProfile = ref(null)
@@ -199,6 +198,9 @@ const followingCount = ref(0)
 const showEditModal = ref(false)
 const postToEdit = ref(null)
 
+const canEdit = (post) => {
+  return post.id_utilisateur === currentUserId
+}
 const openEditModal = (post) => {
   postToEdit.value = { ...post }  
   showEditModal.value = true
@@ -212,9 +214,6 @@ const closeEditModal = () => {
 const handlePostUpdated = (updatedPost) => {
   const index = posts.value.findIndex(p => p.id_post === updatedPost.id_post)
   if (index !== -1) posts.value[index] = { ...updatedPost }
-}
-const goToUpdate = (postId) => {
-  router.push({ name: 'UpdatePost', params: { id: postId } })
 }
 
 const user = computed(() => {

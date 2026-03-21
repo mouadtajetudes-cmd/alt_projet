@@ -273,23 +273,23 @@ public function update(int $idPost,UpdatePostDTO $postDTO,int $currentUserId,?ar
         if (!$existingPost) {
             throw new \RuntimeException('Post introuvable');
         }
-
+       var_dump($currentUserId, $existingPost['id_utilisateur']);
         if ((int)$existingPost['id_utilisateur'] !== $currentUserId) {
             throw new \RuntimeException('Non autorisé');
         }
 
         $description = $postDTO->getDescription() ?? $existingPost['description'];
         $isdraft=(bool) $postDTO->getIsDraft();
-
+       
         $stmt = $this->pdo->prepare(
             'UPDATE posts
-             SET description = :description,is_draft
+             SET description = :description, is_draft= :is_draft
              WHERE id_post = :id
-             RETURNING id_post, description, id_utilisateur'
+             RETURNING id_post, is_draft, description, id_utilisateur'
         );
 
         $stmt->execute([
-            'id_draft'=>$isdraft,
+            'is_draft'=>$isdraft,
             'description' => $description,
             'id' => $idPost
         ]);

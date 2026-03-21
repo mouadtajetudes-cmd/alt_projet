@@ -44,7 +44,7 @@ return function(\Slim\App $app): \Slim\App {
     $app->get('/posts/user/{id}', GetByUserPostsAction::class);
     $app->delete('/posts/{id}', DeletePostAction::class)
         ->add(AuthMiddleware::class);
-    $app->put('/posts/{id}', UpdatePostAction::class)
+    $app->post('/posts/{id}', UpdatePostAction::class)
         ->add(AuthMiddleware::class);
 
     $app->get('/users/{id}/drafts', GetDraftsAction::class)

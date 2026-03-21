@@ -50,7 +50,6 @@ const error = ref('');
 const emit = defineEmits(['close', 'updated'])
 const isImage = computed(() => file.value && file.value.type.startsWith('image/'));
 const isDraft=ref(true)
-
 const handleFile = (event) => {
   const selectedFile = event.target.files[0];
   if (!selectedFile) return;
@@ -87,10 +86,11 @@ const updatePost = async () => {
   try {
     const formData = new FormData();
     formData.append('description', description.value);
+    formData.append('_method','PUT');
     if (file.value) formData.append('file', file.value);
     formData.append('is_draft', isDraft.value ? true : false);
 
-await axios.put(`${API.SOCIAL}/posts/${postId}`, formData, {
+await axios.post(`${API.SOCIAL}/posts/${postId}`, formData, {
   headers: {
     Authorization: 'Bearer ' + localStorage.getItem('token')
   }

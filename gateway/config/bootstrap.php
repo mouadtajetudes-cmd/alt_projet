@@ -16,10 +16,11 @@ $container = $builder->build();
 AppFactory::setContainer($container);
 $app = AppFactory::create();
 
-$app = (require __DIR__ . '/routes.php')($app);
 $app->add(new CorsMiddleware());
 $app->addRoutingMiddleware();
 $app->addBodyParsingMiddleware();
+$app = (require __DIR__ . '/routes.php')($app);
+
 
 
 $app->addErrorMiddleware(true, true, true);
