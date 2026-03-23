@@ -3,11 +3,11 @@
 -- ============================================
 
 -- Insert sample users
-INSERT INTO utilisateurs (nom, prenom, email, password, administrateur, premium, points) VALUES
-('Admin', 'System', 'admin@alt.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', TRUE, TRUE, 1000),
-('Doe', 'John', 'john@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', FALSE, TRUE, 500),
-('Smith', 'Jane', 'jane@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', FALSE, FALSE, 150),
-('Martin', 'Paul', 'paul@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', FALSE, FALSE, 75);
+INSERT INTO utilisateurs (nom, prenom, email, password, administrateur,telephone, premium, points) VALUES
+('Admin', 'System', 'admin@alt.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', TRUE, '0612345678', TRUE, 1000),
+('Doe', 'John', 'john@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', FALSE, '0987654321', TRUE, 500),
+('Smith', 'Jane', 'jane@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', FALSE, '0777777777', FALSE, 150),
+('Martin', 'Paul', 'paul@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', FALSE, '0611223344', FALSE, 75);
 
 -- Insert sample groups
 INSERT INTO groupes (nom, description, niveau) VALUES

@@ -1,10 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace alt\api\actions;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use alt\core\services\MessageServiceInterface;
+use alt\core\application\ports\api\MessageServiceInterface;
 
 class GetMessagesAction
 {
@@ -21,15 +22,22 @@ class GetMessagesAction
         array $args
     ): ResponseInterface {
         
-        $roomId = $args['roomId'] ?? null;
+        $params = $request->getQueryParams();
+        $conversationId = $params['conversationId'] ?? null;
+        $page = (int) ($params['page'] ?? 1);
+        $limit = (int) ($params['limit'] ?? 50);
+
+        if (!$conversationId) {
+            $response->getBody()->write(json_encode([
+                'error' => 'conversationId is required'
+            ]));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
 
         try {
-            $messages = $this->messageService->getMessagesByRoom($roomId);
+            $messages = $this->messageService->getMessagesByConversation($conversationId, $page, $limit);
             
-            $response->getBody()->write(json_encode([
-                'type' => 'collection',
-                'messages' => $messages
-            ]));
+            $response->getBody()->write(json_encode(array_map(fn($m) => $m->toArray(), $messages)));
             
             return $response
                 ->withHeader('Content-Type', 'application/json')
@@ -37,14 +45,13 @@ class GetMessagesAction
                 
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
-                'type' => 'error',
-                'error' => 404,
-                'message' => $e->getMessage()
+                'error' => $e->getMessage()
             ]));
             
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withStatus(404);
+                ->withStatus(500);
         }
     }
 }
+
