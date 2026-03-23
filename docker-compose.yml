@@ -145,10 +145,17 @@ services:
       - alt.net
     volumes:
       - alt_postgres_data:/var/lib/postgresql/data
-      - ./sql/auth_schema.sql:/docker-entrypoint-initdb.d/1-auth_schema.sql
-      - ./sql/auth_data.sql:/docker-entrypoint-initdb.d/2-auth_data.sql
-      - ./sql/marketplace_schema.sql:/docker-entrypoint-initdb.d/3-marketplace_schema.sql
-      - ./sql/marketplace_data.sql:/docker-entrypoint-initdb.d/4-marketplace_data.sql
+      - ./sql/auth_schema.sql:/docker-entrypoint-initdb.d/01-auth_schema.sql
+      - ./sql/auth_data.sql:/docker-entrypoint-initdb.d/02-auth_data.sql
+      - ./sql/marketplace_schema.sql:/docker-entrypoint-initdb.d/03-marketplace_schema.sql
+      - ./sql/marketplace_data.sql:/docker-entrypoint-initdb.d/04-marketplace_data.sql
+      - ./sql/groups_schema.sql:/docker-entrypoint-initdb.d/05-groups_schema.sql
+      - ./sql/friends_schema.sql:/docker-entrypoint-initdb.d/06-friends_schema.sql
+      - ./sql/social.schema.sql:/docker-entrypoint-initdb.d/07-social_schema.sql
+      - ./sql/social.data.sql:/docker-entrypoint-initdb.d/08-social_data.sql
+      - ./sql/avatar_schema.sql:/docker-entrypoint-initdb.d/09-avatar_schema.sql
+      - ./sql/avatar_data.sql:/docker-entrypoint-initdb.d/10-avatar_data.sql
+      - ./sql/add_avatar_url.sql:/docker-entrypoint-initdb.d/11-add_avatar_url.sql
 
   # service alt.mongo : base de données MongoDB pour le chat
   #

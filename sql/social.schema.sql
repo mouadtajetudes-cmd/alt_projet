@@ -1,5 +1,5 @@
 -- table:posts
-CREATE TABLE posts ( 
+CREATE TABLE IF NOT EXISTS posts ( 
 id_post SERIAL PRIMARY KEY, 
 titre VARCHAR(255) NOT NULL, 
 description TEXT, 
@@ -8,14 +8,14 @@ id_utilisateur INTEGER NOT NULL,
 FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
 );
 -- table:medias
-CREATE TABLE medias ( 
+CREATE TABLE IF NOT EXISTS medias ( 
 id_media SERIAL PRIMARY KEY, 
 titre VARCHAR(255),
 url VARCHAR(255),
 type VARCHAR(56)
 );
 -- table:post_medias
-CREATE TABLE post_medias ( 
+CREATE TABLE IF NOT EXISTS post_medias ( 
 id_media INTEGER, 
 id_post INTEGER, 
 PRIMARY KEY (id_media, id_post), 
@@ -23,7 +23,7 @@ FOREIGN KEY (id_media) REFERENCES medias(id_media),
 FOREIGN KEY (id_post) REFERENCES posts(id_post) 
 ); 
 --table:commentaires
-CREATE TABLE commentaires ( 
+CREATE TABLE IF NOT EXISTS commentaires ( 
 id_commentaire SERIAL PRIMARY KEY, 
 details TEXT NOT NULL, 
 id_utilisateur INTEGER NOT NULL, 
@@ -35,7 +35,7 @@ FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
 
 );
 -- table:reactions
-CREATE TABLE reactions ( 
+CREATE TABLE IF NOT EXISTS reactions ( 
 id_reaction SERIAL PRIMARY KEY, 
 type VARCHAR(50) NOT NULL, 
 id_utilisateur INTEGER NOT NULL, 
@@ -46,7 +46,7 @@ FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur),
 UNIQUE(id_utilisateur, id_post) 
 );
 ---table:like
-CREATE TABLE likes (
+CREATE TABLE IF NOT EXISTS likes (
     id_like SERIAL PRIMARY KEY,
     id_post INT NOT NULL,
     id_utilisateur INT NOT NULL,

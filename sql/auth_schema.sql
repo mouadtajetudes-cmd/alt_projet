@@ -27,8 +27,11 @@ CREATE TABLE IF NOT EXISTS groupes (
     id_groupe SERIAL PRIMARY KEY,
     nom VARCHAR(255) NOT NULL,
     description TEXT,
-    niveau VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    avatar_url VARCHAR(255),
+    niveau VARCHAR(50) DEFAULT 'debutant',
+    createur_id INTEGER REFERENCES utilisateurs(id_utilisateur) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Table: membre_groupe
@@ -36,7 +39,7 @@ CREATE TABLE IF NOT EXISTS membre_groupe (
     id_groupe INTEGER NOT NULL,
     id_utilisateur INTEGER NOT NULL,
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    role VARCHAR(50) DEFAULT 'member',
+    role VARCHAR(50) DEFAULT 'membre',
     PRIMARY KEY (id_groupe, id_utilisateur),
     FOREIGN KEY (id_groupe) REFERENCES groupes(id_groupe) ON DELETE CASCADE,
     FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur) ON DELETE CASCADE

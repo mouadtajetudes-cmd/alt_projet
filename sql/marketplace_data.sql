@@ -38,6 +38,7 @@ INSERT INTO produits (nom, description, prix, statut, quantite, id_utilisateur, 
 ('Robe Été Florale', 'Robe légère imprimé floral, 100% coton, tailles 36-44', 59.99, 'disponible', 18, 4, 2);
 
 -- Insert sample product-media associations
+INSERT INTO produit_medias (id_media, id_produit, ordre) VALUES
 (1, 1, 1),
 (2, 2, 1),
 (3, 3, 1),
