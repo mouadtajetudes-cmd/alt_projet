@@ -175,7 +175,7 @@ export default {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}))
           if (response.status === 400 && errorData.message?.includes('already has')) {
-            router.push('/my-avatars')
+            router.push(`/user/${userId}/avatars`)
             return
           }
           throw new Error(errorData.message || `Erreur HTTP: ${response.status}`)
@@ -184,7 +184,7 @@ export default {
         const result = await response.json()
         console.log('[AVATAR] Avatar sélectionné:', result)
         
-        router.push('/my-avatars')
+        router.push(`/user/${userId}/avatars`)
         
       } catch (err) {
         console.error('[AVATAR] Erreur lors du choix:', err)

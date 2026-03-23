@@ -2,7 +2,7 @@
   <div class="avatar-detail-page">
     <div class="container">
       <div class="back-button-wrapper">
-        <router-link :to="isOwner ? '/my-avatars' : '/avatar'" class="btn-back">
+        <router-link :to="isOwner ? `/user/${route.params.userId}/avatars` : '/avatar'" class="btn-back">
           ← Retour {{ isOwner ? 'à mes avatars' : 'à la galerie' }}
         </router-link>
       </div>
