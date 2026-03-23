@@ -98,7 +98,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuth } from '../composables/useAuth'
+import { useAuth } from '../modules/auth/composables/useAuth'
 import LevelUpModal from '../components/LevelUpModal.vue'
 
 export default {

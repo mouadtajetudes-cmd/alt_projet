@@ -22,6 +22,7 @@ public function findAll(int $page, int $limit): array
 
     $stmt = $this->pdo->prepare(
         'SELECT p.id_post,
+                p.titre AS post_titre,
                 p.description,
                 p.date_publication,
                 u.nom,
@@ -45,6 +46,11 @@ public function findAll(int $page, int $limit): array
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($rows as &$row) {
+        if ($row['media_type'] === null) {
+            $row['media_type'] = 'text';
+            $row['titre'] = $row['post_titre'];
+            $row['media_url'] = null;
+        }
 
         if ($row['media_type'] === 'image') {
             $row['media_url'] = 'http://localhost:6085/uploads/images/' . $row['titre'];
@@ -108,13 +114,18 @@ public function findAll(int $page, int $limit): array
     public function create(CreatePostDTO $post):CreatePostDTO
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO posts (type, description, id_utilisateur)
-             VALUES (:type, :description, :id_utilisateur)'
+            'INSERT INTO posts (titre, description, id_utilisateur)
+             VALUES (:titre, :description, :id_utilisateur)'
         );
 
+        $description = $post->getDescription();
+        $titre = $description !== null && trim($description) !== ''
+            ? trim($description)
+            : 'Nouveau post';
+
         $stmt->execute([
-            'type' => $post->getType(),
-            'description' => $post->getDescription(),
+            'titre' => mb_substr($titre, 0, 255),
+            'description' => $description,
             'id_utilisateur' => $post->getIdUtilisateur()
         ]);
 

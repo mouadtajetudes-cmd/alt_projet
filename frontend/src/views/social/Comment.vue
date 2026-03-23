@@ -25,6 +25,7 @@
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { API } from '../../shared/config/api'
+import defaultAvatar from '../../assets/images/default.jpeg'
 
 const props = defineProps({
   postId: {

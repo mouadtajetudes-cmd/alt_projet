@@ -21,28 +21,9 @@ class GetAllProductsAction
         try {
             $q = $request->getQueryParams();
 
-            $filters = new ProductFiltersDTO();
+            $filters = ProductFiltersDTO::fromArray($q);
             $filters->page = isset($q['page']) ? max(1, (int)$q['page']) : 1;
             $filters->limit = isset($q['limit']) ? max(1, (int)$q['limit']) : 12;
-
-            if (property_exists($filters, 'categorie')) {
-                $filters->categorie = isset($q['category_id']) && $q['category_id'] !== '' ? (int)$q['category_id'] : null;
-            }
-            if (property_exists($filters, 'prixMin')) {
-                $filters->prixMin = isset($q['min_price']) && $q['min_price'] !== '' ? (float)$q['min_price'] : null;
-            }
-            if (property_exists($filters, 'prixMax')) {
-                $filters->prixMax = isset($q['max_price']) && $q['max_price'] !== '' ? (float)$q['max_price'] : null;
-            }
-            if (property_exists($filters, 'statut')) {
-                $filters->statut = isset($q['status']) && $q['status'] !== '' ? (string)$q['status'] : null;
-            }
-            if (property_exists($filters, 'search')) {
-                $filters->search = $q['search'] ?? null;
-            }
-            if (property_exists($filters, 'userId')) {
-                $filters->userId = isset($q['user_id']) ? (int)$q['user_id'] : null;
-            }
 
             $result = $this->productService->getAllProducts($filters);
 

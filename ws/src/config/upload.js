@@ -21,10 +21,41 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|zip|rar/
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-    const mimetype = allowedTypes.test(file.mimetype)
-    if (mimetype && extname) return cb(null, true)
+    const extension = path.extname(file.originalname).toLowerCase()
+    const allowedImageExtensions = new Set([
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.gif',
+      '.webp',
+      '.bmp',
+      '.svg',
+      '.avif',
+      '.jfif',
+      '.heic',
+      '.heif'
+    ])
+    const allowedDocumentExtensions = new Set([
+      '.pdf',
+      '.doc',
+      '.docx',
+      '.txt',
+      '.zip',
+      '.rar'
+    ])
+    const isImage = file.mimetype.startsWith('image/') && allowedImageExtensions.has(extension)
+    const allowedDocumentMimeTypes = new Set([
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'application/zip',
+      'application/x-zip-compressed',
+      'application/vnd.rar',
+      'application/x-rar-compressed'
+    ])
+    const isDocument = allowedDocumentExtensions.has(extension) && allowedDocumentMimeTypes.has(file.mimetype)
+    if (isImage || isDocument) return cb(null, true)
     cb(new Error('Type de fichier non autorisé!'))
   }
 })

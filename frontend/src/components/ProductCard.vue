@@ -49,7 +49,7 @@ const goDetails = () => {
   if (!pid.value) return
 
   router.push({
-    name: 'ProductDetails',
+    name: 'ProductDetail',
     params: { id: pid.value }
   })
 }

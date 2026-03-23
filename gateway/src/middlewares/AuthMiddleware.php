@@ -31,7 +31,7 @@ class AuthMiddleware
         }
         
         try {
-            $validationResponse = $this->authClient->request('POST', '/tokens/validate', [
+            $validationResponse = $this->authClient->request('POST', '/auth/tokens/validate', [
                 'headers' => ['Authorization' => $authHeader]
             ]);
             

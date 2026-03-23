@@ -1,4 +1,5 @@
 <?php
+
 use Slim\App;
 use alt\gateway\actions\RoutedProxyAction;
 use alt\gateway\middlewares\AuthMiddleware;
@@ -15,16 +16,16 @@ return function (App $app): App {
     $app->get('/images/products/{filename}', function ($request, $response, $args) {
         $filename = $args['filename'];
         $filepath = __DIR__ . '/../images/products/' . $filename;
-        
+
         if (!file_exists($filepath)) {
             $response->getBody()->write(json_encode(['error' => 'Image non trouvée']));
             return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
         }
-        
+
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_file($finfo, $filepath);
         finfo_close($finfo);
-        
+
         $stream = fopen($filepath, 'r');
         return $response
             ->withBody(new \Slim\Psr7\Stream($stream))
@@ -38,7 +39,7 @@ return function (App $app): App {
     });
 
     $app->any('/avatar[/{params:.*}]', function ($request, $response, $args) use ($container) {
-        $action = new RoutedProxyAction($container, 'avatar.client', '');
+        $action = new RoutedProxyAction($container, 'avatar.client', '/avatar');
         return $action($request, $response, $args);
     });
 

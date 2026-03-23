@@ -37,11 +37,20 @@ app.get('/health', (req, res) => {
   })
 })
 
-app.post('/upload', upload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' })
+app.post('/upload', (req, res) => {
+  upload.single('file')(req, res, (error) => {
+    if (error) {
+      console.error('Erreur upload:', error)
+      const status = error.code === 'LIMIT_FILE_SIZE' ? 400 : 400
+      return res.status(status).json({ error: error.message })
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Aucun fichier fourni' })
+    }
+
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
-    res.json({
+    return res.json({
       success: true,
       file: {
         filename: req.file.filename,
@@ -51,29 +60,17 @@ app.post('/upload', upload.single('file'), async (req, res) => {
         url: fileUrl
       }
     })
-  } catch (error) {
-    console.error('Erreur upload:', error)
-    res.status(500).json({ error: error.message })
-  }
+  })
 })
 
 const mongoDB = getMongoDBInstance
-const conversationsRouter = require('./routes/conversations')(mongoDB())
-const groupsRouter = require('./routes/groups')
-const friendsRouter = require('./routes/friends')
-const notificationsRouter = require('./routes/notifications')
-const sallesRouter = require('./routes/salles')(mongoDB(), pgPool)
-const usersRouter = require('./routes/users')(mongoDB())
 
-app.use('/conversations', conversationsRouter)
-app.use('/groups', groupsRouter)
-app.use('/friends', friendsRouter)
-app.use('/notifications', notificationsRouter)
-app.use('/salles', sallesRouter)
-app.use('/users', usersRouter)
+app.use('/groups', require('./routes/groups'))
+app.use('/friends', require('./routes/friends'))
+app.use('/notifications', require('./routes/notifications'))
 
 wss.on('connection', (ws) => {
-  console.log('✅ Nouvelle connexion WebSocket')
+  console.log('Nouvelle connexion WebSocket')
 
   ws.on('message', async (data) => {
     try {
@@ -149,7 +146,7 @@ wss.on('connection', (ws) => {
     if (ws.userId) {
       onlineUsers.delete(ws.userId)
       broadcastUserStatus(wss, ws.userId, 'offline')
-      console.log(`❌ Utilisateur ${ws.userId} déconnecté`)
+      console.log(`Utilisateur ${ws.userId} déconnecté`)
     }
   })
 
@@ -162,12 +159,17 @@ async function start() {
   try {
     await connectMongoDB()
     await cleanupBrokenConversations()
+
+    app.use('/conversations', require('./routes/conversations')(mongoDB()))
+    app.use('/salles', require('./routes/salles')(mongoDB(), pgPool))
+    app.use('/users', require('./routes/users')(mongoDB()))
+
     server.listen(PORT, () => {
-      console.log(`🚀 WebSocket + REST API sur port ${PORT}`)
-      console.log(`📁 Uploads disponibles sur http://localhost:${PORT}/uploads`)
+      console.log(`WebSocket + REST API sur port ${PORT}`)
+      console.log(`Uploads disponibles sur http://localhost:${PORT}/uploads`)
     })
   } catch (error) {
-    console.error('❌ Erreur démarrage:', error)
+    console.error('Erreur démarrage:', error)
     process.exit(1)
   }
 }

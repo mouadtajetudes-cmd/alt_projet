@@ -188,7 +188,7 @@ const handleLogin = async () => {
   loading.value = true
   
   try {
-    const response = await fetch('http://localhost:6090/auth/auth/login', {
+    const response = await fetch('http://localhost:6090/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -216,7 +216,7 @@ const handleLogin = async () => {
 
 const loginWithGoogle = async () => {
   try {
-    const response = await fetch('http://localhost:6090/auth/auth/google')
+    const response = await fetch('http://localhost:6090/auth/google')
     const data = await response.json()
     
     if (data.authUrl) {
@@ -234,7 +234,7 @@ const loginWithGoogle = async () => {
       const handleMessage = async (event) => {
         if (event.data.type === 'google-auth-callback') {
           const authResponse = await fetch(
-            `http://localhost:6090/auth/auth/google?code=${event.data.code}&state=${event.data.state}`
+            `http://localhost:6090/auth/google?code=${event.data.code}&state=${event.data.state}`
           )
           const result = await authResponse.json()
           
@@ -275,7 +275,7 @@ const loginWithApple = async () => {
     const response = await AppleID.auth.signIn()
     const { id_token, user } = response.authorization
     
-    const authResponse = await fetch('http://localhost:6090/auth/auth/apple', {
+    const authResponse = await fetch('http://localhost:6090/auth/apple', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

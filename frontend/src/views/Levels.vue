@@ -131,7 +131,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '../composables/useAuth'
+import { useAuth } from '../modules/auth/composables/useAuth'
 
 export default {
   name: 'Levels',

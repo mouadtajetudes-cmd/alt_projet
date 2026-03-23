@@ -2,12 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import authRoutes from './routes/auth'
 import chatRoutes from './routes/chat'
 import { requireAuth } from '../modules/auth/middleware/auth'
-import { requireAdmin } from '../modules/auth/middleware/requireAdmin'
 
 import Home from '../views/Home.vue'
 import Profile from '../views/Profile.vue'
 import Users from '../views/Users.vue'
 import Marketplace from '../views/Marketplace.vue'
+import CreateProduct from '../views/CreateProduct.vue'
 import ProductDetail from '../views/ProductDetail.vue'
 import Social from '../views/Social.vue'
 import Avatar from '../views/Avatar.vue'
@@ -19,87 +19,75 @@ import UserAvatar from '../views/UserAvatar.vue'
 
 const routes = [
   {
-    path: "/",
-    name: "Home",
-    component: Home,
+    path: '/',
+    name: 'Home',
+    component: Home
   },
   {
     path: '/profile',
     name: 'Profile',
     component: Profile,
-    beforeEnter: requireAuth,
+    beforeEnter: requireAuth
   },
   {
-    path: "/users",
-    name: "Users",
+    path: '/users',
+    name: 'Users',
     component: Users,
-    beforeEnter: requireAuth,
+    beforeEnter: requireAuth
   },
   {
     path: '/marketplace',
     name: 'Marketplace',
     component: Marketplace,
-    beforeEnter: requireAuth,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/marketplace/create',
+    name: 'MarketplaceCreate',
+    component: CreateProduct,
+    beforeEnter: requireAuth
   },
   {
     path: '/marketplace/:id',
     name: 'ProductDetail',
     component: ProductDetail,
-    beforeEnter: requireAuth,
+    beforeEnter: requireAuth
   },
   {
     path: '/social',
     name: 'Social',
     component: Social,
-    beforeEnter: requireAuth,
+    beforeEnter: requireAuth
   },
   {
     path: '/avatar',
     name: 'Avatar',
-    component: Avatar,
-    beforeEnter: requireAuth,
+    component: Avatar
   },
   {
     path: '/avatar/create',
     name: 'CreateAvatar',
-    component: CreateAvatar,
-    beforeEnter: requireAdmin,
+    component: CreateAvatar
   },
   {
     path: '/avatar/:id/edit',
     name: 'EditAvatar',
-    component: EditAvatar,
-    beforeEnter: requireAdmin,
-  },
-  {
-    path: "/users/:userId/avatar/detail",
-    name: "AvatarDetailByUser",
-    component: AvatarDetail,
-    beforeEnter: requireAuth,
-  },
-  {
-    path: "/levels",
-    name: "Levels",
-    component: Levels,
-    beforeEnter: requireAuth,
+    component: EditAvatar
   },
   {
     path: '/avatar/:id',
     name: 'AvatarDetail',
-    component: AvatarDetail,
-    beforeEnter: requireAuth,
+    component: AvatarDetail
   },
   {
-    path: '/my-avatars',
-    name: 'MyAvatars',
-    component: UserAvatar,
-    beforeEnter: requireAuth,
+    path: '/levels',
+    name: 'Levels',
+    component: Levels
   },
   {
     path: '/user/:id/avatars',
     name: 'UserAvatar',
-    component: UserAvatar,
-    beforeEnter: requireAuth,
+    component: UserAvatar
   },
   ...authRoutes,
   ...chatRoutes
@@ -107,7 +95,7 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
-});
+  routes
+})
 
-export default router;
+export default router

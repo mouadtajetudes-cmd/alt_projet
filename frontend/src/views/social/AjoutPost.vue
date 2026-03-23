@@ -30,9 +30,6 @@
 import { ref } from 'vue'
 import { API } from '../../shared/config/api'
 
-
-const idUtilisateur = 2
-
 const post = ref({
   description: '',
   file: null
@@ -42,11 +39,47 @@ const onFileChange = (event) => {
   post.value.file = event.target.files[0] || null
 }
 
+const getCurrentUserId = () => {
+  const storedUser = localStorage.getItem('user')
+
+  if (!storedUser) return null
+
+  try {
+    const user = JSON.parse(storedUser)
+    return Number(user?.id_utilisateur ?? user?.id ?? null)
+  } catch {
+    return null
+  }
+}
+
+const getPostType = () => {
+  if (!post.value.file) return 'text'
+  if (post.value.file.type.startsWith('image/')) return 'image'
+  if (post.value.file.type.startsWith('video/')) return 'video'
+  return null
+}
+
 const submitPost = async () => {
   try {
+    const idUtilisateur = getCurrentUserId()
+    const type = getPostType()
+
+    if (!idUtilisateur) {
+      throw new Error('Utilisateur introuvable')
+    }
+
+    if (!type) {
+      throw new Error('Type de fichier non pris en charge')
+    }
+
+    if (!post.value.description?.trim() && !post.value.file) {
+      throw new Error('Le post est vide')
+    }
+
     const formData = new FormData()
     formData.append("id_utilisateur", String(idUtilisateur))
-    formData.append("description", post.value.description || "")
+    formData.append("type", type)
+    formData.append("description", post.value.description?.trim() || "")
     if (post.value.file) {
       formData.append("file", post.value.file)
     }
@@ -57,13 +90,17 @@ const submitPost = async () => {
     })
 
     const data = await response.json()
-    console.log(data)
+
+    if (!response.ok || data?.status === 'error') {
+      throw new Error(data?.message || 'Erreur lors de la création du post')
+    }
 
     post.value.description = ''
     post.value.file = null
 
   } catch (err) {
     console.error(err)
+    alert(err.message || 'Erreur lors de la création du post')
   }
 }
 </script>
